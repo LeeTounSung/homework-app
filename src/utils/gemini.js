@@ -272,7 +272,7 @@ export const analyzeProblemSubmission = async (aiConfig, problemDesc, base64Imag
 
 export const solveProblemWithAI = async (aiConfig, problemStatement, problemImage = null) => {
   const prompt = `당신은 대한민국 최고 수준의 고등 수학 전문 강사입니다.
-제시된 고등학교 수학 문제를 정확하고 신속하게 풀고, 학생 채점용 기준 정답(객관식 선지 번호 1~5 또는 단답형 정수/분수)을 도출해주세요.
+제시된 고등학교 수학 문제를 정확하고 신속하게 풀고, 학생 채점용 기준 정답을 도출해주세요.
 
 [문제]
 ${problemStatement || '첨부된 문제 이미지를 풀이해주세요.'}
@@ -280,18 +280,17 @@ ${problemStatement || '첨부된 문제 이미지를 풀이해주세요.'}
 출력 규칙:
 1. 복잡한 풀이 과정이나 설명은 일절 작성하지 마십시오.
 2. 오직 학생 답안과 직접 비교할 수 있는 최종 정답 값만 간결하게 한 줄로 출력하십시오.
-- 객관식의 경우: 1, 2, 3, 4, 5 중 번호 하나만 출력 (예: 5)
-- 단답형 숫자의 경우: 계산된 최종 숫자만 출력 (예: 51, -12, 9/4)`;
+- 객관식의 경우: 1, 2, 3, 4, 5 중 선지 번호 하나만 출력 (예: 5)
+- 단답형 숫자의 경우: 계산된 최종 숫자만 출력 (예: 51, -12)
+- 분수/수식/서술형의 경우: 표준 LaTeX 수식 형태로 출력 (예: \\frac{9}{4}, 2(x+1)(y+2), x^2 - 4x + 3)`;
 
   const response = await callAIAPI(aiConfig, prompt, problemImage);
   if (!response) return '';
 
-  let clean = response.trim().replace(/[*_#`]/g, '').trim();
-  const match = clean.match(/([0-9]+(?:\/[0-9]+)?)/);
-  if (match) {
-    return match[1];
-  }
-  return clean.split('\n')[0].trim();
+  let clean = response.trim().replace(/^`+|`+$/g, '').trim();
+  clean = clean.replace(/^\$+|\$+$/g, '').trim();
+  const firstLine = clean.split('\n')[0].replace(/^정답:\s*/, '').trim();
+  return firstLine;
 };
 
 export const autoGradeProblemSubmission = async (aiConfig, problemDesc, studentSolutionImage, customDetails = '', correctAns = null) => {
@@ -299,11 +298,13 @@ export const autoGradeProblemSubmission = async (aiConfig, problemDesc, studentS
 
   if (correctAns) {
     prompt = `당신은 정확하고 빠른 고등수학 채점관입니다.
-선생님이 사전에 지정한 이 문제의 공식 정답은 [${correctAns}]입니다.
+선생님이 사전에 지정한 이 문제의 공식 정답은 다음과 같습니다:
+[공식 정답]: ${correctAns} (객관식 번호, 단답형 숫자, 또는 LaTeX 수식)
 
 첨부된 학생의 손글씨 풀이 사진을 보고 다음만 판정하세요:
 1. 학생이 도출하여 적은 최종 답안을 찾으세요.
-2. 학생의 최종 답안이 공식 정답 [${correctAns}]와 일치하면 [채점 결과]를 "⭕ 정답", 다르면 "❌ 오답", 글씨를 전혀 알아볼 수 없거나 다른 문제 풀이면 "🔺 채점 불가 (이미지 확인 필요)"로 판정하세요.
+2. 학생의 최종 답안이 공식 정답 [${correctAns}]와 수학적으로 일치하면 [채점 결과]를 "⭕ 정답", 다르면 "❌ 오답", 글씨를 전혀 알아볼 수 없거나 다른 문제 풀이면 "🔺 채점 불가 (이미지 확인 필요)"로 판정하세요.
+- 공식 정답이 서술형 수식(LaTeX)인 경우, 학생의 풀이 마지막에 적힌 수식이 수식적으로 동치인지 판정하세요.
 3. 문제를 처음부터 직접 새로 풀 필요가 전혀 없으며, 학생의 손글씨 답안과 공식 정답 [${correctAns}]의 일치 여부만 신속하고 간결하게 판정하세요.
 
 응답 형식 (반드시 준수):

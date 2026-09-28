@@ -267,8 +267,12 @@ export default function UploadPage() {
             <button
               type="button"
               onClick={() => {
+                const nextState = !isBookmarked;
                 toggleBookmarkProblem(id, groupId, problemId);
-                setIsBookmarked(!isBookmarked);
+                setIsBookmarked(nextState);
+                if (nextState) {
+                  alert("📌 이 문제가 [문제] 보관함에 등록되었습니다!\n홈 화면의 [문제] 탭에서 언제든 다시 풀고 복습할 수 있습니다.");
+                }
               }}
               style={{
                 padding: '6px 14px',
@@ -286,7 +290,7 @@ export default function UploadPage() {
                 transition: 'all 0.2s'
               }}
             >
-              <span>{isBookmarked ? '⭐️ 어려움 (보관함에 저장됨)' : '☆ 어려웠던 문제 보관'}</span>
+              <span>{isBookmarked ? '⭐️ 보관됨 (문제 보관함)' : '☆ 문제 보관'}</span>
             </button>
 
             {/* Red box location: Touch to zoom hint */}

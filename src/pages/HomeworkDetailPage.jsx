@@ -581,6 +581,30 @@ export default function HomeworkDetailPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={handleOpenAnswerKeyModal}
+                      style={{
+                        padding: '9px 14px',
+                        borderRadius: '8px',
+                        border: '1px solid #4CAF50',
+                        backgroundColor: '#1E2D24',
+                        color: '#A5D6A7',
+                        fontWeight: 'bold',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        transition: 'all 0.2s'
+                      }}
+                      title="원장샘 전용: 각 문항의 정답을 미리 등록하거나 AI로 자동 생성합니다"
+                    >
+                      <span>📝 정답표 관리</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={handleBulkAiGrade}
@@ -895,11 +919,11 @@ export default function HomeworkDetailPage() {
             maxWidth: '480px', width: '100%', maxHeight: '80vh', overflowY: 'auto',
             border: '1px solid #444', color: '#fff'
           }}>
-            <h3 style={{ margin: '0 0 8px 0', color: '#FFD700', fontSize: '17px' }}>
-              📝 과제 정답표 등록 / 수정
+            <h3 style={{ margin: '0 0 8px 0', color: '#81C784', fontSize: '17px' }}>
+              📝 과제 정답표 관리 (원장샘 전용)
             </h3>
             <p style={{ fontSize: '12px', color: '#aaa', margin: '0 0 16px 0', lineHeight: '1.4' }}>
-              각 문항의 정답을 미리 등록해두면, 학생이 제출 시 <b>AI 토큰 소모 없이 즉시 0초 만에 자동 채점</b>됩니다.
+              각 문항의 정답(객관식 선지 번호, 단답형 숫자, 서술형 LaTeX 수식)을 등록합니다. 아래 <b>[🤖 AI 정답 자동 생성]</b>을 누르면 AI가 자동으로 풀어서 입력합니다.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
@@ -908,30 +932,40 @@ export default function HomeworkDetailPage() {
                   <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#90CAF9', marginBottom: '8px' }}>
                     {formatGroupLabel(grp.label)}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                    {grp.problems.map(num => (
-                      <div key={num} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#2A2A32', padding: '6px 10px', borderRadius: '8px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 'bold', width: '38px', color: '#FFD700' }}>
-                          {num}번:
-                        </span>
-                        <input
-                          type="text"
-                          placeholder="정답 (예: 3, 11)"
-                          value={editedAnswers[num] || ''}
-                          onChange={(e) => setEditedAnswers({ ...editedAnswers, [num]: e.target.value })}
-                          style={{
-                            flex: 1,
-                            padding: '6px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid #555',
-                            backgroundColor: '#16161A',
-                            color: '#fff',
-                            fontSize: '13px',
-                            textAlign: 'center'
-                          }}
-                        />
-                      </div>
-                    ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {grp.problems.map(num => {
+                      const val = editedAnswers[num] || '';
+                      const isLatex = val.includes('\\') || val.includes('^') || val.includes('_') || val.includes('{') || (val.includes('/') && val.length > 2);
+                      return (
+                        <div key={num} style={{ backgroundColor: '#262834', padding: '8px 12px', borderRadius: '8px', border: '1px solid #3E4254' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', width: '42px', color: '#81C784' }}>
+                              {num}번:
+                            </span>
+                            <input
+                              type="text"
+                              placeholder="정답 (객관식 1~5, 단답형, 또는 LaTeX 수식)"
+                              value={val}
+                              onChange={(e) => setEditedAnswers({ ...editedAnswers, [num]: e.target.value })}
+                              style={{
+                                flex: 1,
+                                padding: '7px 10px',
+                                borderRadius: '6px',
+                                border: '1px solid #555',
+                                backgroundColor: '#16161A',
+                                color: '#fff',
+                                fontSize: '13px'
+                              }}
+                            />
+                          </div>
+                          {isLatex && (
+                            <div style={{ marginTop: '4px', paddingLeft: '50px', fontSize: '11px', color: '#90CAF9' }}>
+                              📐 수식(LaTeX): <code>${val}$</code>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}

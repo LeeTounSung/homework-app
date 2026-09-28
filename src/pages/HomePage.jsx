@@ -558,7 +558,7 @@ export default function HomePage() {
         <div className="header-tabs" style={{ display: 'flex', flex: 1, justifyContent: 'space-around', alignItems: 'center', maxWidth: '360px', margin: '0 auto' }}>
           {[
             { id: 'homework', label: '숙제' },
-            { id: 'incorrect', label: '오답' },
+            { id: 'incorrect', label: '문제' },
             { id: 'test', label: '시험' },
             { id: 'schedule', label: '일정' },
             { id: 'statistics', label: '성적' }
@@ -682,10 +682,10 @@ export default function HomePage() {
           <div>
             <div style={{ marginBottom: '16px' }}>
               <h2 style={{ color: '#FFD700', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                📚 단원별 오답 & 복습 보관함
+                📚 단원별 문제 보관함
               </h2>
               <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
-                학생들이 풀면서 틀렸거나 어려웠던 문제들이 단원별로 누적 보관되어 스스로 언제든 다시 풀고 복습할 수 있습니다.
+                학생들이 직접 보관했거나 다시 풀어볼 문제들이 단원별로 누적 보관되어 언제든 스스로 다시 풀고 복습할 수 있습니다.
               </p>
             </div>
 
@@ -760,7 +760,7 @@ export default function HomePage() {
                   transition: 'all 0.2s'
                 }}
               >
-                <span>⭐️ 어려움 보관</span>
+                <span>⭐️ 문제 보관</span>
               </button>
             </div>
 
@@ -879,7 +879,7 @@ export default function HomePage() {
               <div style={{ color: '#888', textAlign: 'center', marginTop: '50px' }}>
                 {incorrectViewMode === 'current' 
                   ? '🎉 현재 미해결된 오답이 없습니다!' 
-                  : (incorrectViewMode === 'bookmark' ? '⭐️ 보관된 어려운 문제가 없습니다.' : '기록된 오답 & 복습 문제가 없습니다.')}
+                  : (incorrectViewMode === 'bookmark' ? '⭐️ 보관된 문제가 없습니다.' : '기록된 문제가 없습니다.')}
               </div>
             )}
           </div>
