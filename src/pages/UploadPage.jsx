@@ -44,7 +44,6 @@ export default function UploadPage() {
   const { id, groupId, problemId } = useParams();
   const { getHomeworkById, submitHomeworkProblem, exemptProblem, toggleBookmarkProblem, isSaving, getProblemImageFromDrive, geminiApiKey, aiConfig, isAiConfigured } = useHomework();
   const [imagePreview, setImagePreview] = useState(null);
-  const [studentAnswer, setStudentAnswer] = useState('');
   const [aiFeedback, setAiFeedback] = useState('');
   const [aiGrade, setAiGrade] = useState('');
   const [isAiGrading, setIsAiGrading] = useState(false);
@@ -89,9 +88,6 @@ export default function UploadPage() {
       if (existingProblem) {
         if (existingProblem.imageUrl && existingProblem.status !== 'exempt') {
           setImagePreview(existingProblem.imageUrl);
-        }
-        if (existingProblem.studentAnswer) {
-          setStudentAnswer(existingProblem.studentAnswer);
         }
         if (existingProblem.aiFeedback) {
           setAiFeedback(existingProblem.aiFeedback);
@@ -216,31 +212,12 @@ export default function UploadPage() {
   const handleSubmit = async () => {
     let finalData = imagePreview;
     
-    // If no finalData and no studentAnswer, block submit
-    if (!finalData && (!studentAnswer || !studentAnswer.trim())) {
-      alert("데이터가 없습니다. 단답형 정답을 입력하거나 풀이 사진을 첨부해주세요.");
+    if (!finalData) {
+      alert("제출할 풀이 사진 또는 직접 입력한 수식이 없습니다.");
       return;
     }
 
-    // If no photo/drawing but student entered an answer, create a lightweight canvas placeholder
-    if (!finalData && studentAnswer && studentAnswer.trim()) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 400;
-      canvas.height = 180;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#1c1c24';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#FFD700';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`[문제 ${problemId}번] 학생 입력 답안`, 200, 50);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 36px sans-serif';
-      ctx.fillText(studentAnswer.trim(), 200, 115);
-      finalData = canvas.toDataURL('image/jpeg', 0.9);
-    }
-
-    await submitHomeworkProblem(id, groupId, problemId, finalData, aiFeedback, aiGrade, studentAnswer ? studentAnswer.trim() : null);
+    await submitHomeworkProblem(id, groupId, problemId, finalData, aiFeedback, aiGrade, null);
     navigate(-1);
   };
 
@@ -551,82 +528,6 @@ export default function UploadPage() {
           </div>
         )}
 
-        {/* Short Answer Input Section */}
-        <div style={{ 
-          backgroundColor: '#1E1E24', 
-          borderRadius: '12px', 
-          padding: '16px', 
-          border: '1px solid #3A3215', 
-          marginBottom: '16px' 
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#FFD700' }}>
-              ✏️ 정답 입력 (단답형 / 번호)
-            </span>
-            <span style={{ fontSize: '11px', color: '#888' }}>
-              * 정답만 입력해도 채점 가능 (토큰 절약)
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
-            {[1, 2, 3, 4, 5].map(num => (
-              <button
-                key={num}
-                type="button"
-                onClick={() => setStudentAnswer(String(num))}
-                style={{
-                  flex: 1,
-                  padding: '9px 0',
-                  borderRadius: '8px',
-                  border: studentAnswer === String(num) ? '2px solid #FFD700' : '1px solid #444',
-                  backgroundColor: studentAnswer === String(num) ? '#FFD700' : '#2A2A2A',
-                  color: studentAnswer === String(num) ? '#000' : '#fff',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  fontSize: '15px',
-                  transition: 'all 0.15s'
-                }}
-              >
-                {num}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input 
-              type="text" 
-              placeholder="단답형 정답 직접 입력 (예: 12, 9/4 등)"
-              value={studentAnswer}
-              onChange={(e) => setStudentAnswer(e.target.value)}
-              style={{
-                flex: 1,
-                padding: '10px 14px',
-                borderRadius: '8px',
-                border: '1px solid #555',
-                backgroundColor: '#111',
-                color: '#fff',
-                fontSize: '14px'
-              }}
-            />
-            {studentAnswer && (
-              <button
-                type="button"
-                onClick={() => setStudentAnswer('')}
-                style={{
-                  padding: '0 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #444',
-                  backgroundColor: '#333',
-                  color: '#aaa',
-                  fontSize: '12px',
-                  cursor: 'pointer'
-                }}
-              >
-                지우기
-              </button>
-            )}
-          </div>
-        </div>
 
         {/* Toggle MathType / Image Upload */}
         <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>

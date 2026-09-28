@@ -581,30 +581,6 @@ export default function HomeworkDetailPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  {isAdmin && (
-                    <button
-                      type="button"
-                      onClick={handleOpenAnswerKeyModal}
-                      style={{
-                        padding: '9px 14px',
-                        borderRadius: '8px',
-                        border: '1px solid #735914',
-                        backgroundColor: '#262215',
-                        color: '#FFD700',
-                        fontWeight: 'bold',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        transition: 'all 0.2s'
-                      }}
-                      title="단답형/객관식 정답을 등록해두면 AI 토큰 없이 즉시 채점됩니다"
-                    >
-                      <span>📝 정답표</span>
-                    </button>
-                  )}
-
                   <button
                     type="button"
                     onClick={handleBulkAiGrade}
@@ -650,12 +626,12 @@ export default function HomeworkDetailPage() {
           <div key={group.groupId} style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
               <div style={{ 
-                backgroundColor: '#262215', 
-                border: '1px solid #735914',
-                color: '#FFD700', 
+                backgroundColor: '#2A2C38', 
+                border: '1px solid #3E4254',
+                color: '#FFFFFF', 
                 padding: '6px 14px', 
-                borderRadius: '10px', 
-                fontSize: '15px',
+                borderRadius: '8px', 
+                fontSize: '14px',
                 fontWeight: 'bold',
                 letterSpacing: '0.2px'
               }}>

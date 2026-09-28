@@ -1477,10 +1477,10 @@ export default function HomePage() {
                       <StatusIndicator hw={hw} />
                     </div>
                     
-                    <div className="card-content" style={{ marginTop: '10px', marginBottom: '4px' }}>
+                    <div className="card-content" style={{ marginTop: '8px', marginBottom: '4px' }}>
                       <p className="hw-desc" style={{
-                        fontSize: '15px',
-                        color: '#f0f0f0',
+                        fontSize: '14.5px',
+                        color: '#b0b4be',
                         fontWeight: '500',
                         lineHeight: '1.6',
                         margin: 0,
