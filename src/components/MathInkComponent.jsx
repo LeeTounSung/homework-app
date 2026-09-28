@@ -200,10 +200,12 @@ export default function MathInkComponent({ onInsert, onCancel, geminiApiKey, aiC
       ? aiConfig
       : { provider: 'deepseek', geminiApiKey: geminiApiKey, deepseekApiKey: geminiApiKey };
 
-    const provider = config.provider || 'deepseek';
-    const hasKey = provider === 'deepseek'
-      ? (config.deepseekApiKey || (typeof geminiApiKey === 'string' && geminiApiKey.startsWith('sk-') ? geminiApiKey : null))
-      : (config.geminiApiKey || geminiApiKey);
+    const provider = config.provider || 'musespark';
+    const hasKey = (provider === 'musespark' || provider === 'meta')
+      ? (config.musesparkApiKey || import.meta.env.VITE_META_API_KEY || 'LLM_2161394044719218_Lv8NcmLsyd5kH8je0bbvj4tyQlg')
+      : (provider === 'deepseek'
+        ? (config.deepseekApiKey || (typeof geminiApiKey === 'string' && geminiApiKey.startsWith('sk-') ? geminiApiKey : null))
+        : (config.geminiApiKey || geminiApiKey));
 
     if (!hasKey) {
       showMsg('API 키가 설정되지 않았습니다. 관리자 페이지에서 API 키를 등록해주세요.', true);

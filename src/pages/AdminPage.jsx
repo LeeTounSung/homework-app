@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
+import SettingsModal from '../components/SettingsModal';
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -77,12 +78,6 @@ export default function AdminPage() {
 
   // Settings Modal State
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [tempProvider, setTempProvider] = useState(aiProvider || 'musespark');
-  const [tempGeminiKey, setTempGeminiKey] = useState(geminiApiKey || '');
-  const [tempDeepseekKey, setTempDeepseekKey] = useState(deepseekApiKey || '');
-  const [tempDeepseekModel, setTempDeepseekModel] = useState(deepseekModel || 'deepseek-v4-flash-vision-exp');
-  const [tempMusesparkKey, setTempMusesparkKey] = useState(musesparkApiKey || '');
-  const [tempMusesparkModel, setTempMusesparkModel] = useState(musesparkModel || 'muse-spark-1.3-contributor');
 
   const handleScanFolder = async () => {
     if (!newProblemImagesBaseUrl) {
@@ -332,15 +327,7 @@ export default function AdminPage() {
 
           {/* Card 5: 환경 설정 */}
           <div 
-            onClick={() => {
-              setTempProvider(aiProvider || 'musespark');
-              setTempGeminiKey(geminiApiKey || '');
-              setTempDeepseekKey(deepseekApiKey || '');
-              setTempDeepseekModel(deepseekModel || 'deepseek-v4-flash-vision-exp');
-              setTempMusesparkKey(musesparkApiKey || '');
-              setTempMusesparkModel(musesparkModel || 'muse-spark-1.3-contributor');
-              setIsSettingsModalOpen(true);
-            }}
+            onClick={() => setIsSettingsModalOpen(true)}
             style={{ 
               backgroundColor: '#607D8B', padding: '30px 20px', borderRadius: '12px', 
               cursor: 'pointer', textAlign: 'center', transition: 'transform 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
@@ -637,205 +624,10 @@ export default function AdminPage() {
       )}
 
       {/* Settings Modal */}
-      {isSettingsModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '520px', width: '90%' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFD700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              ⚙️ AI 엔진 및 API 환경 설정
-            </h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              {/* AI Engine Selection */}
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#eee', fontWeight: 'bold' }}>
-                  🤖 기본 사용할 AI 엔진 선택
-                </label>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button 
-                    type="button"
-                    onClick={() => setTempProvider('gemini')}
-                    style={{
-                      flex: '1 1 calc(33.3% - 6px)',
-                      padding: '10px 8px',
-                      borderRadius: '8px',
-                      border: tempProvider === 'gemini' ? '2px solid #2196F3' : '1px solid #555',
-                      backgroundColor: tempProvider === 'gemini' ? 'rgba(33, 150, 243, 0.2)' : '#2A2B36',
-                      color: tempProvider === 'gemini' ? '#64B5F6' : '#aaa',
-                      fontWeight: tempProvider === 'gemini' ? 'bold' : 'normal',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    Google Gemini
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setTempProvider('deepseek')}
-                    style={{
-                      flex: '1 1 calc(33.3% - 6px)',
-                      padding: '10px 8px',
-                      borderRadius: '8px',
-                      border: tempProvider === 'deepseek' ? '2px solid #4CAF50' : '1px solid #555',
-                      backgroundColor: tempProvider === 'deepseek' ? 'rgba(76, 175, 80, 0.2)' : '#2A2B36',
-                      color: tempProvider === 'deepseek' ? '#81C784' : '#aaa',
-                      fontWeight: tempProvider === 'deepseek' ? 'bold' : 'normal',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    DeepSeek Vision
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setTempProvider('musespark')}
-                    style={{
-                      flex: '1 1 calc(33.3% - 6px)',
-                      padding: '10px 8px',
-                      borderRadius: '8px',
-                      border: tempProvider === 'musespark' ? '2px solid #0084FF' : '1px solid #555',
-                      backgroundColor: tempProvider === 'musespark' ? 'rgba(0, 132, 255, 0.2)' : '#2A2B36',
-                      color: tempProvider === 'musespark' ? '#4da6ff' : '#aaa',
-                      fontWeight: tempProvider === 'musespark' ? 'bold' : 'normal',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    ⚡ Meta Muse Spark 1.3
-                  </button>
-                </div>
-              </div>
-
-              {/* Gemini Settings */}
-              <div style={{ 
-                padding: '12px', 
-                borderRadius: '8px', 
-                backgroundColor: tempProvider === 'gemini' ? 'rgba(33, 150, 243, 0.08)' : '#252630',
-                border: tempProvider === 'gemini' ? '1px solid #2196F3' : '1px solid #444' 
-              }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#64B5F6', fontWeight: 'bold' }}>
-                  Google Gemini API Key (고정 모델: 2.5 Flash-Lite)
-                </label>
-                <input 
-                  type="password" 
-                  value={tempGeminiKey} 
-                  onChange={(e) => setTempGeminiKey(e.target.value)}
-                  className="modal-input"
-                  placeholder="AIzaSy... 형식의 Gemini API 키"
-                />
-              </div>
-
-              {/* DeepSeek Settings */}
-              <div style={{ 
-                padding: '12px', 
-                borderRadius: '8px', 
-                backgroundColor: tempProvider === 'deepseek' ? 'rgba(76, 175, 80, 0.08)' : '#252630',
-                border: tempProvider === 'deepseek' ? '1px solid #4CAF50' : '1px solid #444',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px'
-              }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#81C784', fontWeight: 'bold' }}>
-                    DeepSeek API Key
-                  </label>
-                  <input 
-                    type="password" 
-                    value={tempDeepseekKey} 
-                    onChange={(e) => setTempDeepseekKey(e.target.value)}
-                    className="modal-input"
-                    placeholder="sk-... 형식의 DeepSeek API 키"
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#aaa' }}>
-                    DeepSeek 모델명
-                  </label>
-                  <input 
-                    type="text" 
-                    value={tempDeepseekModel} 
-                    onChange={(e) => setTempDeepseekModel(e.target.value)}
-                    className="modal-input"
-                    placeholder="deepseek-v4-flash-vision-exp"
-                  />
-                </div>
-              </div>
-
-              {/* Meta Muse Spark 1.3 (Contributor) Settings */}
-              <div style={{ 
-                padding: '12px', 
-                borderRadius: '8px', 
-                backgroundColor: tempProvider === 'musespark' ? 'rgba(0, 132, 255, 0.08)' : '#252630',
-                border: tempProvider === 'musespark' ? '1px solid #0084FF' : '1px solid #444',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={{ fontSize: '13px', color: '#4da6ff', fontWeight: 'bold' }}>
-                    ⚡ Meta Muse Spark 1.3 (Contributor) API 설정
-                  </label>
-                  <span style={{ fontSize: '11px', color: '#60a5fa', backgroundColor: 'rgba(0, 132, 255, 0.2)', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold', border: '1px solid #0084FF' }}>
-                    Meta AI Cloud
-                  </span>
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#60a5fa', fontWeight: 'bold' }}>
-                    Meta Model API Key
-                  </label>
-                  <input 
-                    type="password" 
-                    value={tempMusesparkKey} 
-                    onChange={(e) => setTempMusesparkKey(e.target.value)}
-                    className="modal-input"
-                    placeholder="Bearer 토큰 / Meta Model API Key"
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#aaa' }}>
-                    모델명
-                  </label>
-                  <input 
-                    type="text" 
-                    value={tempMusesparkModel} 
-                    onChange={(e) => setTempMusesparkModel(e.target.value)}
-                    className="modal-input"
-                    placeholder="muse-spark-1.3-contributor"
-                  />
-                </div>
-                <div style={{ fontSize: '11px', color: '#aaa', lineHeight: '1.4' }}>
-                  * Meta Superintelligence Labs(MSL)의 Muse Spark 1.3 Contributor 추론 API(<code>https://api.meta.ai/v1/chat/completions</code>)를 활용하여 정답표 대비 주관식/서술형 LaTeX 동치 판정 및 손글씨 비전 채점을 수행합니다.
-                </div>
-              </div>
-
-              <p style={{ fontSize: '12px', color: '#888', margin: 0, lineHeight: 1.4 }}>
-                * API 키는 브라우저 내부(LocalStorage)에만 안전하게 저장됩니다.
-              </p>
-            </div>
-            
-            <div className="modal-buttons" style={{ marginTop: '20px' }}>
-              <button className="modal-btn cancel" onClick={() => setIsSettingsModalOpen(false)}>취소</button>
-              <button className="modal-btn confirm" onClick={() => {
-                const cleanedDeepseekModel = tempDeepseekModel.trim() || 'deepseek-v4-flash-vision-exp';
-                const cleanedMusesparkModel = tempMusesparkModel.trim() || 'muse-spark-1.3-contributor';
-                saveAiSettings({
-                  provider: tempProvider,
-                  geminiKey: tempGeminiKey.trim(),
-                  deepseekKey: tempDeepseekKey.trim(),
-                  model: cleanedDeepseekModel,
-                  musesparkKey: tempMusesparkKey.trim(),
-                  musesparkModel: cleanedMusesparkModel
-                });
-                setIsSettingsModalOpen(false);
-                const providerName = tempProvider === 'musespark' 
-                  ? 'Meta Muse Spark 1.3 (Contributor)' 
-                  : (tempProvider === 'deepseek' ? 'DeepSeek Vision' : 'Google Gemini');
-                alert(`AI 설정이 저장되었습니다. (활성 엔진: ${providerName})`);
-              }}>저장</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SettingsModal 
+        isOpen={isSettingsModalOpen} 
+        onClose={() => setIsSettingsModalOpen(false)} 
+      />
 
       {/* Promo Banner Management Modal */}
       {isBannerModalOpen && (

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import { analyzeStudentProgress } from '../utils/gemini';
+import SettingsModal from '../components/SettingsModal';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -114,6 +115,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState('homework'); // 'homework' | 'incorrect' | 'test' | 'schedule' | 'statistics'
   const [incorrectViewMode, setIncorrectViewMode] = useState('history'); // 'history' | 'current' | 'bookmark' | 'selfStudy'
   const [zoomPromoImage, setZoomPromoImage] = useState(null);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // Self-Study Problem State & Modals (숙제 외 문제 보관함)
   const [isSelfStudyModalOpen, setIsSelfStudyModalOpen] = useState(false);
@@ -698,8 +700,8 @@ export default function HomePage() {
           })}
         </div>
 
-        {isAdmin && (
-          <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {isAdmin && (
             <button 
               className="new-hw-btn" 
               style={{ 
@@ -715,8 +717,29 @@ export default function HomePage() {
             >
               👑 관리자
             </button>
-          </div>
-        )}
+          )}
+          <button 
+            type="button"
+            style={{ 
+              backgroundColor: '#2A2B36', 
+              color: '#FFD700', 
+              border: '1px solid #FFD700',
+              fontWeight: 'bold',
+              padding: '6px 10px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              whiteSpace: 'nowrap',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }} 
+            onClick={() => setIsSettingsModalOpen(true)}
+            title="AI 엔진 및 API 키 설정"
+          >
+            ⚙️ AI 설정
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
@@ -2406,6 +2429,12 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* AI Settings Modal */}
+      <SettingsModal 
+        isOpen={isSettingsModalOpen} 
+        onClose={() => setIsSettingsModalOpen(false)} 
+      />
 
     </div>
   );
