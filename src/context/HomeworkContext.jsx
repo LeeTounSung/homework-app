@@ -427,7 +427,7 @@ export const HomeworkProvider = ({ children }) => {
     }
   };
 
-  const submitHomeworkProblem = async (id, groupId, problemNumber, imageBase64, aiFeedback = null, aiGrade = null) => {
+  const submitHomeworkProblem = async (id, groupId, problemNumber, imageBase64, aiFeedback = null, aiGrade = null, studentAnswer = null) => {
     setIsSaving(true);
     try {
       let shouldUploadToDrive = true;
@@ -522,6 +522,7 @@ export const HomeworkProvider = ({ children }) => {
                 ...newSubmitted[existingIndex], 
                 imageUrl: finalImageUrl, 
                 status: statusToSet,
+                studentAnswer: studentAnswer !== null ? studentAnswer : (newSubmitted[existingIndex].studentAnswer || null),
                 aiFeedback: aiFeedback || newSubmitted[existingIndex].aiFeedback || null,
                 aiGrade: aiGrade || newSubmitted[existingIndex].aiGrade || null
               };
@@ -531,6 +532,7 @@ export const HomeworkProvider = ({ children }) => {
                 problemNumber: parseInt(problemNumber), 
                 imageUrl: finalImageUrl, 
                 status: statusToSet,
+                studentAnswer: studentAnswer || null,
                 aiFeedback: aiFeedback || null,
                 aiGrade: aiGrade || null
               });
@@ -743,6 +745,21 @@ export const HomeworkProvider = ({ children }) => {
     })));
   };
 
+  const updateHomeworkAnswers = (id, answers) => {
+    updateStateAndSave(prevData => prevData.map(section => ({
+      ...section,
+      homeworks: section.homeworks.map(hw => {
+        if (hw.id === parseInt(id)) {
+          return {
+            ...hw,
+            answers: { ...(hw.answers || {}), ...answers }
+          };
+        }
+        return hw;
+      })
+    })));
+  };
+
   const updateTestInfo = (id, title, studentName, score, comment) => {
     updateStateAndSave(prevData => prevData.map(section => ({
       ...section,
@@ -875,6 +892,7 @@ export const HomeworkProvider = ({ children }) => {
       addProblemRange,
       removeProblemGroup,
       updateHomeworkInfo,
+      updateHomeworkAnswers,
       updateTestInfo,
       deleteHomework,
       evaluateHomework,

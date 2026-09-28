@@ -17,6 +17,7 @@ export default function HomeworkDetailPage() {
     addProblemRange, 
     removeProblemGroup, 
     updateHomeworkInfo, 
+    updateHomeworkAnswers,
     isAdmin, 
     deleteHomework,
     evaluateSingleProblem,
@@ -32,6 +33,10 @@ export default function HomeworkDetailPage() {
   const [endNum, setEndNum] = useState('');
   
   const [deleteTarget, setDeleteTarget] = useState(null); // { groupId, label }
+
+  // Answer Key Modal State
+  const [isAnswerKeyModalOpen, setIsAnswerKeyModalOpen] = useState(false);
+  const [editedAnswers, setEditedAnswers] = useState({});
 
   // Edit Info Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -150,19 +155,40 @@ export default function HomeworkDetailPage() {
   
   const progressPercent = totalQuestions > 0 ? (actualSubmittedCount / totalQuestions) * 100 : 0;
 
+  const normalizeAnswer = (str) => {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .trim()
+      .replace(/[①⑴(1)]/g, '1')
+      .replace(/[②⑵(2)]/g, '2')
+      .replace(/[③⑶(3)]/g, '3')
+      .replace(/[④⑷(4)]/g, '4')
+      .replace(/[⑤⑸(5)]/g, '5')
+      .replace(/\s+/g, '')
+      .toLowerCase();
+  };
+
+  const handleOpenAnswerKeyModal = () => {
+    setEditedAnswers({ ...(hw.answers || {}) });
+    setIsAnswerKeyModalOpen(true);
+  };
+
+  const handleSaveAnswerKey = () => {
+    updateHomeworkAnswers(hw.id, editedAnswers);
+    setIsAnswerKeyModalOpen(false);
+    alert('정답표가 성공적으로 저장되었습니다.');
+  };
+
   const handleBulkAiGrade = async () => {
-    const toGrade = (hw.submittedProblems || []).filter(p => p.imageUrl && p.status !== 'exempt');
+    const toGrade = (hw.submittedProblems || []).filter(p => p.status !== 'exempt' && (p.imageUrl || p.studentAnswer));
     if (toGrade.length === 0) {
       alert("채점할 제출물이 없습니다. 먼저 문제를 제출해주세요.");
       return;
     }
 
-    if (!isAiConfigured && !geminiApiKey) {
-      alert("AI API 키가 설정되지 않았습니다.\n\n👑 관리자 페이지 -> [⚙️ 환경 설정]에서 Google Gemini 또는 DeepSeek API 키를 먼저 입력해주세요.");
-      return;
-    }
+    const registeredAnswers = hw.answers || hw.answerKey || {};
 
-    if (!window.confirm(`총 ${toGrade.length}개의 제출된 문제를 AI 비전으로 일괄 자동 채점하시겠습니까?`)) {
+    if (!window.confirm(`총 ${toGrade.length}개의 제출된 문제를 채점하시겠습니까?`)) {
       return;
     }
 
@@ -172,6 +198,7 @@ export default function HomeworkDetailPage() {
     let correctCount = 0;
     let incorrectCount = 0;
     let indeterminateCount = 0;
+    let autoMatchedCount = 0;
     let errors = [];
 
     try {
@@ -185,8 +212,34 @@ export default function HomeworkDetailPage() {
           if (g) label = g.label;
         }
 
-        const desc = `${hw.studentName} 학생의 ${hw.title} ${label ? `[${label}] ` : ''}${p.problemNumber}번 문제 풀이입니다.`;
-        
+        const correctAns = registeredAnswers[p.problemNumber] || registeredAnswers[String(p.problemNumber)];
+
+        // FAST-PATH 1: Student typed answer & answer key exists -> Instant 0-token grading!
+        if (correctAns && p.studentAnswer && p.studentAnswer.trim()) {
+          const isMatch = normalizeAnswer(p.studentAnswer) === normalizeAnswer(correctAns);
+          const gradeStatus = isMatch ? 'correct' : 'incorrect';
+          const feedback = isMatch
+            ? `⭕ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 정답입니다!`
+            : `❌ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 오답입니다.`;
+
+          evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, gradeStatus, feedback);
+          if (isMatch) correctCount++;
+          else incorrectCount++;
+          autoMatchedCount++;
+          continue;
+        }
+
+        // SLOW-PATH 2: Needs AI Vision
+        if (!isAiConfigured && !geminiApiKey) {
+          errors.push(`${p.problemNumber}번: AI API 키 미설정 (정답표에 정답을 등록하고 단답형으로 제출하면 AI 키 없이 즉시 채점됩니다)`);
+          continue;
+        }
+
+        let desc = `${hw.studentName} 학생의 ${hw.title} ${label ? `[${label}] ` : ''}${p.problemNumber}번 문제 풀이입니다.`;
+        if (correctAns) {
+          desc += `\n[참고] 이 문제의 실제 정답은 [${correctAns}]입니다. 학생의 손글씨 풀이 결과가 이와 일치하는지 신속히 판정해주세요.`;
+        }
+
         try {
           const feedback = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, p.imageUrl);
           
@@ -209,11 +262,14 @@ export default function HomeworkDetailPage() {
       }
 
       if (errors.length > 0 && correctCount === 0 && incorrectCount === 0 && indeterminateCount === 0) {
-        alert(`❌ AI 채점 중 오류가 발생했습니다:\n\n${errors.slice(0, 3).join('\n')}\n\n관리자 설정에서 AI API 키 및 인터넷 연결을 확인해주세요.`);
+        alert(`❌ 채점 중 오류가 발생했습니다:\n\n${errors.slice(0, 3).join('\n')}\n\n관리자 설정에서 AI API 키 및 인터넷 연결을 확인해주세요.`);
       } else {
-        let msg = `🎉 AI 자동 채점이 완료되었습니다!\n\n⭕ 맞음(연파랑): ${correctCount}개\n❌ 틀림(연빨강): ${incorrectCount}개`;
+        let msg = `🎉 채점이 완료되었습니다!\n\n⭕ 맞음(연파랑): ${correctCount}개\n❌ 틀림(연빨강): ${incorrectCount}개`;
         if (indeterminateCount > 0) {
           msg += `\n🔺 확인필요/채점불가(연녹색): ${indeterminateCount}개`;
+        }
+        if (autoMatchedCount > 0) {
+          msg += `\n⚡ (정답표 초고속 자동채점: ${autoMatchedCount}문항, 토큰 0개 소모)`;
         }
         if (errors.length > 0) {
           msg += `\n(참고: ${errors.length}건 오류)`;
@@ -221,7 +277,7 @@ export default function HomeworkDetailPage() {
         alert(msg);
       }
     } catch (err) {
-      console.error("Bulk AI grading error:", err);
+      console.error("Bulk grading error:", err);
       alert(`채점 중 오류가 발생했습니다: ${err.message}`);
     } finally {
       setIsBulkAiGrading(false);
@@ -464,41 +520,65 @@ export default function HomeworkDetailPage() {
                       )}
                     </div>
                   ) : (
-                    <span>💡 숙제를 제출한 후 [AI 전체 채점하기]를 누르면 일괄 채점됩니다.</span>
+                    <span>💡 숙제를 제출한 후 [채점하기]를 누르면 채점됩니다.</span>
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleBulkAiGrade}
-                  disabled={isBulkAiGrading || actualSubmittedCount === 0}
-                  style={{
-                    padding: '9px 16px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    backgroundColor: actualSubmittedCount > 0 ? '#673AB7' : '#333',
-                    color: '#ffffff',
-                    fontWeight: 'bold',
-                    fontSize: '13px',
-                    cursor: actualSubmittedCount > 0 && !isBulkAiGrading ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: actualSubmittedCount > 0 ? '0 3px 8px rgba(103, 58, 183, 0.4)' : 'none',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {isBulkAiGrading ? (
-                    <>
-                      <div className="spinner" style={{ width: '14px', height: '14px', border: '2px solid #fff', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                      <span>AI 채점 중 ({bulkGradingProgress.current}/{bulkGradingProgress.total})...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>🤖 AI 전체 채점하기</span>
-                    </>
-                  )}
-                </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={handleOpenAnswerKeyModal}
+                    style={{
+                      padding: '9px 14px',
+                      borderRadius: '8px',
+                      border: '1px solid #735914',
+                      backgroundColor: '#262215',
+                      color: '#FFD700',
+                      fontWeight: 'bold',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      transition: 'all 0.2s'
+                    }}
+                    title="단답형/객관식 정답을 등록해두면 AI 토큰 없이 즉시 채점됩니다"
+                  >
+                    <span>📝 정답표</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleBulkAiGrade}
+                    disabled={isBulkAiGrading || actualSubmittedCount === 0}
+                    style={{
+                      padding: '9px 16px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: actualSubmittedCount > 0 ? '#673AB7' : '#333',
+                      color: '#ffffff',
+                      fontWeight: 'bold',
+                      fontSize: '13px',
+                      cursor: actualSubmittedCount > 0 && !isBulkAiGrading ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: actualSubmittedCount > 0 ? '0 3px 8px rgba(103, 58, 183, 0.4)' : 'none',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {isBulkAiGrading ? (
+                      <>
+                        <div className="spinner" style={{ width: '14px', height: '14px', border: '2px solid #fff', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                        <span>채점 중 ({bulkGradingProgress.current}/{bulkGradingProgress.total})...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>✍️ 채점하기</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -764,6 +844,87 @@ export default function HomeworkDetailPage() {
             <div className="modal-buttons" style={{ marginTop: '20px' }}>
               <button className="modal-btn cancel" onClick={() => setIsEditModalOpen(false)}>취소</button>
               <button className="modal-btn confirm" onClick={handleEditSubmit}>저장하기</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Answer Key Modal */}
+      {isAnswerKeyModalOpen && (
+        <div className="modal-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1000,
+          display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px'
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: '#1E1E24', borderRadius: '14px', padding: '24px',
+            maxWidth: '480px', width: '100%', maxHeight: '80vh', overflowY: 'auto',
+            border: '1px solid #444', color: '#fff'
+          }}>
+            <h3 style={{ margin: '0 0 8px 0', color: '#FFD700', fontSize: '17px' }}>
+              📝 과제 정답표 등록 / 수정
+            </h3>
+            <p style={{ fontSize: '12px', color: '#aaa', margin: '0 0 16px 0', lineHeight: '1.4' }}>
+              각 문항의 정답을 미리 등록해두면, 학생이 제출 시 <b>AI 토큰 소모 없이 즉시 0초 만에 자동 채점</b>됩니다.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+              {problemGroups.map(grp => (
+                <div key={grp.groupId}>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#90CAF9', marginBottom: '8px' }}>
+                    {formatGroupLabel(grp.label)}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                    {grp.problems.map(num => (
+                      <div key={num} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#2A2A32', padding: '6px 10px', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 'bold', width: '38px', color: '#FFD700' }}>
+                          {num}번:
+                        </span>
+                        <input
+                          type="text"
+                          placeholder="정답 (예: 3, 11)"
+                          value={editedAnswers[num] || ''}
+                          onChange={(e) => setEditedAnswers({ ...editedAnswers, [num]: e.target.value })}
+                          style={{
+                            flex: 1,
+                            padding: '6px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #555',
+                            backgroundColor: '#16161A',
+                            color: '#fff',
+                            fontSize: '13px',
+                            textAlign: 'center'
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setIsAnswerKeyModalOpen(false)}
+                style={{
+                  padding: '8px 16px', borderRadius: '8px', border: '1px solid #555',
+                  backgroundColor: '#333', color: '#ccc', cursor: 'pointer', fontSize: '13px'
+                }}
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAnswerKey}
+                style={{
+                  padding: '8px 18px', borderRadius: '8px', border: 'none',
+                  backgroundColor: '#FFD700', color: '#000', fontWeight: 'bold',
+                  cursor: 'pointer', fontSize: '13px'
+                }}
+              >
+                💾 정답 저장
+              </button>
             </div>
           </div>
         </div>

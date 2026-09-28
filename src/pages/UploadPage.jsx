@@ -44,6 +44,7 @@ export default function UploadPage() {
   const { id, groupId, problemId } = useParams();
   const { getHomeworkById, submitHomeworkProblem, exemptProblem, toggleBookmarkProblem, isSaving, getProblemImageFromDrive, geminiApiKey, aiConfig, isAiConfigured } = useHomework();
   const [imagePreview, setImagePreview] = useState(null);
+  const [studentAnswer, setStudentAnswer] = useState('');
   const [aiFeedback, setAiFeedback] = useState('');
   const [aiGrade, setAiGrade] = useState('');
   const [isAiGrading, setIsAiGrading] = useState(false);
@@ -88,6 +89,9 @@ export default function UploadPage() {
       if (existingProblem) {
         if (existingProblem.imageUrl && existingProblem.status !== 'exempt') {
           setImagePreview(existingProblem.imageUrl);
+        }
+        if (existingProblem.studentAnswer) {
+          setStudentAnswer(existingProblem.studentAnswer);
         }
         if (existingProblem.aiFeedback) {
           setAiFeedback(existingProblem.aiFeedback);
@@ -212,13 +216,31 @@ export default function UploadPage() {
   const handleSubmit = async () => {
     let finalData = imagePreview;
     
-    // If no finalData, block submit
-    if (!finalData) {
-      alert("데이터가 없습니다. 사진을 첨부하거나 수식을 그려주세요.");
+    // If no finalData and no studentAnswer, block submit
+    if (!finalData && (!studentAnswer || !studentAnswer.trim())) {
+      alert("데이터가 없습니다. 단답형 정답을 입력하거나 풀이 사진을 첨부해주세요.");
       return;
     }
 
-    await submitHomeworkProblem(id, groupId, problemId, finalData, aiFeedback, aiGrade);
+    // If no photo/drawing but student entered an answer, create a lightweight canvas placeholder
+    if (!finalData && studentAnswer && studentAnswer.trim()) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 180;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#1c1c24';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#FFD700';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`[문제 ${problemId}번] 학생 입력 답안`, 200, 50);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText(studentAnswer.trim(), 200, 115);
+      finalData = canvas.toDataURL('image/jpeg', 0.9);
+    }
+
+    await submitHomeworkProblem(id, groupId, problemId, finalData, aiFeedback, aiGrade, studentAnswer ? studentAnswer.trim() : null);
     navigate(-1);
   };
 
@@ -264,30 +286,60 @@ export default function UploadPage() {
             <p style={{ margin: '4px 0 0 0' }}>{hw.title} · {hw.studentName}</p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              toggleBookmarkProblem(id, groupId, problemId);
-              setIsBookmarked(!isBookmarked);
-            }}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '20px',
-              border: isBookmarked ? '1px solid #FFD700' : '1px solid #555',
-              backgroundColor: isBookmarked ? '#3A3215' : '#222',
-              color: isBookmarked ? '#FFD700' : '#aaa',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              whiteSpace: 'nowrap',
-              transition: 'all 0.2s'
-            }}
-          >
-            <span>{isBookmarked ? '⭐️ 어려움 (보관함에 저장됨)' : '☆ 어려웠던 문제 보관'}</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                toggleBookmarkProblem(id, groupId, problemId);
+                setIsBookmarked(!isBookmarked);
+              }}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                border: isBookmarked ? '1px solid #FFD700' : '1px solid #555',
+                backgroundColor: isBookmarked ? '#3A3215' : '#222',
+                color: isBookmarked ? '#FFD700' : '#aaa',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s'
+              }}
+            >
+              <span>{isBookmarked ? '⭐️ 어려움 (보관함에 저장됨)' : '☆ 어려웠던 문제 보관'}</span>
+            </button>
+
+            {/* Red box location: Touch to zoom hint */}
+            {driveImageUrl && !imageError && (
+              <div 
+                onClick={() => {
+                  setZoomModalImage(formatDriveImageUrl(driveImageUrl));
+                  setZoomScale(1);
+                }}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: '1px solid #735914',
+                  backgroundColor: '#262215',
+                  color: '#FFD700',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s'
+                }}
+                title="클릭하여 고화질 확대"
+              >
+                <span>🔍 터치하면 고화질 확대</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {imageError && errorMessage && (
@@ -301,30 +353,8 @@ export default function UploadPage() {
           {/* Problem Image Card */}
           {driveImageUrl && !imageError && (
             <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '16px', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-              <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#333', marginBottom: '10px', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1565C0', marginBottom: '10px', textAlign: 'left' }}>
                 <span>📌 [문제] {cleanLabel}{problemId}번</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setZoomModalImage(formatDriveImageUrl(driveImageUrl));
-                    setZoomScale(1);
-                  }}
-                  style={{
-                    background: '#222',
-                    color: '#FFD700',
-                    border: '1px solid #FFD700',
-                    borderRadius: '16px',
-                    padding: '4px 10px',
-                    fontSize: '11px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  🔍 크게 보기 (확대)
-                </button>
               </div>
               
               <div 
@@ -367,7 +397,6 @@ export default function UploadPage() {
                   }}
                 />
               </div>
-              <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: '#888', textAlign: 'right' }}>💡 터치/클릭하면 고화질로 확대됩니다.</p>
             </div>
           )}
 
@@ -521,6 +550,83 @@ export default function UploadPage() {
             </div>
           </div>
         )}
+
+        {/* Short Answer Input Section */}
+        <div style={{ 
+          backgroundColor: '#1E1E24', 
+          borderRadius: '12px', 
+          padding: '16px', 
+          border: '1px solid #3A3215', 
+          marginBottom: '16px' 
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#FFD700' }}>
+              ✏️ 정답 입력 (단답형 / 번호)
+            </span>
+            <span style={{ fontSize: '11px', color: '#888' }}>
+              * 정답만 입력해도 채점 가능 (토큰 절약)
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
+            {[1, 2, 3, 4, 5].map(num => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => setStudentAnswer(String(num))}
+                style={{
+                  flex: 1,
+                  padding: '9px 0',
+                  borderRadius: '8px',
+                  border: studentAnswer === String(num) ? '2px solid #FFD700' : '1px solid #444',
+                  backgroundColor: studentAnswer === String(num) ? '#FFD700' : '#2A2A2A',
+                  color: studentAnswer === String(num) ? '#000' : '#fff',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                  transition: 'all 0.15s'
+                }}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input 
+              type="text" 
+              placeholder="단답형 정답 직접 입력 (예: 12, 9/4 등)"
+              value={studentAnswer}
+              onChange={(e) => setStudentAnswer(e.target.value)}
+              style={{
+                flex: 1,
+                padding: '10px 14px',
+                borderRadius: '8px',
+                border: '1px solid #555',
+                backgroundColor: '#111',
+                color: '#fff',
+                fontSize: '14px'
+              }}
+            />
+            {studentAnswer && (
+              <button
+                type="button"
+                onClick={() => setStudentAnswer('')}
+                style={{
+                  padding: '0 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #444',
+                  backgroundColor: '#333',
+                  color: '#aaa',
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                지우기
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Toggle MathType / Image Upload */}
         <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>

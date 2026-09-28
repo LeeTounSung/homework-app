@@ -20,6 +20,52 @@ const formatDriveImageUrl = (url) => {
   return url;
 };
 
+const formatHomeworkBreadcrumb = (hw) => {
+  if (!hw) return '';
+  const desc = hw.description || '';
+  
+  // 1. Try extracting structured parts from description
+  // e.g. "📖 진도 단원: 공통수학1 > 다항식"
+  // "📚 교재: 블랙라벨 (p.12) 1~4"
+  const subjectMatch = desc.match(/진도 단원:\s*([^>\n\r]+)\s*>\s*([^\n\r]+)/);
+  const textbookMatch = desc.match(/교재:\s*([^\(\n\r]+)\s*(?:\(([^)]+)\))?\s*([0-9~]+)?/);
+  
+  if (subjectMatch && textbookMatch) {
+    const subject = subjectMatch[1].trim();
+    const chapter = subjectMatch[2].trim();
+    const textbook = textbookMatch[1].trim();
+    const page = textbookMatch[2] ? (textbookMatch[2].startsWith('p') ? textbookMatch[2].trim() : `p.${textbookMatch[2].trim()}`) : '';
+    const numRange = textbookMatch[3] ? `${textbookMatch[3].trim()}번` : '';
+    
+    return [subject, textbook, chapter, page, numRange].filter(Boolean).join(' > ');
+  }
+
+  // 2. Try extracting from problemGroups label
+  // e.g. "[블랙라벨]-[다항식]-[p.12]-[번호:1~4]"
+  if (hw.problemGroups && hw.problemGroups.length > 0) {
+    const firstGroup = hw.problemGroups[0];
+    const label = firstGroup.label || '';
+    const parts = label.match(/\[([^\]]+)\]/g);
+    if (parts && parts.length >= 2) {
+      const cleanParts = parts.map(p => p.replace(/[\[\]]/g, ''));
+      let subject = '공통수학1';
+      if (desc.includes('공통수학1') || (hw.title && hw.title.includes('공통수학1'))) subject = '공통수학1';
+      else if (desc.includes('수학(상)')) subject = '수학(상)';
+      else if (desc.includes('수학(하)')) subject = '수학(하)';
+      else if (desc.includes('수학1')) subject = '수학1';
+      else if (desc.includes('수학2')) subject = '수학2';
+      else if (desc.includes('미적분')) subject = '미적분';
+      else if (desc.includes('기하')) subject = '기하';
+      else if (desc.includes('확률과통계')) subject = '확률과통계';
+
+      return [subject, ...cleanParts].join(' > ');
+    }
+  }
+
+  // 3. Fallback: single clean line
+  return desc.split('\n')[0].replace(/^[📖📚🎯\s]+/, '');
+};
+
 const StatusIndicator = ({ hw }) => {
   if (hw.evaluation && hw.evaluation.type === 'check') {
     return (
@@ -1436,8 +1482,23 @@ export default function HomePage() {
                       <StatusIndicator hw={hw} />
                     </div>
                     
-                    <div className="card-content">
-                      <p className="hw-desc">{hw.description}</p>
+                    <div className="card-content" style={{ marginTop: '8px' }}>
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        backgroundColor: '#1E1E24',
+                        border: '1px solid #3A3215',
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        color: '#FFD700',
+                        letterSpacing: '0.2px'
+                      }}>
+                        <span>📌</span>
+                        <span>{formatHomeworkBreadcrumb(hw)}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
