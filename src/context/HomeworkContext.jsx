@@ -98,6 +98,10 @@ export const HomeworkProvider = ({ children }) => {
     return saved;
   });
 
+  const [agentApiUrl, setAgentApiUrl] = useState(() => {
+    return localStorage.getItem('agentApiUrl') || 'http://127.0.0.1:8000';
+  });
+
   // Student-specific Progress Plan by Subject (과목별 주차별 예상 진도 단원)
   const initialSchedules = [
     {
@@ -265,7 +269,7 @@ export const HomeworkProvider = ({ children }) => {
     localStorage.setItem('homework_app_main_banner_v1', url);
   };
 
-  const saveAiSettings = ({ provider, geminiKey, deepseekKey, model }) => {
+  const saveAiSettings = ({ provider, geminiKey, deepseekKey, model, agentUrl }) => {
     if (provider !== undefined) {
       setAiProvider(provider);
       localStorage.setItem('aiProvider', provider);
@@ -281,6 +285,10 @@ export const HomeworkProvider = ({ children }) => {
     if (model !== undefined) {
       setDeepseekModel(model);
       localStorage.setItem('deepseekModel', model);
+    }
+    if (agentUrl !== undefined) {
+      setAgentApiUrl(agentUrl);
+      localStorage.setItem('agentApiUrl', agentUrl);
     }
   };
 
@@ -298,10 +306,13 @@ export const HomeworkProvider = ({ children }) => {
     provider: aiProvider || 'deepseek',
     geminiApiKey,
     deepseekApiKey: deepseekApiKey || DEFAULT_DEEPSEEK_KEY,
-    deepseekModel: (deepseekModel && deepseekModel !== 'deepseek-chat') ? deepseekModel : 'deepseek-v4-flash-vision-exp'
+    deepseekModel: (deepseekModel && deepseekModel !== 'deepseek-chat') ? deepseekModel : 'deepseek-v4-flash-vision-exp',
+    agentApiUrl: agentApiUrl || 'http://127.0.0.1:8000'
   };
 
-  const isAiConfigured = (aiProvider === 'deepseek' && !!deepseekApiKey) || (aiProvider === 'gemini' && !!geminiApiKey);
+  const isAiConfigured = (aiProvider === 'deepseek' && !!deepseekApiKey) ||
+                         (aiProvider === 'gemini' && !!geminiApiKey) ||
+                         (aiProvider === 'musespark');
 
   // Fetch data on mount
   useEffect(() => {
@@ -1045,6 +1056,8 @@ export const HomeworkProvider = ({ children }) => {
       saveAiSettings,
       aiConfig,
       isAiConfigured,
+      agentApiUrl,
+      setAgentApiUrl,
       createHomework,
       createTest,
       getProblemImageFromDrive,

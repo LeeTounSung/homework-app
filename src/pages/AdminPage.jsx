@@ -12,6 +12,7 @@ export default function AdminPage() {
     deepseekApiKey, 
     aiProvider, 
     deepseekModel, 
+    agentApiUrl,
     saveAiSettings, 
     isAdmin,
     scanDriveFolderProblems,
@@ -78,6 +79,31 @@ export default function AdminPage() {
   const [tempGeminiKey, setTempGeminiKey] = useState(geminiApiKey || '');
   const [tempDeepseekKey, setTempDeepseekKey] = useState(deepseekApiKey || '');
   const [tempDeepseekModel, setTempDeepseekModel] = useState(deepseekModel || 'deepseek-v4-flash-vision-exp');
+  const [tempAgentUrl, setTempAgentUrl] = useState(agentApiUrl || 'http://127.0.0.1:8000');
+  const [agentTestResult, setAgentTestResult] = useState(null);
+  const [isTestingAgent, setIsTestingAgent] = useState(false);
+
+  const handleTestAgent = async () => {
+    setIsTestingAgent(true);
+    setAgentTestResult(null);
+    try {
+      const targetUrl = (tempAgentUrl || 'http://127.0.0.1:8000').replace(/\/$/, '');
+      const res = await fetch(`${targetUrl}/api/version`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const info = await res.json();
+      setAgentTestResult({
+        success: true,
+        message: `✅ 연결 성공: ${info.target || 'musespark1.3 contributor'} (${info.version || 'v1.3.0'}) 정상 가동 중`
+      });
+    } catch (err) {
+      setAgentTestResult({
+        success: false,
+        message: `⚠️ 연결 실패: 로컬 에이전트 서버(py -m homework_agent.cli serve)가 켜져 있는지 확인해주세요.`
+      });
+    } finally {
+      setIsTestingAgent(false);
+    }
+  };
 
   const handleScanFolder = async () => {
     if (!newProblemImagesBaseUrl) {
@@ -332,6 +358,8 @@ export default function AdminPage() {
               setTempGeminiKey(geminiApiKey || '');
               setTempDeepseekKey(deepseekApiKey || '');
               setTempDeepseekModel(deepseekModel || 'deepseek-v4-flash-vision-exp');
+              setTempAgentUrl(agentApiUrl || 'http://127.0.0.1:8000');
+              setAgentTestResult(null);
               setIsSettingsModalOpen(true);
             }}
             style={{ 
@@ -343,7 +371,7 @@ export default function AdminPage() {
           >
             <div style={{ fontSize: '40px', marginBottom: '10px' }}>⚙️</div>
             <h3 style={{ color: 'white', margin: 0, fontSize: '18px' }}>환경 설정 (AI 엔진)</h3>
-            <p style={{ color: '#ECEFF1', fontSize: '12px', margin: '10px 0 0 0' }}>Gemini 및 DeepSeek API 키와 모델을 설정합니다.</p>
+            <p style={{ color: '#ECEFF1', fontSize: '12px', margin: '10px 0 0 0' }}>Gemini, DeepSeek 및 musespark1.3 로컬 에이전트 연동을 설정합니다.</p>
           </div>
 
           {/* Card 6: 메인 홍보 배너/포스터 관리 */}
@@ -643,20 +671,20 @@ export default function AdminPage() {
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#eee', fontWeight: 'bold' }}>
                   🤖 기본 사용할 AI 엔진 선택
                 </label>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <button 
                     type="button"
                     onClick={() => setTempProvider('gemini')}
                     style={{
-                      flex: 1,
-                      padding: '10px 14px',
+                      flex: '1 1 calc(33.3% - 6px)',
+                      padding: '10px 8px',
                       borderRadius: '8px',
                       border: tempProvider === 'gemini' ? '2px solid #2196F3' : '1px solid #555',
                       backgroundColor: tempProvider === 'gemini' ? 'rgba(33, 150, 243, 0.2)' : '#2A2B36',
                       color: tempProvider === 'gemini' ? '#64B5F6' : '#aaa',
                       fontWeight: tempProvider === 'gemini' ? 'bold' : 'normal',
                       cursor: 'pointer',
-                      fontSize: '13px'
+                      fontSize: '12px'
                     }}
                   >
                     Google Gemini
@@ -665,18 +693,35 @@ export default function AdminPage() {
                     type="button"
                     onClick={() => setTempProvider('deepseek')}
                     style={{
-                      flex: 1,
-                      padding: '10px 14px',
+                      flex: '1 1 calc(33.3% - 6px)',
+                      padding: '10px 8px',
                       borderRadius: '8px',
                       border: tempProvider === 'deepseek' ? '2px solid #4CAF50' : '1px solid #555',
                       backgroundColor: tempProvider === 'deepseek' ? 'rgba(76, 175, 80, 0.2)' : '#2A2B36',
                       color: tempProvider === 'deepseek' ? '#81C784' : '#aaa',
                       fontWeight: tempProvider === 'deepseek' ? 'bold' : 'normal',
                       cursor: 'pointer',
-                      fontSize: '13px'
+                      fontSize: '12px'
                     }}
                   >
-                    DeepSeek (deepseek-v4-flash-vision-exp)
+                    DeepSeek Vision
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setTempProvider('musespark')}
+                    style={{
+                      flex: '1 1 calc(33.3% - 6px)',
+                      padding: '10px 8px',
+                      borderRadius: '8px',
+                      border: tempProvider === 'musespark' ? '2px solid #FFD700' : '1px solid #555',
+                      backgroundColor: tempProvider === 'musespark' ? 'rgba(255, 215, 0, 0.2)' : '#2A2B36',
+                      color: tempProvider === 'musespark' ? '#FFD700' : '#aaa',
+                      fontWeight: tempProvider === 'musespark' ? 'bold' : 'normal',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    ⚡ musespark1.3
                   </button>
                 </div>
               </div>
@@ -686,7 +731,7 @@ export default function AdminPage() {
                 padding: '12px', 
                 borderRadius: '8px', 
                 backgroundColor: tempProvider === 'gemini' ? 'rgba(33, 150, 243, 0.08)' : '#252630',
-                border: '1px solid #444' 
+                border: tempProvider === 'gemini' ? '1px solid #2196F3' : '1px solid #444' 
               }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#64B5F6', fontWeight: 'bold' }}>
                   Google Gemini API Key (고정 모델: 2.5 Flash-Lite)
@@ -705,7 +750,7 @@ export default function AdminPage() {
                 padding: '12px', 
                 borderRadius: '8px', 
                 backgroundColor: tempProvider === 'deepseek' ? 'rgba(76, 175, 80, 0.08)' : '#252630',
-                border: '1px solid #444',
+                border: tempProvider === 'deepseek' ? '1px solid #4CAF50' : '1px solid #444',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '10px'
@@ -737,23 +782,78 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* musespark1.3 contributor API status */}
-              <div style={{ padding: '12px 14px', borderRadius: '10px', backgroundColor: '#1A1C24', border: '1px solid #333' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', color: '#FFD700', fontWeight: 'bold' }}>
-                    🌐 외부 에이전트 연동 API
-                  </span>
+              {/* musespark1.3 contributor Settings */}
+              <div style={{ 
+                padding: '12px', 
+                borderRadius: '8px', 
+                backgroundColor: tempProvider === 'musespark' ? 'rgba(255, 215, 0, 0.08)' : '#252630',
+                border: tempProvider === 'musespark' ? '1px solid #FFD700' : '1px solid #444',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ fontSize: '13px', color: '#FFD700', fontWeight: 'bold' }}>
+                    ⚡ musespark1.3 contributor 로컬 에이전트 연동
+                  </label>
                   <span style={{ fontSize: '11px', color: '#81C784', backgroundColor: '#1B3320', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold', border: '1px solid #4CAF50' }}>
-                    v1.3.0 (musespark1.3 contributor)
+                    v1.3.0 REST API
                   </span>
                 </div>
-                <div style={{ fontSize: '12px', color: '#aaa', lineHeight: '1.4' }}>
-                  로컬 REST 서버 (포트 8000)를 통해 musespark1.3 contributor 및 외부 AI 에이전트가 숙제 배분, Vision 자동 채점, 정답표 등록을 수행할 수 있습니다.
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#aaa' }}>
+                    에이전트 서버 주소 (REST API Endpoint)
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      type="text" 
+                      value={tempAgentUrl} 
+                      onChange={(e) => setTempAgentUrl(e.target.value)}
+                      className="modal-input"
+                      placeholder="http://127.0.0.1:8000"
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleTestAgent}
+                      disabled={isTestingAgent}
+                      style={{
+                        padding: '0 14px',
+                        borderRadius: '6px',
+                        backgroundColor: '#FF9800',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        border: 'none',
+                        cursor: isTestingAgent ? 'wait' : 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {isTestingAgent ? '확인 중...' : '🔍 연결 테스트'}
+                    </button>
+                  </div>
+                </div>
+
+                {agentTestResult && (
+                  <div style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    backgroundColor: agentTestResult.success ? 'rgba(76, 175, 80, 0.15)' : 'rgba(244, 67, 54, 0.15)',
+                    border: `1px solid ${agentTestResult.success ? '#4CAF50' : '#f44336'}`,
+                    color: agentTestResult.success ? '#A5D6A7' : '#EF9A9A'
+                  }}>
+                    {agentTestResult.message}
+                  </div>
+                )}
+
+                <div style={{ fontSize: '11px', color: '#888', lineHeight: '1.4' }}>
+                  * 로컬 터미널에서 <code>py -m homework_agent.cli serve</code> 명령어로 서버를 구동하면 musespark1.3 contributor 및 안티그래비티가 직접 숙제 배분, Vision 자동 채점, 정답표 등록을 수행할 수 있습니다.
                 </div>
               </div>
 
               <p style={{ fontSize: '12px', color: '#888', margin: 0, lineHeight: 1.4 }}>
-                * API 키는 브라우저 내부(LocalStorage)에만 안전하게 저장되며 외부 서버로 유출되지 않습니다.
+                * API 키 및 로컬 엔드포인트는 브라우저 내부(LocalStorage)에만 안전하게 저장됩니다.
               </p>
             </div>
             
@@ -765,10 +865,12 @@ export default function AdminPage() {
                   provider: tempProvider,
                   geminiKey: tempGeminiKey.trim(),
                   deepseekKey: tempDeepseekKey.trim(),
-                  model: cleanedModel
+                  model: cleanedModel,
+                  agentUrl: tempAgentUrl.trim()
                 });
                 setIsSettingsModalOpen(false);
-                alert(`AI 설정이 저장되었습니다. (활성 엔진: ${tempProvider === 'deepseek' ? 'DeepSeek' : 'Google Gemini'})`);
+                const providerName = tempProvider === 'musespark' ? 'musespark1.3 contributor' : (tempProvider === 'deepseek' ? 'DeepSeek Vision' : 'Google Gemini');
+                alert(`AI 설정이 저장되었습니다. (활성 엔진: ${providerName})`);
               }}>저장</button>
             </div>
           </div>
