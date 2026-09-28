@@ -737,6 +737,21 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* musespark1.3 contributor API status */}
+              <div style={{ padding: '12px 14px', borderRadius: '10px', backgroundColor: '#1A1C24', border: '1px solid #333' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '13px', color: '#FFD700', fontWeight: 'bold' }}>
+                    🌐 외부 에이전트 연동 API
+                  </span>
+                  <span style={{ fontSize: '11px', color: '#81C784', backgroundColor: '#1B3320', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold', border: '1px solid #4CAF50' }}>
+                    v1.3.0 (musespark1.3 contributor)
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#aaa', lineHeight: '1.4' }}>
+                  로컬 REST 서버 (포트 8000)를 통해 musespark1.3 contributor 및 외부 AI 에이전트가 숙제 배분, Vision 자동 채점, 정답표 등록을 수행할 수 있습니다.
+                </div>
+              </div>
+
               <p style={{ fontSize: '12px', color: '#888', margin: 0, lineHeight: 1.4 }}>
                 * API 키는 브라우저 내부(LocalStorage)에만 안전하게 저장되며 외부 서버로 유출되지 않습니다.
               </p>

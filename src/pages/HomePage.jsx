@@ -118,10 +118,8 @@ export default function HomePage() {
   // Self-Study Problem State & Modals (숙제 외 문제 보관함)
   const [isSelfStudyModalOpen, setIsSelfStudyModalOpen] = useState(false);
   const [selfStudyStudent, setSelfStudyStudent] = useState('');
-  const [selfStudyWorkbook, setSelfStudyWorkbook] = useState('쎈');
-  const [selfStudyCustomWorkbook, setSelfStudyCustomWorkbook] = useState('');
-  const [selfStudyChapter, setSelfStudyChapter] = useState('다항식의 연산');
-  const [selfStudyCustomChapter, setSelfStudyCustomChapter] = useState('');
+  const [selfStudyWorkbook, setSelfStudyWorkbook] = useState('');
+  const [selfStudyChapter, setSelfStudyChapter] = useState('');
   const [selfStudyProblemNumber, setSelfStudyProblemNumber] = useState('');
   const [selfStudyImage, setSelfStudyImage] = useState(null);
   const [selfStudyMemo, setSelfStudyMemo] = useState('');
@@ -179,8 +177,8 @@ export default function HomePage() {
 
   const handleSaveSelfStudyProblem = async () => {
     const targetStudent = selfStudyStudent || (currentUser && currentUser !== 'mathkorea' ? currentUser : '강백');
-    const finalWorkbook = selfStudyWorkbook === '직접 입력' ? selfStudyCustomWorkbook.trim() || '자율학습' : selfStudyWorkbook;
-    const finalChapter = selfStudyChapter === '직접 입력' ? selfStudyCustomChapter.trim() || '단원 미지정' : selfStudyChapter;
+    const finalWorkbook = selfStudyWorkbook.trim() || '자율학습';
+    const finalChapter = selfStudyChapter.trim() || '단원 미지정';
     const finalProbNum = selfStudyProblemNumber.trim() || '1';
 
     if (!selfStudyImage && !selfStudyMemo.trim()) {
@@ -200,6 +198,8 @@ export default function HomePage() {
       });
       alert('문제 보관함에 성공적으로 등록되었습니다!');
       setIsSelfStudyModalOpen(false);
+      setSelfStudyWorkbook('');
+      setSelfStudyChapter('');
       setSelfStudyImage(null);
       setSelfStudyMemo('');
       setSelfStudyProblemNumber('');
@@ -805,6 +805,8 @@ export default function HomePage() {
                 type="button"
                 onClick={() => {
                   setSelfStudyStudent(currentUser && currentUser !== 'mathkorea' ? currentUser : (allStudentNames[0] || '강백'));
+                  setSelfStudyWorkbook('');
+                  setSelfStudyChapter('');
                   setSelfStudyImage(null);
                   setSelfStudyMemo('');
                   setSelfStudyProblemNumber('');
@@ -2064,84 +2066,38 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Textbook selection */}
+              {/* Textbook input */}
               <div>
                 <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
                   교재 / 출처
                 </label>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                  {['쎈', '블랙라벨', '일품', '자이스토리', '모의고사', '교과서', '직접 입력'].map(wb => (
-                    <button
-                      key={wb}
-                      type="button"
-                      onClick={() => setSelfStudyWorkbook(wb)}
-                      style={{
-                        padding: '5px 11px',
-                        borderRadius: '14px',
-                        border: selfStudyWorkbook === wb ? '1.5px solid #FFD700' : '1px solid #444',
-                        backgroundColor: selfStudyWorkbook === wb ? '#3A3215' : '#2A2C38',
-                        color: selfStudyWorkbook === wb ? '#FFD700' : '#aaa',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {wb}
-                    </button>
-                  ))}
-                </div>
-                {selfStudyWorkbook === '직접 입력' && (
-                  <input
-                    type="text"
-                    placeholder="교재명 직접 입력 (예: RPM, 수학의 정석)"
-                    value={selfStudyCustomWorkbook}
-                    onChange={(e) => setSelfStudyCustomWorkbook(e.target.value)}
-                    style={{
-                      width: '100%', padding: '9px 12px', backgroundColor: '#14151B',
-                      border: '1px solid #444', borderRadius: '8px', color: '#fff', fontSize: '13px'
-                    }}
-                  />
-                )}
+                <input
+                  type="text"
+                  placeholder="교재명 또는 출처 입력 (예: 쎈, 블랙라벨, 모의고사, 프린트 등)"
+                  value={selfStudyWorkbook}
+                  onChange={(e) => setSelfStudyWorkbook(e.target.value)}
+                  style={{
+                    width: '100%', padding: '10px 12px', backgroundColor: '#14151B',
+                    border: '1px solid #444', borderRadius: '8px', color: '#fff', fontSize: '13px'
+                  }}
+                />
               </div>
 
-              {/* Chapter selection */}
+              {/* Chapter input */}
               <div>
                 <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
                   단원 / 영역
                 </label>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                  {['다항식의 연산', '나머지정리', '복소수', '이차방정식', '이차함수', '직접 입력'].map(ch => (
-                    <button
-                      key={ch}
-                      type="button"
-                      onClick={() => setSelfStudyChapter(ch)}
-                      style={{
-                        padding: '5px 11px',
-                        borderRadius: '14px',
-                        border: selfStudyChapter === ch ? '1.5px solid #FFD700' : '1px solid #444',
-                        backgroundColor: selfStudyChapter === ch ? '#3A3215' : '#2A2C38',
-                        color: selfStudyChapter === ch ? '#FFD700' : '#aaa',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {ch}
-                    </button>
-                  ))}
-                </div>
-                {selfStudyChapter === '직접 입력' && (
-                  <input
-                    type="text"
-                    placeholder="단원명 직접 입력 (예: 여러 가지 방정식, 평면좌표)"
-                    value={selfStudyCustomChapter}
-                    onChange={(e) => setSelfStudyCustomChapter(e.target.value)}
-                    style={{
-                      width: '100%', padding: '9px 12px', backgroundColor: '#14151B',
-                      border: '1px solid #444', borderRadius: '8px', color: '#fff', fontSize: '13px'
-                    }}
-                  />
-                )}
+                <input
+                  type="text"
+                  placeholder="단원 또는 영역 입력 (예: 다항식, 복소수, 이차방정식, 평면좌표 등)"
+                  value={selfStudyChapter}
+                  onChange={(e) => setSelfStudyChapter(e.target.value)}
+                  style={{
+                    width: '100%', padding: '10px 12px', backgroundColor: '#14151B',
+                    border: '1px solid #444', borderRadius: '8px', color: '#fff', fontSize: '13px'
+                  }}
+                />
               </div>
 
               {/* Problem number & page */}
