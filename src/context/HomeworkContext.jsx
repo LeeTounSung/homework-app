@@ -79,7 +79,7 @@ export const HomeworkProvider = ({ children }) => {
   const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
 
   const [aiProvider, setAiProvider] = useState(() => {
-    return localStorage.getItem('aiProvider') || 'deepseek';
+    return localStorage.getItem('aiProvider') || 'musespark';
   });
 
   const [geminiApiKey, setGeminiApiKey] = useState(() => {
@@ -303,7 +303,7 @@ export const HomeworkProvider = ({ children }) => {
   };
 
   const aiConfig = {
-    provider: aiProvider || 'deepseek',
+    provider: aiProvider || 'musespark',
     geminiApiKey,
     deepseekApiKey: deepseekApiKey || DEFAULT_DEEPSEEK_KEY,
     deepseekModel: (deepseekModel && deepseekModel !== 'deepseek-chat') ? deepseekModel : 'deepseek-v4-flash-vision-exp',

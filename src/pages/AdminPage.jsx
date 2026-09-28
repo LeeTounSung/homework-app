@@ -75,7 +75,7 @@ export default function AdminPage() {
 
   // Settings Modal State
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [tempProvider, setTempProvider] = useState(aiProvider || 'gemini');
+  const [tempProvider, setTempProvider] = useState(aiProvider || 'musespark');
   const [tempGeminiKey, setTempGeminiKey] = useState(geminiApiKey || '');
   const [tempDeepseekKey, setTempDeepseekKey] = useState(deepseekApiKey || '');
   const [tempDeepseekModel, setTempDeepseekModel] = useState(deepseekModel || 'deepseek-v4-flash-vision-exp');
@@ -354,7 +354,7 @@ export default function AdminPage() {
           {/* Card 5: 환경 설정 */}
           <div 
             onClick={() => {
-              setTempProvider(aiProvider || 'gemini');
+              setTempProvider(aiProvider || 'musespark');
               setTempGeminiKey(geminiApiKey || '');
               setTempDeepseekKey(deepseekApiKey || '');
               setTempDeepseekModel(deepseekModel || 'deepseek-v4-flash-vision-exp');
