@@ -225,38 +225,73 @@ export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType
   throw lastError || new Error('사용 가능한 Gemini 모델을 찾을 수 없습니다.');
 };
 
-export const callMusesparkAPI = async (agentApiUrl, prompt, base64Image = null, correctAns = null, studentAns = null) => {
-  const url = (agentApiUrl || 'http://127.0.0.1:8000').replace(/\/$/, '');
-  const response = await fetch(`${url}/api/evaluate`, {
+export const callMetaMuseSparkAPI = async (apiKey, prompt, base64Image = null, mimeType = 'image/jpeg', model = 'muse-spark-1.3-contributor') => {
+  if (!apiKey) {
+    throw new Error('Meta Muse Spark API 키가 설정되지 않았습니다. 관리자 환경 설정에서 API 키를 입력해주세요.');
+  }
+
+  const url = 'https://api.meta.ai/v1/chat/completions';
+  const selectedModel = model || 'muse-spark-1.3-contributor';
+
+  let messages = [];
+
+  if (base64Image) {
+    const fullDataUrl = await normalizeImageToBase64(base64Image, mimeType);
+    messages.push({
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: prompt
+        },
+        {
+          type: 'image_url',
+          image_url: {
+            url: fullDataUrl
+          }
+        }
+      ]
+    });
+  } else {
+    messages.push({
+      role: 'user',
+      content: prompt
+    });
+  }
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey.trim()}`
+    },
     body: JSON.stringify({
-      prompt,
-      base64_image: base64Image,
-      correct_answer: correctAns,
-      student_answer: studentAns
+      model: selectedModel,
+      messages: messages,
+      temperature: 0.1,
+      max_tokens: 1000
     })
   });
+
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`musespark1.3 contributor 서버 오류: HTTP ${response.status} (${errorText})`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Meta Muse Spark API 호출 실패 (HTTP ${response.status})`);
   }
+
   const data = await response.json();
-  return data.feedback || data.content || (data.is_correct ? '⭕ 정답' : '❌ 오답');
+  if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+    return data.choices[0].message.content;
+  }
+
+  return '응답을 생성하지 못했습니다.';
 };
 
 export const callAIAPI = async (aiConfig, prompt, base64Image = null, mimeType = 'image/jpeg', extraMeta = {}) => {
-  // If aiConfig is passed as an object: { provider, geminiApiKey, deepseekApiKey, deepseekModel, agentApiUrl }
+  // If aiConfig is passed as an object: { provider, geminiApiKey, deepseekApiKey, deepseekModel, musesparkApiKey, musesparkModel }
   if (typeof aiConfig === 'object' && aiConfig !== null) {
-    const { provider, geminiApiKey, deepseekApiKey, deepseekModel, agentApiUrl } = aiConfig;
-    if (provider === 'musespark') {
-      return await callMusesparkAPI(
-        agentApiUrl,
-        prompt,
-        base64Image,
-        extraMeta.correctAns || null,
-        extraMeta.studentAns || null
-      );
+    const { provider, geminiApiKey, deepseekApiKey, deepseekModel, musesparkApiKey, musesparkModel } = aiConfig;
+    if (provider === 'musespark' || provider === 'meta') {
+      return await callMetaMuseSparkAPI(musesparkApiKey, prompt, base64Image, mimeType, musesparkModel);
     } else if (provider === 'deepseek') {
       return await callDeepseekAPI(deepseekApiKey, prompt, base64Image, mimeType, deepseekModel);
     } else {

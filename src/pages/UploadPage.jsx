@@ -180,7 +180,7 @@ export default function UploadPage() {
     }
 
     if (!isAiConfigured && !geminiApiKey) {
-      alert("AI API 키가 설정되지 않았습니다. 관리자 페이지 환경 설정에서 DeepSeek 또는 Gemini API 키를 먼저 입력해주세요.");
+      alert("AI API 키가 설정되지 않았습니다. 관리자 페이지 환경 설정에서 AI(Meta Muse Spark, DeepSeek, Gemini) API 키를 먼저 입력해주세요.");
       return;
     }
 

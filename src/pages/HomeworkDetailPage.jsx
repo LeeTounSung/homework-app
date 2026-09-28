@@ -183,7 +183,7 @@ export default function HomeworkDetailPage() {
 
   const handleAutoSolveAnswers = async () => {
     if (!isAiConfigured && !geminiApiKey) {
-      alert("우측 상단 관리자 설정에서 Gemini 또는 DeepSeek API 키를 먼저 등록해주세요.");
+      alert("우측 상단 관리자 설정에서 AI(Meta Muse Spark, DeepSeek, Gemini) API 키를 먼저 등록해주세요.");
       return;
     }
 

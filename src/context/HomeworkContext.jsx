@@ -98,6 +98,14 @@ export const HomeworkProvider = ({ children }) => {
     return saved;
   });
 
+  const [musesparkApiKey, setMusesparkApiKey] = useState(() => {
+    return localStorage.getItem('musesparkApiKey') || '';
+  });
+
+  const [musesparkModel, setMusesparkModel] = useState(() => {
+    return localStorage.getItem('musesparkModel') || 'muse-spark-1.3-contributor';
+  });
+
   const [agentApiUrl, setAgentApiUrl] = useState(() => {
     return localStorage.getItem('agentApiUrl') || 'http://127.0.0.1:8000';
   });
@@ -269,7 +277,7 @@ export const HomeworkProvider = ({ children }) => {
     localStorage.setItem('homework_app_main_banner_v1', url);
   };
 
-  const saveAiSettings = ({ provider, geminiKey, deepseekKey, model, agentUrl }) => {
+  const saveAiSettings = ({ provider, geminiKey, deepseekKey, model, musesparkKey, musesparkModel: mModel, agentUrl }) => {
     if (provider !== undefined) {
       setAiProvider(provider);
       localStorage.setItem('aiProvider', provider);
@@ -285,6 +293,14 @@ export const HomeworkProvider = ({ children }) => {
     if (model !== undefined) {
       setDeepseekModel(model);
       localStorage.setItem('deepseekModel', model);
+    }
+    if (musesparkKey !== undefined) {
+      setMusesparkApiKey(musesparkKey);
+      localStorage.setItem('musesparkApiKey', musesparkKey);
+    }
+    if (mModel !== undefined) {
+      setMusesparkModel(mModel);
+      localStorage.setItem('musesparkModel', mModel);
     }
     if (agentUrl !== undefined) {
       setAgentApiUrl(agentUrl);
@@ -302,17 +318,24 @@ export const HomeworkProvider = ({ children }) => {
     localStorage.setItem('deepseekApiKey', key);
   };
 
+  const saveMusesparkApiKey = (key) => {
+    setMusesparkApiKey(key);
+    localStorage.setItem('musesparkApiKey', key);
+  };
+
   const aiConfig = {
     provider: aiProvider || 'musespark',
     geminiApiKey,
     deepseekApiKey: deepseekApiKey || DEFAULT_DEEPSEEK_KEY,
     deepseekModel: (deepseekModel && deepseekModel !== 'deepseek-chat') ? deepseekModel : 'deepseek-v4-flash-vision-exp',
+    musesparkApiKey,
+    musesparkModel: musesparkModel || 'muse-spark-1.3-contributor',
     agentApiUrl: agentApiUrl || 'http://127.0.0.1:8000'
   };
 
   const isAiConfigured = (aiProvider === 'deepseek' && !!deepseekApiKey) ||
                          (aiProvider === 'gemini' && !!geminiApiKey) ||
-                         (aiProvider === 'musespark');
+                         (aiProvider === 'musespark' && !!musesparkApiKey);
 
   // Fetch data on mount
   useEffect(() => {
@@ -1075,6 +1098,9 @@ export const HomeworkProvider = ({ children }) => {
       deepseekApiKey,
       deepseekModel,
       saveDeepseekApiKey,
+      musesparkApiKey,
+      musesparkModel,
+      saveMusesparkApiKey,
       saveAiSettings,
       aiConfig,
       isAiConfigured,
