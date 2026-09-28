@@ -15,10 +15,8 @@
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-height: 100vh;
-  background-color: #000;
+  background-color: #0B0F19;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -26,12 +24,12 @@ body {
 
 #root {
   width: 100%;
-  max-width: 480px;
+  max-width: 640px;
   min-height: 100vh;
-  background-color: #111116; /* App Background matching the image */
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  background-color: #111827;
+  box-shadow: 0 0 30px rgba(0,0,0,0.6);
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, p {

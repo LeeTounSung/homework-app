@@ -409,32 +409,32 @@ export default function HomeworkDetailPage() {
     switch (status) {
       case 'correct':
         return { 
-          bg: '#FFD700', 
-          border: '#1E88E5', 
-          borderWidth: '3.5px',
-          text: '#000000', 
+          bg: '#1E293B', 
+          border: '#3B82F6', 
+          borderWidth: '2.5px',
+          text: '#FFFFFF', 
           label: '⭕ 맞음',
-          labelColor: '#0D47A1'
-        }; // 원래 노란색 배경 + 파란색 테두리
+          labelColor: '#60A5FA'
+        }; // 블루 테두리 + 슬레이트 배경
       case 'incorrect':
         return { 
-          bg: '#FFD700', 
-          border: '#E53935', 
-          borderWidth: '3.5px',
-          text: '#000000', 
+          bg: '#1E293B', 
+          border: '#EF4444', 
+          borderWidth: '2.5px',
+          text: '#FFFFFF', 
           label: '❌ 틀림',
-          labelColor: '#B71C1C'
-        }; // 원래 노란색 배경 + 빨간색 테두리
+          labelColor: '#F87171'
+        }; // 레드 테두리 + 슬레이트 배경
       case 'indeterminate':
       case 'unclear':
         return { 
-          bg: '#FFD700', 
-          border: '#43A047', 
-          borderWidth: '3.5px',
-          text: '#000000', 
+          bg: '#1E293B', 
+          border: '#10B981', 
+          borderWidth: '2.5px',
+          text: '#FFFFFF', 
           label: '🔺 확인',
-          labelColor: '#1B5E20'
-        }; // 원래 노란색 배경 + 연녹색 테두리
+          labelColor: '#34D399'
+        }; // 그린 테두리 + 슬레이트 배경
       case 'exempt':
         return { 
           bg: '#16171C', 
@@ -446,19 +446,19 @@ export default function HomeworkDetailPage() {
         }; // 제외
       case 'submitted':
         return { 
-          bg: '#FFD700', 
-          border: '#FFD700', 
+          bg: '#1E293B', 
+          border: '#3B82F6', 
           borderWidth: '2px',
-          text: '#000000', 
+          text: '#FFFFFF', 
           label: '제출',
-          labelColor: '#333333'
-        }; // 원래 노란색 제출
+          labelColor: '#93C5FD'
+        }; // 블루 제출
       default:
         return { 
           bg: '#1A1B23', 
-          border: '#333333', 
-          borderWidth: '2px',
-          text: '#888888', 
+          border: '#334155', 
+          borderWidth: '1.5px',
+          text: '#94A3B8', 
           label: '' 
         }; // 미제출
     }
@@ -487,7 +487,7 @@ export default function HomeworkDetailPage() {
                 <button 
                   onClick={handleEditOpen}
                   style={{ 
-                    background: 'none', border: '1px solid #444', color: '#FFD700', 
+                    background: 'none', border: '1px solid #3B82F6', color: '#60A5FA', 
                     padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' 
                   }}
                 >
@@ -576,7 +576,7 @@ export default function HomeworkDetailPage() {
                 <span>{actualSubmittedCount} / {totalQuestions} ({Math.round(progressPercent)}%)</span>
               </div>
               <div className="progress-bar" style={{ width: '100%', height: '8px', backgroundColor: '#333', borderRadius: '4px', overflow: 'hidden' }}>
-                <div className="progress-fill" style={{ width: `${progressPercent}%`, backgroundColor: '#FFD700', height: '100%' }}></div>
+                <div className="progress-fill" style={{ width: `${progressPercent}%`, backgroundColor: '#3B82F6', height: '100%' }}></div>
               </div>
 
               {/* AI Bulk Grading Action & Result Summary */}
@@ -740,7 +740,7 @@ export default function HomeworkDetailPage() {
                       cursor: 'pointer',
                       position: 'relative',
                       opacity: style.opacity || 1,
-                      boxShadow: style.border !== '#333333' && style.border !== '#FFD700' ? `0 0 8px ${style.border}55` : 'none',
+                      boxShadow: style.border !== '#333333' ? `0 0 8px ${style.border}55` : 'none',
                       transition: 'all 0.15s ease'
                     }}
                   >
@@ -755,7 +755,7 @@ export default function HomeworkDetailPage() {
                       </span>
                     )}
                     {status === 'submitted' && (
-                      <div style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', backgroundColor: '#FFD700', borderRadius: '50%' }}></div>
+                      <div style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', backgroundColor: '#3B82F6', borderRadius: '50%' }}></div>
                     )}
                     {(status === 'correct' || status === 'incorrect' || status === 'indeterminate') && subProb?.attempts > 1 && (
                       <div style={{ 
@@ -847,7 +847,7 @@ export default function HomeworkDetailPage() {
               </button>
               <button 
                 onClick={handleAddSubmit}
-                style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: '#FFD700', color: '#000', fontWeight: 'bold', cursor: 'pointer' }}
+                style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: '#2563EB', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
               >
                 추가하기
               </button>
@@ -892,7 +892,7 @@ export default function HomeworkDetailPage() {
       {isEditModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFD700' }}>정보 수정</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFFFFF' }}>정보 수정</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#aaa' }}>학생 이름 (또는 그룹명)</label>
@@ -1045,7 +1045,7 @@ export default function HomeworkDetailPage() {
                   onClick={handleSaveAnswerKey}
                   style={{
                     padding: '8px 18px', borderRadius: '8px', border: 'none',
-                    backgroundColor: '#FFD700', color: '#000', fontWeight: 'bold',
+                    backgroundColor: '#2563EB', color: '#fff', fontWeight: 'bold',
                     cursor: 'pointer', fontSize: '13px'
                   }}
                 >

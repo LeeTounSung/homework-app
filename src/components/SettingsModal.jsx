@@ -60,7 +60,7 @@ export default function SettingsModal({ isOpen, onClose }) {
   return (
     <div className="modal-overlay" style={{ zIndex: 1100 }}>
       <div className="modal-content" style={{ maxWidth: '520px', width: '92%', maxHeight: '90vh', overflowY: 'auto' }}>
-        <h3 style={{ marginTop: 0, marginBottom: '18px', color: '#FFD700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h3 style={{ marginTop: 0, marginBottom: '18px', color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
           ⚙️ AI 엔진 및 API 키 환경 설정
         </h3>
 

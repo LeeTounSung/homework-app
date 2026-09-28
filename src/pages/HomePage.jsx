@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import { analyzeStudentProgress } from '../utils/gemini';
-import SettingsModal from '../components/SettingsModal';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -96,7 +95,7 @@ const StatusIndicator = ({ hw }) => {
       <div className="status-indicator progress-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
         <span className="progress-text" style={{ fontSize: '13px', color: '#888' }}>{submittedCount}/{total} ({percent}%)</span>
         <div className="progress-bar" style={{ width: '80px', height: '4px', backgroundColor: '#333', borderRadius: '2px', overflow: 'hidden' }}>
-          <div className="progress-fill" style={{ width: `${percent}%`, backgroundColor: '#FFD700', height: '100%' }}></div>
+          <div className="progress-fill" style={{ width: `${percent}%`, backgroundColor: '#3B82F6', height: '100%' }}></div>
         </div>
       </div>
     );
@@ -115,7 +114,6 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState('homework'); // 'homework' | 'incorrect' | 'test' | 'schedule' | 'statistics'
   const [incorrectViewMode, setIncorrectViewMode] = useState('history'); // 'history' | 'current' | 'bookmark' | 'selfStudy'
   const [zoomPromoImage, setZoomPromoImage] = useState(null);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // Self-Study Problem State & Modals (숙제 외 문제 보관함)
   const [isSelfStudyModalOpen, setIsSelfStudyModalOpen] = useState(false);
@@ -622,8 +620,8 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#111' }}>
-        <div style={{ color: '#FFD700', fontSize: '18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid #333', borderTop: '4px solid #FFD700', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <div style={{ color: '#60A5FA', fontSize: '18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+          <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid #333', borderTop: '4px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
           데이터를 불러오는 중...
         </div>
@@ -663,7 +661,7 @@ export default function HomePage() {
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-             <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#FFD700"/>
+             <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#60A5FA"/>
           </svg>
           {currentUser ? `${currentUser} 님` : '로그인'}
         </button>
@@ -682,12 +680,12 @@ export default function HomePage() {
                 key={tab.id}
                 className="header-title" 
                 style={{ 
-                  color: isActive ? '#FFD700' : '#888', 
+                  color: isActive ? '#3B82F6' : '#94A3B8', 
                   fontWeight: isActive ? 'bold' : 'normal',
                   cursor: 'pointer',
                   margin: 0,
                   padding: '4px 6px',
-                  borderBottom: isActive ? '2.5px solid #FFD700' : '2.5px solid transparent',
+                  borderBottom: isActive ? '2.5px solid #3B82F6' : '2.5px solid transparent',
                   whiteSpace: 'nowrap',
                   fontSize: '16px',
                   transition: 'all 0.2s'
@@ -700,56 +698,38 @@ export default function HomePage() {
           })}
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {isAdmin && (
+        {isAdmin && (
+          <div style={{ flexShrink: 0 }}>
             <button 
               className="new-hw-btn" 
               style={{ 
-                backgroundColor: '#FFD700', 
-                color: '#000', 
+                backgroundColor: '#2563EB', 
+                color: '#FFFFFF', 
                 fontWeight: 'bold',
                 padding: '6px 12px',
                 borderRadius: '8px',
-                fontSize: '12px',
-                whiteSpace: 'nowrap'
+                fontSize: '12.5px',
+                whiteSpace: 'nowrap',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)'
               }} 
               onClick={() => navigate('/admin')}
             >
               👑 관리자
             </button>
-          )}
-          <button 
-            type="button"
-            style={{ 
-              backgroundColor: '#2A2B36', 
-              color: '#FFD700', 
-              border: '1px solid #FFD700',
-              fontWeight: 'bold',
-              padding: '6px 10px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              whiteSpace: 'nowrap',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }} 
-            onClick={() => setIsSettingsModalOpen(true)}
-            title="AI 엔진 및 API 키 설정"
-          >
-            ⚙️ AI 설정
-          </button>
-        </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
       <main className="content-list">
         {!currentUser ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0 40px 0' }}>
-            {/* Blank Yellow Box / Image Banner Frame */}
+            {/* Blank Blue Box / Image Banner Frame */}
             <div style={{
               backgroundColor: '#181A22',
-              border: '1px solid #FFD700',
+              border: '1px solid rgba(59, 130, 246, 0.4)',
               borderRadius: '16px',
               minHeight: '140px',
               boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
@@ -816,10 +796,10 @@ export default function HomePage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h2 style={{ color: '#FFD700', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h2 style={{ color: '#FFFFFF', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   📚 단원별 문제 보관함
                 </h2>
-                <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
+                <p style={{ color: '#94A3B8', fontSize: '13px', margin: 0 }}>
                   숙제 오답은 물론, 혼자 공부하며 수집한 숙제 외 문제까지 단원별로 누적 보관되어 언제든 복습할 수 있습니다.
                 </p>
               </div>
@@ -838,16 +818,16 @@ export default function HomePage() {
                 style={{
                   padding: '8px 14px',
                   borderRadius: '10px',
-                  border: '1.5px solid #FFD700',
-                  backgroundColor: '#FFD700',
-                  color: '#000',
+                  border: '1px solid #3B82F6',
+                  backgroundColor: '#2563EB',
+                  color: '#FFFFFF',
                   fontWeight: 'bold',
                   fontSize: '13px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  boxShadow: '0 2px 10px rgba(255, 215, 0, 0.25)',
+                  boxShadow: '0 2px 10px rgba(37, 99, 235, 0.35)',
                   whiteSpace: 'nowrap'
                 }}
               >
@@ -913,9 +893,9 @@ export default function HomePage() {
                   minWidth: '100px',
                   padding: '9px 10px',
                   borderRadius: '10px',
-                  border: incorrectViewMode === 'bookmark' ? '2px solid #FFD700' : '1px solid #333',
-                  backgroundColor: incorrectViewMode === 'bookmark' ? '#3A3215' : '#1E2028',
-                  color: incorrectViewMode === 'bookmark' ? '#FFD700' : '#888',
+                  border: incorrectViewMode === 'bookmark' ? '2px solid #3B82F6' : '1px solid #334155',
+                  backgroundColor: incorrectViewMode === 'bookmark' ? 'rgba(37, 99, 235, 0.2)' : '#1E293B',
+                  color: incorrectViewMode === 'bookmark' ? '#93C5FD' : '#94A3B8',
                   fontWeight: 'bold',
                   fontSize: '13px',
                   cursor: 'pointer',
@@ -961,10 +941,10 @@ export default function HomePage() {
                     {/* Student Title if Admin or multiple students */}
                     {isAdmin && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid #2A2D3A' }}>
-                        <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#FFD700' }}>
-                          👤 {studentData.studentName} 학생
+                        <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#FFFFFF' }}>
+                          👤 <span style={{ color: '#60A5FA' }}>{studentData.studentName}</span> 학생
                         </span>
-                        <span style={{ fontSize: '12px', color: '#888' }}>
+                        <span style={{ fontSize: '12px', color: '#94A3B8' }}>
                           (누적 {studentData.totalCount}문제 · 미해결 {studentData.unresolvedCount})
                         </span>
                       </div>
@@ -977,12 +957,13 @@ export default function HomePage() {
                           {/* Chapter Badge */}
                           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
                             <div style={{ 
-                              backgroundColor: '#333', 
-                              color: '#FFD700', 
+                              backgroundColor: '#1E293B', 
+                              border: '1px solid #3B82F6',
+                              color: '#93C5FD', 
                               padding: '4px 12px', 
                               borderRadius: '12px', 
-                              fontSize: '12px',
-                              fontWeight: 'bold'
+                              fontSize: '12px', 
+                              fontWeight: 'bold' 
                             }}>
                               {sec.subHeader}
                             </div>
@@ -999,33 +980,44 @@ export default function HomePage() {
                               const isIndeterminate = prob.status === 'indeterminate' || prob.status === 'unclear';
                               const isIncorrect = prob.status === 'incorrect';
                               
-                              let borderColor = '#E53935';
+                              let borderColor = '#EF4444';
                               let labelText = '❌ 틀림';
-                              let labelColor = '#B71C1C';
-                              let bgColor = '#FFD700';
+                              let labelColor = '#FCA5A5';
+                              let bgColor = '#1E293B';
+                              let textColor = '#FFFFFF';
 
                               if (isSelf) {
                                 if (isCorrect) {
-                                  borderColor = '#1E88E5';
+                                  borderColor = '#3B82F6';
                                   labelText = '⭕ 해결';
-                                  labelColor = '#0D47A1';
+                                  labelColor = '#93C5FD';
+                                  bgColor = 'rgba(59, 130, 246, 0.18)';
                                 } else {
-                                  borderColor = '#FF9800';
+                                  borderColor = '#0284C7';
                                   labelText = prob.workbook ? prob.workbook : '📖 자율';
-                                  labelColor = '#E65100';
+                                  labelColor = '#7DD3FC';
+                                  bgColor = 'rgba(2, 132, 199, 0.16)';
                                 }
                               } else if (isCorrect) {
-                                borderColor = '#1E88E5';
+                                borderColor = '#3B82F6';
                                 labelText = '⭕ 맞음';
-                                labelColor = '#0D47A1';
+                                labelColor = '#93C5FD';
+                                bgColor = 'rgba(59, 130, 246, 0.18)';
                               } else if (isIndeterminate) {
-                                borderColor = '#43A047';
+                                borderColor = '#10B981';
                                 labelText = '🔺 확인';
-                                labelColor = '#1B5E20';
+                                labelColor = '#6EE7B7';
+                                bgColor = 'rgba(16, 185, 129, 0.16)';
                               } else if (prob.isBookmarked && !isIncorrect) {
-                                borderColor = '#FFD700';
+                                borderColor = '#3B82F6';
                                 labelText = '⭐️ 보관';
-                                labelColor = '#333';
+                                labelColor = '#93C5FD';
+                                bgColor = 'rgba(37, 99, 235, 0.22)';
+                              } else if (isIncorrect) {
+                                borderColor = '#EF4444';
+                                labelText = '❌ 틀림';
+                                labelColor = '#FCA5A5';
+                                bgColor = 'rgba(239, 68, 68, 0.15)';
                               }
 
                               return (
@@ -1043,9 +1035,9 @@ export default function HomePage() {
                                   style={{
                                     aspectRatio: '1',
                                     backgroundColor: bgColor,
-                                    border: `3.5px solid ${borderColor}`,
+                                    border: `2px solid ${borderColor}`,
                                     borderRadius: '12px',
-                                    color: '#000000',
+                                    color: textColor,
                                     fontSize: '18px',
                                     fontWeight: 'bold',
                                     display: 'flex',
@@ -1054,7 +1046,7 @@ export default function HomePage() {
                                     alignItems: 'center',
                                     cursor: 'pointer',
                                     position: 'relative',
-                                    boxShadow: `0 2px 8px ${borderColor}44`,
+                                    boxShadow: `0 2px 8px ${borderColor}33`,
                                     transition: 'transform 0.15s ease'
                                   }}
                                   onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -1063,7 +1055,7 @@ export default function HomePage() {
                                   {isSelf ? (
                                     <span style={{ position: 'absolute', top: '3px', left: '5px', fontSize: '11px' }}>📖</span>
                                   ) : prob.isBookmarked ? (
-                                    <span style={{ position: 'absolute', top: '3px', left: '5px', fontSize: '11px' }}>⭐️</span>
+                                    <span style={{ position: 'absolute', top: '3px', left: '5px', fontSize: '11px', color: '#60A5FA' }}>⭐️</span>
                                   ) : null}
                                   <span style={{ fontSize: (prob.customDisplayNumber && String(prob.customDisplayNumber).length > 4) ? '13px' : '18px' }}>
                                     {prob.customDisplayNumber || prob.problemNumber}
@@ -1133,7 +1125,7 @@ export default function HomePage() {
                         <div className="card-header" style={{ marginBottom: 0 }}>
                           <div className="sender-receiver">
                             <div className="profile-container" style={{ width: '32px', height: '32px' }}>
-                              <div className="profile-pic" style={{ backgroundColor: '#444', color: '#FFD700', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold' }}>
+                              <div className="profile-pic" style={{ backgroundColor: '#1E293B', border: '1px solid #3B82F6', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold' }}>
                                 {test.studentName.charAt(0)}
                               </div>
                             </div>
@@ -1188,7 +1180,7 @@ export default function HomePage() {
                         <div className="card-header">
                           <div className="sender-receiver">
                             <div className="profile-container">
-                              <div className="profile-pic" style={{ backgroundColor: '#444', color: '#FFD700', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+                              <div className="profile-pic" style={{ backgroundColor: '#1E293B', border: '1.5px solid #3B82F6', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>
                                 {test.studentName.charAt(0)}
                               </div>
                               <div className="red-dot"></div>
@@ -1225,7 +1217,7 @@ export default function HomePage() {
           ) : (
             <div style={{ padding: '0 16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', color: '#FFD700', margin: 0 }}>📊 전체 성적 통계표</h2>
+                <h2 style={{ fontSize: '18px', color: '#FFFFFF', margin: 0 }}>📊 전체 성적 통계표</h2>
               </div>
               <div style={{ overflowX: 'auto', backgroundColor: '#1A1B23', borderRadius: '12px', border: '1px solid #333' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', color: '#ddd', textAlign: 'left' }}>
@@ -1334,9 +1326,9 @@ export default function HomePage() {
                       style={{
                         padding: '6px 14px',
                         borderRadius: '20px',
-                        border: isSelected ? '1.5px solid #FFD700' : '1px solid #444',
-                        backgroundColor: isSelected ? '#333' : '#1A1B23',
-                        color: isSelected ? '#FFD700' : '#888',
+                        border: isSelected ? '1.5px solid #3B82F6' : '1px solid #334155',
+                        backgroundColor: isSelected ? '#1E293B' : '#1A1B23',
+                        color: isSelected ? '#60A5FA' : '#888',
                         fontWeight: 'bold',
                         fontSize: '13px',
                         cursor: 'pointer',
@@ -1353,7 +1345,7 @@ export default function HomePage() {
             {/* Header Title */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
-                <h2 style={{ color: '#FFD700', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h2 style={{ color: '#FFFFFF', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   📋 {activeScheduleStudent} 학생의 주차별 진도표
                 </h2>
                 <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
@@ -1366,8 +1358,8 @@ export default function HomePage() {
                   type="button"
                   onClick={openAddScheduleModal}
                   style={{
-                    backgroundColor: '#FFD700',
-                    color: '#000',
+                    backgroundColor: '#2563EB',
+                    color: '#FFFFFF',
                     fontWeight: 'bold',
                     padding: '8px 14px',
                     borderRadius: '8px',
@@ -1392,9 +1384,9 @@ export default function HomePage() {
                 style={{
                   padding: '7px 12px',
                   borderRadius: '20px',
-                  border: scheduleFilter === 'all' ? '1.5px solid #FFD700' : '1px solid #333',
-                  backgroundColor: scheduleFilter === 'all' ? '#333' : '#1A1B23',
-                  color: scheduleFilter === 'all' ? '#FFD700' : '#888',
+                  border: scheduleFilter === 'all' ? '1.5px solid #3B82F6' : '1px solid #333',
+                  backgroundColor: scheduleFilter === 'all' ? '#1E293B' : '#1A1B23',
+                  color: scheduleFilter === 'all' ? '#60A5FA' : '#888',
                   fontSize: '12px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -1410,9 +1402,9 @@ export default function HomePage() {
                 style={{
                   padding: '7px 12px',
                   borderRadius: '20px',
-                  border: scheduleFilter === 'current' ? '1.5px solid #FFD700' : '1px solid #333',
-                  backgroundColor: scheduleFilter === 'current' ? '#3A3215' : '#1A1B23',
-                  color: scheduleFilter === 'current' ? '#FFD700' : '#888',
+                  border: scheduleFilter === 'current' ? '1.5px solid #3B82F6' : '1px solid #333',
+                  backgroundColor: scheduleFilter === 'current' ? 'rgba(59, 130, 246, 0.15)' : '#1A1B23',
+                  color: scheduleFilter === 'current' ? '#60A5FA' : '#888',
                   fontSize: '12px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -1495,16 +1487,16 @@ export default function HomePage() {
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontSize: '18px' }}>📘</span>
-                          <h3 style={{ color: '#FFD700', fontSize: '16px', margin: 0, fontWeight: 'bold' }}>
+                          <h3 style={{ color: '#FFFFFF', fontSize: '16px', margin: 0, fontWeight: 'bold' }}>
                             {subjName}
                           </h3>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           {currentItem && (
                             <span style={{
-                              backgroundColor: '#3A3215',
-                              color: '#FFD700',
-                              border: '1px solid #FFD700',
+                              backgroundColor: '#1E3A8A',
+                              color: '#93C5FD',
+                              border: '1px solid #3B82F6',
                               fontSize: '11px',
                               fontWeight: 'bold',
                               padding: '2px 8px',
@@ -1529,8 +1521,8 @@ export default function HomePage() {
                               onClick={() => openAddScheduleModal(subjName)}
                               style={{
                                 backgroundColor: '#252838',
-                                color: '#FFD700',
-                                border: '1px solid #FFD700',
+                                color: '#60A5FA',
+                                border: '1px solid #3B82F6',
                                 borderRadius: '8px',
                                 padding: '2px 8px',
                                 fontSize: '11px',
@@ -1549,9 +1541,9 @@ export default function HomePage() {
                         {subjItems.map(s => {
                           const isCurrent = s.status === 'current';
                           const isCompleted = s.status === 'completed';
-                          const statusBg = isCurrent ? '#3A3215' : (isCompleted ? '#1A3320' : '#222533');
-                          const statusCol = isCurrent ? '#FFD700' : (isCompleted ? '#A5D6A7' : '#888');
-                          const statusBorder = isCurrent ? '#FFD700' : (isCompleted ? '#4CAF50' : '#333');
+                          const statusBg = isCurrent ? '#1E3A8A' : (isCompleted ? '#1A3320' : '#222533');
+                          const statusCol = isCurrent ? '#93C5FD' : (isCompleted ? '#A5D6A7' : '#888');
+                          const statusBorder = isCurrent ? '#3B82F6' : (isCompleted ? '#4CAF50' : '#333');
                           const statusText = isCurrent ? '🔥 이번 주' : (isCompleted ? '✅ 완료' : '⏳ 예정');
 
                           return (
@@ -1562,10 +1554,10 @@ export default function HomePage() {
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 padding: '10px 14px',
-                                backgroundColor: isCurrent ? '#232532' : '#1C1D26',
+                                backgroundColor: isCurrent ? '#1E293B' : '#1C1D26',
                                 borderRadius: '10px',
-                                borderLeft: isCurrent ? '4px solid #FFD700' : (isCompleted ? '4px solid #4CAF50' : '4px solid #444'),
-                                border: `1px solid ${isCurrent ? 'rgba(255, 215, 0, 0.35)' : '#282A36'}`,
+                                borderLeft: isCurrent ? '4px solid #3B82F6' : (isCompleted ? '4px solid #4CAF50' : '4px solid #444'),
+                                border: `1px solid ${isCurrent ? 'rgba(59, 130, 246, 0.4)' : '#282A36'}`,
                                 gap: '10px',
                                 flexWrap: 'wrap'
                               }}
@@ -1573,8 +1565,8 @@ export default function HomePage() {
                               {/* 좌측: 주차 + 기간 */}
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '110px' }}>
                                 <span style={{
-                                  backgroundColor: isCurrent ? '#FFD700' : '#2A2C3A',
-                                  color: isCurrent ? '#000' : '#FFD700',
+                                  backgroundColor: isCurrent ? '#2563EB' : '#2A2C3A',
+                                  color: isCurrent ? '#FFFFFF' : '#93C5FD',
                                   fontWeight: 'bold',
                                   fontSize: '11.5px',
                                   padding: '2px 7px',
@@ -1600,7 +1592,7 @@ export default function HomePage() {
                                   alignItems: 'center',
                                   gap: '6px'
                                 }}>
-                                  <span style={{ color: isCurrent ? '#FFD700' : '#888', fontSize: '11px' }}>📖</span>
+                                  <span style={{ color: isCurrent ? '#60A5FA' : '#888', fontSize: '11px' }}>📖</span>
                                   <span>{s.chapter || s.topic}</span>
                                 </div>
                                 {s.topic && s.topic !== s.chapter && !s.topic.startsWith('1회차') && (
@@ -1680,7 +1672,7 @@ export default function HomePage() {
                     <div className="card-header">
                       <div className="sender-receiver">
                         <div className="profile-container">
-                          <div className="profile-pic" style={{ backgroundColor: '#444', color: '#FFD700', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+                          <div className="profile-pic" style={{ backgroundColor: '#1E293B', border: '1.5px solid #3B82F6', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>
                             {hw.studentName.charAt(0)}
                           </div>
                           <div className="red-dot"></div>
@@ -1720,7 +1712,7 @@ export default function HomePage() {
       {isLoginModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFD700' }}>이름 확인</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFFFFF' }}>이름 확인</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#aaa' }}>빠른 선택</label>
@@ -1736,9 +1728,9 @@ export default function HomePage() {
                       style={{
                         padding: '6px 12px',
                         borderRadius: '16px',
-                        border: name === 'mathkorea' || name === '원장샘' ? '1px solid #FFD700' : '1px solid #4CAF50',
-                        backgroundColor: name === 'mathkorea' || name === '원장샘' ? '#3A3215' : '#1A3320',
-                        color: name === 'mathkorea' || name === '원장샘' ? '#FFD700' : '#A5D6A7',
+                        border: name === 'mathkorea' || name === '원장샘' ? '1.5px solid #2563EB' : '1px solid #4CAF50',
+                        backgroundColor: name === 'mathkorea' || name === '원장샘' ? 'rgba(37, 99, 235, 0.2)' : '#1A3320',
+                        color: name === 'mathkorea' || name === '원장샘' ? '#93C5FD' : '#A5D6A7',
                         fontSize: '13px',
                         fontWeight: 'bold',
                         cursor: 'pointer'
@@ -1774,7 +1766,7 @@ export default function HomePage() {
       {isScheduleModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '440px' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#FFD700' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#FFFFFF' }}>
               {editScheduleId ? '✏️ 주차별 진도 수정' : `➕ ${activeScheduleStudent} 학생 주차 진도 등록`}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1829,7 +1821,7 @@ export default function HomePage() {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#aaa' }}>
-                  예상 단원 * <span style={{ color: '#FFD700', fontSize: '11px' }}>(해당 주차에 나갈 예상 단원명)</span>
+                  예상 단원 * <span style={{ color: '#60A5FA', fontSize: '11px' }}>(해당 주차에 나갈 예상 단원명)</span>
                 </label>
                 <input 
                   type="text"
@@ -2008,8 +2000,8 @@ export default function HomePage() {
                 position: 'absolute',
                 top: '-40px',
                 right: '0',
-                background: '#FFD700',
-                color: '#000',
+                background: '#2563EB',
+                color: '#fff',
                 border: 'none',
                 borderRadius: '50%',
                 width: '36px',
@@ -2040,10 +2032,10 @@ export default function HomePage() {
           <div className="modal-content" style={{
             backgroundColor: '#1E1E24', borderRadius: '16px', padding: '24px',
             maxWidth: '480px', width: '100%', maxHeight: '88vh', overflowY: 'auto',
-            border: '1px solid #FFD700', color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
+            border: '1px solid #3B82F6', color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ margin: 0, color: '#FFD700', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ margin: 0, color: '#FFFFFF', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span>📖 숙제 외 문제 직접 등록</span>
               </h3>
               <button
@@ -2074,9 +2066,9 @@ export default function HomePage() {
                         style={{
                           padding: '6px 12px',
                           borderRadius: '16px',
-                          border: selfStudyStudent === name ? '1.5px solid #FFD700' : '1px solid #444',
-                          backgroundColor: selfStudyStudent === name ? '#3A3215' : '#2A2C38',
-                          color: selfStudyStudent === name ? '#FFD700' : '#888',
+                          border: selfStudyStudent === name ? '1.5px solid #3B82F6' : '1px solid #444',
+                          backgroundColor: selfStudyStudent === name ? '#1E293B' : '#2A2C38',
+                          color: selfStudyStudent === name ? '#60A5FA' : '#888',
                           fontSize: '12.5px',
                           fontWeight: 'bold',
                           cursor: 'pointer'
@@ -2172,7 +2164,7 @@ export default function HomePage() {
                     backgroundColor: '#161720', cursor: 'pointer', transition: 'border-color 0.2s'
                   }}>
                     <span style={{ fontSize: '28px', marginBottom: '6px' }}>📷</span>
-                    <span style={{ fontSize: '13px', color: '#FFD700', fontWeight: 'bold' }}>
+                    <span style={{ fontSize: '13px', color: '#60A5FA', fontWeight: 'bold' }}>
                       카메라로 촬영하거나 사진 선택
                     </span>
                     <span style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
@@ -2225,7 +2217,7 @@ export default function HomePage() {
                 disabled={isSavingSelfStudy}
                 style={{
                   flex: 2, padding: '11px', borderRadius: '8px', border: 'none',
-                  backgroundColor: '#FFD700', color: '#000', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold'
+                  backgroundColor: '#2563EB', color: '#fff', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold'
                 }}
               >
                 {isSavingSelfStudy ? '저장 중...' : '💾 문제 보관함에 저장'}
@@ -2245,13 +2237,13 @@ export default function HomePage() {
           <div className="modal-content" style={{
             backgroundColor: '#1E1E24', borderRadius: '16px', padding: '24px',
             maxWidth: '520px', width: '100%', maxHeight: '90vh', overflowY: 'auto',
-            border: '1px solid #FFD700', color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
+            border: '1px solid #3B82F6', color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
           }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ backgroundColor: '#3A3215', color: '#FFD700', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold' }}>
+                  <span style={{ backgroundColor: '#1E293B', color: '#60A5FA', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
                     📖 {selectedSelfStudyProblem.workbook || '자율학습'}
                   </span>
                   <span style={{ color: '#888', fontSize: '12px' }}>
@@ -2288,7 +2280,7 @@ export default function HomePage() {
                   />
                   <div style={{
                     position: 'absolute', bottom: '8px', right: '8px',
-                    backgroundColor: 'rgba(0,0,0,0.7)', color: '#FFD700',
+                    backgroundColor: 'rgba(0,0,0,0.7)', color: '#60A5FA',
                     padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
                     display: 'flex', alignItems: 'center', gap: '4px'
                   }}>
@@ -2342,7 +2334,7 @@ export default function HomePage() {
             {/* Memo Display & Edit */}
             <div style={{ marginBottom: '20px', backgroundColor: '#161720', borderRadius: '10px', padding: '12px', border: '1px solid #333' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#FFD700', fontWeight: 'bold' }}>
+                <span style={{ fontSize: '12px', color: '#60A5FA', fontWeight: 'bold' }}>
                   📝 나의 오답 & 핵심 발상 메모
                 </span>
                 {!isEditingMemo && (
@@ -2384,7 +2376,7 @@ export default function HomePage() {
                         setSelectedSelfStudyProblem(prev => ({ ...prev, memo: editMemoText }));
                         setIsEditingMemo(false);
                       }}
-                      style={{ padding: '4px 10px', borderRadius: '4px', border: 'none', backgroundColor: '#FFD700', color: '#000', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                      style={{ padding: '4px 10px', borderRadius: '4px', border: 'none', backgroundColor: '#2563EB', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                     >
                       저장
                     </button>
@@ -2429,12 +2421,6 @@ export default function HomePage() {
           </div>
         </div>
       )}
-
-      {/* AI Settings Modal */}
-      <SettingsModal 
-        isOpen={isSettingsModalOpen} 
-        onClose={() => setIsSettingsModalOpen(false)} 
-      />
 
     </div>
   );

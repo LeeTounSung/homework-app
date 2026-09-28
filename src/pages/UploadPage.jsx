@@ -238,9 +238,9 @@ export default function UploadPage() {
           backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999,
           display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'
         }}>
-          <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid #333', borderTop: '4px solid #FFD700', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid #333', borderTop: '4px solid #3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-          <p style={{ color: '#FFD700', marginTop: '16px', fontWeight: 'bold' }}>저장 중...</p>
+          <p style={{ color: '#60A5FA', marginTop: '16px', fontWeight: 'bold' }}>저장 중...</p>
         </div>
       )}
       
@@ -277,9 +277,9 @@ export default function UploadPage() {
               style={{
                 padding: '6px 14px',
                 borderRadius: '20px',
-                border: isBookmarked ? '1px solid #FFD700' : '1px solid #555',
-                backgroundColor: isBookmarked ? '#3A3215' : '#222',
-                color: isBookmarked ? '#FFD700' : '#aaa',
+                border: isBookmarked ? '1px solid #3B82F6' : '1px solid #555',
+                backgroundColor: isBookmarked ? '#1E293B' : '#222',
+                color: isBookmarked ? '#60A5FA' : '#aaa',
                 fontSize: '12px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
@@ -303,9 +303,9 @@ export default function UploadPage() {
                 style={{
                   padding: '6px 14px',
                   borderRadius: '20px',
-                  border: '1px solid #735914',
-                  backgroundColor: '#262215',
-                  color: '#FFD700',
+                  border: '1px solid #3B82F6',
+                  backgroundColor: '#1E293B',
+                  color: '#60A5FA',
                   fontSize: '12px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -410,7 +410,7 @@ export default function UploadPage() {
 
           {/* Submitted Answer Card (Rendered clearly with the problem) */}
           {imagePreview && (
-            <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '16px', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)', border: '2px solid #FFD700' }}>
+            <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '16px', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)', border: '2px solid #3B82F6' }}>
               <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#111', marginBottom: '10px', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>✍️ [내 풀이 / 정답 미리보기]</span>
                 <button
@@ -501,7 +501,7 @@ export default function UploadPage() {
         {/* Problem Attempt History Timeline */}
         {problemHistory && problemHistory.length > 1 && (
           <div style={{ backgroundColor: '#181A22', border: '1px solid #333', borderRadius: '8px', padding: '14px', marginBottom: '20px' }}>
-            <h4 style={{ margin: '0 0 10px 0', color: '#FFD700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <h4 style={{ margin: '0 0 10px 0', color: '#FFFFFF', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               📜 누적 풀이 및 오답 히스토리 ({problemHistory.length}회 기록)
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -539,8 +539,8 @@ export default function UploadPage() {
             htmlFor="hw-upload"
             style={{ 
               flex: 1, padding: '14px', borderRadius: '8px', border: '1px solid #444', 
-              backgroundColor: '#FFD700',
-              color: '#000000',
+              backgroundColor: '#2563EB',
+              color: '#FFFFFF',
               fontWeight: 'bold', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
               fontSize: '15px'
@@ -636,7 +636,7 @@ export default function UploadPage() {
             gap: '8px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#FFD700', fontWeight: 'bold', fontSize: '15px' }}>🔍 문제 고화질 확대보기</span>
+              <span style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: '15px' }}>🔍 문제 고화질 확대보기</span>
               <span style={{ color: '#aaa', fontSize: '13px' }}>({Math.round(zoomScale * 100)}%)</span>
             </div>
 
@@ -664,7 +664,7 @@ export default function UploadPage() {
                 onClick={() => setZoomScale(1)}
                 style={{
                   background: '#333',
-                  color: '#FFD700',
+                  color: '#60A5FA',
                   border: '1px solid #555',
                   borderRadius: '6px',
                   padding: '6px 10px',
@@ -679,8 +679,8 @@ export default function UploadPage() {
                 type="button"
                 onClick={() => setZoomScale(prev => Math.min(3.5, prev + 0.25))}
                 style={{
-                  background: '#FFD700',
-                  color: '#000',
+                  background: '#2563EB',
+                  color: '#FFFFFF',
                   border: 'none',
                   borderRadius: '6px',
                   padding: '6px 12px',

@@ -135,7 +135,7 @@ export default function EvaluatePage() {
             <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <h1 className="header-title" style={{ color: '#FFD700' }}>숙제 평가하기</h1>
+        <h1 className="header-title" style={{ color: '#FFFFFF' }}>숙제 평가하기</h1>
         <div style={{width: '24px'}}></div>
       </header>
 
@@ -149,7 +149,7 @@ export default function EvaluatePage() {
           <button 
             onClick={() => setIsBulkAiModalOpen(true)}
             style={{
-              padding: '10px 16px', backgroundColor: '#A8A8FF', color: '#000', 
+              padding: '10px 16px', backgroundColor: '#2563EB', color: '#FFFFFF', 
               border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: '6px'
             }}
@@ -267,14 +267,14 @@ export default function EvaluatePage() {
             <button 
               className={`tag ${evaluationType === 'check' ? 'active-eval' : ''}`}
               onClick={() => setEvaluationType('check')}
-              style={{ cursor: 'pointer', border: evaluationType === 'check' ? '1px solid #FFD700' : 'none' }}
+              style={{ cursor: 'pointer', border: evaluationType === 'check' ? '1px solid #3B82F6' : 'none' }}
             >
               통과(체크)
             </button>
             <button 
               className={`tag ${evaluationType === 'stars' ? 'active-eval' : ''}`}
               onClick={() => setEvaluationType('stars')}
-              style={{ cursor: 'pointer', border: evaluationType === 'stars' ? '1px solid #FFD700' : 'none' }}
+              style={{ cursor: 'pointer', border: evaluationType === 'stars' ? '1px solid #3B82F6' : 'none' }}
             >
               별점 부여
             </button>
@@ -286,7 +286,7 @@ export default function EvaluatePage() {
                 <button 
                   key={s}
                   onClick={() => setStars(s)}
-                  style={{ background: 'none', border: 'none', color: stars >= s ? '#FFD700' : '#444', fontSize: '24px', cursor: 'pointer' }}
+                  style={{ background: 'none', border: 'none', color: stars >= s ? '#3B82F6' : '#444', fontSize: '24px', cursor: 'pointer' }}
                 >
                   ★
                 </button>
