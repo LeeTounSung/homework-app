@@ -1,0 +1,13 @@
+# Netlify 배포 설정 (SPA 리다이렉트 + WASM MIME 헤더)
+# SPA 라우팅: React Router의 /upload/... 직접 접근 시 index.html 제공
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# onnxruntime WASM이 올바른 MIME 타입으로 제공되도록 (CDN 대비 안전장치)
+[[headers]]
+  for = "*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+    Cache-Control = "public, max-age=31536000, immutable"

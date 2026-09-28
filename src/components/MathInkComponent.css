@@ -1,0 +1,259 @@
+/* Inline Mode (Default: Sits neatly below problem card without covering it) */
+.mathink-inline-container {
+  width: 100%;
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+
+.mathink-container.inline {
+  width: 100%;
+  max-width: 100%;
+  background: #ffffff;
+  border: 2px solid #FFD700;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  font-family: sans-serif;
+  color: #1f2328;
+}
+
+.mathink-container.inline .mathink-draw-canvas {
+  width: 100%;
+  height: 350px;
+  cursor: crosshair;
+  touch-action: none;
+  display: block;
+}
+
+/* Expanded Fullscreen Mode */
+.mathink-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.94);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+
+.mathink-container.expanded {
+  background: #ffffff;
+  border: 2px solid #1E88E5;
+  border-radius: 12px;
+  width: 98vw;
+  max-width: 98vw;
+  height: calc(100vh - 16px);
+  max-height: calc(100vh - 16px);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  font-family: sans-serif;
+  color: #1f2328;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.mathink-container.expanded .mathink-header {
+  flex-shrink: 0;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+}
+
+.mathink-container.expanded .mathink-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mathink-container.expanded .mathink-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 10px;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.mathink-container.expanded .mathink-toolbar {
+  flex-shrink: 0;
+}
+
+.mathink-container.expanded .mathink-canvas-wrap {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mathink-container.expanded .mathink-draw-canvas {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  cursor: crosshair;
+  touch-action: none;
+  display: block;
+}
+
+.mathink-action-bar {
+  flex-shrink: 0;
+}
+
+.mathink-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e3e6ea;
+  padding-bottom: 10px;
+}
+
+.mathink-badge {
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #eef1f5;
+  color: #6b7280;
+  border: 1px solid #e3e6ea;
+  white-space: nowrap;
+}
+.mathink-badge.ready { background: #e7f6ee; color: #1a8f5c; border-color: #bce6cf; }
+.mathink-badge.error { background: #fdecea; color: #c0392b; border-color: #f5c6bf; }
+.mathink-badge.loading { background: #e8efff; color: #2f6fed; border-color: #c9d8fb; }
+
+.mathink-cancel {
+  padding: 8px 16px;
+  background-color: transparent;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.mathink-cancel:hover {
+  background-color: #fdecea;
+}
+
+.mathink-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mathink-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid #e3e6ea;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fbfcfe;
+}
+
+.mathink-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mathink-tool {
+  padding: 5px 9px;
+  border: 1px solid #e3e6ea;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+}
+.mathink-tool:hover { background: #f3f5f8; }
+.mathink-tool.active { background: #e8efff; border-color: #2f6fed; color: #2f6fed; }
+
+.mathink-canvas-wrap {
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  background-size: 30px 30px;
+  background-image:
+    linear-gradient(to right, #f1f5f9 1px, transparent 1px),
+    linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
+  overflow: hidden;
+}
+.mathink-draw-canvas {
+  width: 100%;
+  height: 320px;
+  cursor: crosshair;
+  touch-action: none;
+  display: block;
+}
+
+.mathink-hint {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  text-align: center;
+}
+
+.mathink-primary-btn {
+  background: #2f6fed;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+.mathink-primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.mathink-insert-btn {
+  background: #1a8f5c;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  margin-top: 16px;
+  width: 100%;
+}
+.mathink-insert-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.mathink-field-label { font-size: 14px; color: #6b7280; font-weight: bold; }
+.mathink-latex-out {
+  width: 100%;
+  font-family: monospace;
+  font-size: 16px;
+  padding: 12px;
+  border: 1px solid #e3e6ea;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.mathink-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #e3e6ea;
+  border-radius: 10px;
+  padding: 16px;
+  background: #fff;
+}
+.mathink-preview-img {
+  max-width: 100%;
+  border: 1px solid #e3e6ea;
+  border-radius: 8px;
+}
+
+.mathink-msg { font-size: 14px; color: #1a8f5c; margin: 0; font-weight: bold; }
+.mathink-msg.err { color: #c0392b; }
