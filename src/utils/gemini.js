@@ -225,11 +225,39 @@ export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType
   throw lastError || new Error('사용 가능한 Gemini 모델을 찾을 수 없습니다.');
 };
 
-export const callAIAPI = async (aiConfig, prompt, base64Image = null, mimeType = 'image/jpeg') => {
-  // If aiConfig is passed as an object: { provider, geminiApiKey, deepseekApiKey, deepseekModel }
+export const callMusesparkAPI = async (agentApiUrl, prompt, base64Image = null, correctAns = null, studentAns = null) => {
+  const url = (agentApiUrl || 'http://127.0.0.1:8000').replace(/\/$/, '');
+  const response = await fetch(`${url}/api/evaluate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt,
+      base64_image: base64Image,
+      correct_answer: correctAns,
+      student_answer: studentAns
+    })
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`musespark1.3 contributor 서버 오류: HTTP ${response.status} (${errorText})`);
+  }
+  const data = await response.json();
+  return data.feedback || data.content || (data.is_correct ? '⭕ 정답' : '❌ 오답');
+};
+
+export const callAIAPI = async (aiConfig, prompt, base64Image = null, mimeType = 'image/jpeg', extraMeta = {}) => {
+  // If aiConfig is passed as an object: { provider, geminiApiKey, deepseekApiKey, deepseekModel, agentApiUrl }
   if (typeof aiConfig === 'object' && aiConfig !== null) {
-    const { provider, geminiApiKey, deepseekApiKey, deepseekModel } = aiConfig;
-    if (provider === 'deepseek') {
+    const { provider, geminiApiKey, deepseekApiKey, deepseekModel, agentApiUrl } = aiConfig;
+    if (provider === 'musespark') {
+      return await callMusesparkAPI(
+        agentApiUrl,
+        prompt,
+        base64Image,
+        extraMeta.correctAns || null,
+        extraMeta.studentAns || null
+      );
+    } else if (provider === 'deepseek') {
       return await callDeepseekAPI(deepseekApiKey, prompt, base64Image, mimeType, deepseekModel);
     } else {
       return await callGeminiAPI(geminiApiKey, prompt, base64Image, mimeType);
@@ -313,7 +341,7 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
 - 학생 답안: ${studentAnswer}
 - 해설: (동치 여부에 대한 간결한 1줄 설명)`;
 
-  return await callAIAPI(aiConfig, prompt, null);
+  return await callAIAPI(aiConfig, prompt, null, 'image/jpeg', { correctAns: correctAnswer, studentAns: studentAnswer });
 };
 
 export const autoGradeProblemSubmission = async (aiConfig, problemDesc, studentSolutionImage, customDetails = '', correctAns = null) => {
@@ -365,7 +393,7 @@ ${problemDesc}
     prompt += `\n\n[선생님의 추가 요청사항]\n${customDetails}`;
   }
 
-  return await callAIAPI(aiConfig, prompt, studentSolutionImage);
+  return await callAIAPI(aiConfig, prompt, studentSolutionImage, 'image/jpeg', { correctAns });
 };
 
 export const analyzeStudentProgress = async (aiConfig, studentName, testsData, incorrectProblems, customDetails = '') => {
