@@ -225,8 +225,11 @@ export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType
   throw lastError || new Error('사용 가능한 Gemini 모델을 찾을 수 없습니다.');
 };
 
+const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || 'LLM_2161394044719218_Lv8NcmLsyd5kH8je0bbvj4tyQlg';
+
 export const callMetaMuseSparkAPI = async (apiKey, prompt, base64Image = null, mimeType = 'image/jpeg', model = 'muse-spark-1.3-contributor') => {
-  if (!apiKey) {
+  const activeKey = apiKey || DEFAULT_META_KEY;
+  if (!activeKey) {
     throw new Error('Meta Muse Spark API 키가 설정되지 않았습니다. 관리자 환경 설정에서 API 키를 입력해주세요.');
   }
 
@@ -263,7 +266,7 @@ export const callMetaMuseSparkAPI = async (apiKey, prompt, base64Image = null, m
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey.trim()}`
+      'Authorization': `Bearer ${activeKey.trim()}`
     },
     body: JSON.stringify({
       model: selectedModel,

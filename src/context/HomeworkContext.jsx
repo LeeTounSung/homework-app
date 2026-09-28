@@ -75,8 +75,9 @@ export const HomeworkProvider = ({ children }) => {
 
   const isAdmin = currentUser === 'mathkorea' || currentUser === 'admin' || currentUser === '선생님' || currentUser === '원장샘';
 
-  // AI Settings State (Gemini / DeepSeek)
+  // AI Settings State (Gemini / DeepSeek / Meta Muse Spark)
   const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
+  const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || 'LLM_2161394044719218_Lv8NcmLsyd5kH8je0bbvj4tyQlg';
 
   const [aiProvider, setAiProvider] = useState(() => {
     return localStorage.getItem('aiProvider') || 'musespark';
@@ -99,7 +100,7 @@ export const HomeworkProvider = ({ children }) => {
   });
 
   const [musesparkApiKey, setMusesparkApiKey] = useState(() => {
-    return localStorage.getItem('musesparkApiKey') || '';
+    return localStorage.getItem('musesparkApiKey') || DEFAULT_META_KEY;
   });
 
   const [musesparkModel, setMusesparkModel] = useState(() => {
