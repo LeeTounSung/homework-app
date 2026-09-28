@@ -4,7 +4,7 @@ const HomeworkContext = createContext();
 
 export const useHomework = () => useContext(HomeworkContext);
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwxaSaImS5ti1i9np4gAb85eIbhnKyflptUYpul2LXbLtCgiX7i7OEj0ESBOASQhgM/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxaYVDgDHHkKz1wJazeMDlsYl3VGS8m05YQGpgdnyGxG4-12bWHsVP7I3pcKOMLBnU/exec';
 
 const fallbackInitialData = [
   {
