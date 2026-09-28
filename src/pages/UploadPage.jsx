@@ -19,6 +19,17 @@ const formatDriveImageUrl = (url) => {
       return `https://lh3.googleusercontent.com/d/${fileId}`;
     }
   }
+
+  // Prepend BASE_URL for relative paths (e.g., /problem_images/... or problem_images/...)
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    if (base && !cleanPath.startsWith(base + '/')) {
+      return `${base}${cleanPath}`;
+    }
+    return cleanPath;
+  }
+
   return url;
 };
 
@@ -109,7 +120,8 @@ export default function UploadPage() {
               setImageError(true);
             });
         } else {
-          setDriveImageUrl(`${hw.problemImagesBaseUrl.replace(/\/$/, '')}/${problemId}.png`);
+          const rawUrl = `${hw.problemImagesBaseUrl.replace(/\/$/, '')}/${problemId}.png`;
+          setDriveImageUrl(formatDriveImageUrl(rawUrl));
           setImageError(false);
         }
       }
@@ -280,33 +292,6 @@ export default function UploadPage() {
 
         {/* Problem Image & Submitted Answer Cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
-          {/* Problem Statement Card (Text / LaTeX from problemDetails) */}
-          {hw.problemDetails && (hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]) && (
-            <div style={{ backgroundColor: '#ffffff', color: '#111', borderRadius: '12px', padding: '18px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', border: '1px solid #E0E0E0' }}>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1565C0', marginBottom: '10px', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>📌 [문제 {problemId}번] {cleanLabel}{(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).concept || ''}</span>
-                {(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).level && (
-                  <span style={{ fontSize: '11px', backgroundColor: '#FFF3E0', color: '#E65100', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
-                    Level {(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).level}
-                  </span>
-                )}
-              </div>
-              <ProblemStatementView 
-                statement={(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).statement} 
-              />
-              {(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).image && (
-                <div style={{ marginTop: '16px', textAlign: 'center', backgroundColor: '#fcfcfc', padding: '16px', borderRadius: '8px', border: '1px solid #ECEFF1' }}>
-                  <img 
-                    src={(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).image} 
-                    alt="문제 도형 그래프"
-                    style={{ maxWidth: '100%', maxHeight: '380px', objectFit: 'contain', display: 'block', margin: '0 auto' }} 
-                  />
-                  <div style={{ fontSize: '11px', color: '#888', marginTop: '6px' }}>📐 [TikZ 벡터 도형 그래프]</div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Problem Image Card */}
           {driveImageUrl && !imageError && (
             <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '16px', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
@@ -377,6 +362,33 @@ export default function UploadPage() {
                 />
               </div>
               <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: '#888', textAlign: 'right' }}>💡 터치/클릭하면 고화질로 확대됩니다.</p>
+            </div>
+          )}
+
+          {/* Problem Statement Card (Text / LaTeX from problemDetails) - Only shown if no image or image error */}
+          {(!driveImageUrl || imageError) && hw.problemDetails && (hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]) && (
+            <div style={{ backgroundColor: '#ffffff', color: '#111', borderRadius: '12px', padding: '18px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', border: '1px solid #E0E0E0' }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1565C0', marginBottom: '10px', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>📌 [문제 {problemId}번] {cleanLabel}{(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).concept || ''}</span>
+                {(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).level && (
+                  <span style={{ fontSize: '11px', backgroundColor: '#FFF3E0', color: '#E65100', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
+                    Level {(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).level}
+                  </span>
+                )}
+              </div>
+              <ProblemStatementView 
+                statement={(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).statement} 
+              />
+              {(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).image && (
+                <div style={{ marginTop: '16px', textAlign: 'center', backgroundColor: '#fcfcfc', padding: '16px', borderRadius: '8px', border: '1px solid #ECEFF1' }}>
+                  <img 
+                    src={(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).image} 
+                    alt="문제 도형 그래프"
+                    style={{ maxWidth: '100%', maxHeight: '380px', objectFit: 'contain', display: 'block', margin: '0 auto' }} 
+                  />
+                  <div style={{ fontSize: '11px', color: '#888', marginTop: '6px' }}>📐 [TikZ 벡터 도형 그래프]</div>
+                </div>
+              )}
             </div>
           )}
 
