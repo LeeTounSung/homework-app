@@ -523,6 +523,7 @@ export const HomeworkProvider = ({ children }) => {
           },
           body: JSON.stringify({
             action: 'uploadImage',
+            folderId: '1jh2auGT5QXNY6Te2mGX0QvJGico0eMGx',
             studentName: cleanStudent,
             hwTitle: cleanHwTitle,
             filename: fileName,
