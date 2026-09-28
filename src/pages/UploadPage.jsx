@@ -33,6 +33,12 @@ const formatDriveImageUrl = (url) => {
   return url;
 };
 
+const formatGroupLabel = (label) => {
+  if (!label || typeof label !== 'string') return label;
+  if (label.includes('번호:')) return label;
+  return label.replace(/-?\[(\d+~\d+|\d+)\]$/, '-[번호:$1]');
+};
+
 export default function UploadPage() {
   const navigate = useNavigate();
   const { id, groupId, problemId } = useParams();
@@ -68,7 +74,7 @@ export default function UploadPage() {
   let groupLabel = '';
   if (hw && hw.problemGroups) {
     const group = hw.problemGroups.find(g => g.groupId === groupId);
-    if (group) groupLabel = group.label;
+    if (group) groupLabel = formatGroupLabel(group.label);
   }
   const cleanLabel = groupLabel && groupLabel !== '문제' 
     ? (groupLabel.startsWith('[') ? `${groupLabel} ` : `[${groupLabel}] `) 

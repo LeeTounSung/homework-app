@@ -3,6 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import { autoGradeProblemSubmission } from '../utils/gemini';
 
+const formatGroupLabel = (label) => {
+  if (!label || typeof label !== 'string') return label;
+  if (label.includes('번호:')) return label;
+  return label.replace(/-?\[(\d+~\d+|\d+)\]$/, '-[번호:$1]');
+};
+
 export default function HomeworkDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -506,14 +512,16 @@ export default function HomeworkDetailPage() {
           <div key={group.groupId} style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
               <div style={{ 
-                backgroundColor: '#333', 
+                backgroundColor: '#262215', 
+                border: '1px solid #735914',
                 color: '#FFD700', 
-                padding: '4px 12px', 
-                borderRadius: '12px', 
-                fontSize: '12px',
-                fontWeight: 'bold'
+                padding: '6px 14px', 
+                borderRadius: '10px', 
+                fontSize: '15px',
+                fontWeight: 'bold',
+                letterSpacing: '0.2px'
               }}>
-                {group.label}
+                {formatGroupLabel(group.label)}
               </div>
               {isAdmin && (
                 <button 
