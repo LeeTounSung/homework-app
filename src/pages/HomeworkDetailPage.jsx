@@ -487,7 +487,7 @@ export default function HomeworkDetailPage() {
                 <button 
                   onClick={handleEditOpen}
                   style={{ 
-                    background: 'none', border: '1px solid #3B82F6', color: '#60A5FA', 
+                    background: 'none', border: '1px solid #444', color: '#FFD700', 
                     padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' 
                   }}
                 >
@@ -576,7 +576,7 @@ export default function HomeworkDetailPage() {
                 <span>{actualSubmittedCount} / {totalQuestions} ({Math.round(progressPercent)}%)</span>
               </div>
               <div className="progress-bar" style={{ width: '100%', height: '8px', backgroundColor: '#333', borderRadius: '4px', overflow: 'hidden' }}>
-                <div className="progress-fill" style={{ width: `${progressPercent}%`, backgroundColor: '#3B82F6', height: '100%' }}></div>
+                <div className="progress-fill" style={{ width: `${progressPercent}%`, backgroundColor: '#FFD700', height: '100%' }}></div>
               </div>
 
               {/* AI Bulk Grading Action & Result Summary */}
@@ -847,7 +847,7 @@ export default function HomeworkDetailPage() {
               </button>
               <button 
                 onClick={handleAddSubmit}
-                style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: '#2563EB', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
+                style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: '#FFD700', color: '#000', fontWeight: 'bold', cursor: 'pointer' }}
               >
                 추가하기
               </button>
@@ -892,7 +892,7 @@ export default function HomeworkDetailPage() {
       {isEditModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFFFFF' }}>정보 수정</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFD700' }}>정보 수정</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#aaa' }}>학생 이름 (또는 그룹명)</label>
@@ -1045,7 +1045,7 @@ export default function HomeworkDetailPage() {
                   onClick={handleSaveAnswerKey}
                   style={{
                     padding: '8px 18px', borderRadius: '8px', border: 'none',
-                    backgroundColor: '#2563EB', color: '#fff', fontWeight: 'bold',
+                    backgroundColor: '#FFD700', color: '#000', fontWeight: 'bold',
                     cursor: 'pointer', fontSize: '13px'
                   }}
                 >

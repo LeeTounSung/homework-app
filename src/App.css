@@ -135,12 +135,12 @@
 .check-icon {
   width: 20px;
   height: 20px;
-  background-color: #2563EB;
+  background-color: #FFD700;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #FFFFFF;
+  color: #000000;
   font-size: 12px;
   font-weight: bold;
 }
@@ -161,7 +161,7 @@
 
 .progress-fill {
   height: 100%;
-  background-color: #3B82F6;
+  background-color: #FFD700;
   border-radius: 4px;
 }
 
@@ -173,7 +173,7 @@
 .stars {
   display: flex;
   gap: 2px;
-  color: #60A5FA;
+  color: #FFD700;
   font-size: 16px;
 }
 
@@ -374,10 +374,10 @@
 }
 
 .modal-btn.confirm {
-  background-color: #2563EB;
-  color: #FFFFFF;
+  background-color: #FFD700;
+  color: #000000;
 }
 
 .modal-btn.confirm:hover {
-  background-color: #1D4ED8;
+  background-color: #E6C200;
 }

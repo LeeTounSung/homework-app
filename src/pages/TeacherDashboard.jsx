@@ -17,7 +17,7 @@ export default function TeacherDashboard() {
             <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <h1 className="header-title" style={{ color: '#FFFFFF' }}>[관리자] 평가 대기열</h1>
+        <h1 className="header-title" style={{ color: '#FFD700' }}>[관리자] 평가 대기열</h1>
         <div style={{width: '24px'}}></div>
       </header>
 
@@ -34,7 +34,7 @@ export default function TeacherDashboard() {
                 key={hw.id} 
                 className="homework-card" 
                 onClick={() => navigate(`/teacher/evaluate/${hw.id}`)}
-                style={{ borderLeft: '4px solid #3B82F6' }}
+                style={{ borderLeft: '4px solid #FFD700' }}
               >
                 <div className="card-header">
                   <div className="sender-receiver">

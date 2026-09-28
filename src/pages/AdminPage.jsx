@@ -361,7 +361,7 @@ export default function AdminPage() {
       {isCreateModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '560px', width: '92%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFD700', display: 'flex', alignItems: 'center', gap: '8px' }}>
               📝 새 숙제 / 온라인 시험 출제 (구글 드라이브 연동)
             </h3>
             
@@ -389,9 +389,9 @@ export default function AdminPage() {
                         style={{
                           padding: '4px 10px',
                           borderRadius: '12px',
-                          border: newStudent === st ? '1px solid #3B82F6' : '1px solid #444',
-                          backgroundColor: newStudent === st ? '#1E293B' : '#2A2B36',
-                          color: newStudent === st ? '#60A5FA' : '#ccc',
+                          border: newStudent === st ? '1px solid #FFD700' : '1px solid #444',
+                          backgroundColor: newStudent === st ? '#FFD700' : '#2A2B36',
+                          color: newStudent === st ? '#000' : '#ccc',
                           fontSize: '12px',
                           cursor: 'pointer',
                           fontWeight: newStudent === st ? 'bold' : 'normal'
@@ -463,7 +463,7 @@ export default function AdminPage() {
 
               {/* Problem Range Setup (Auto created with homework) */}
               <div style={{ padding: '14px', backgroundColor: '#202129', borderRadius: '10px', border: '1px solid #333' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#60A5FA', fontWeight: 'bold' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#FFD700', fontWeight: 'bold' }}>
                   🔢 생성할 문항 번호 범위 (출제 시 타일 자동 생성)
                 </label>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -550,7 +550,7 @@ export default function AdminPage() {
             
             <div className="modal-buttons" style={{ marginTop: '20px' }}>
               <button className="modal-btn cancel" onClick={() => setIsCreateModalOpen(false)}>취소</button>
-              <button className="modal-btn confirm" onClick={handleCreateSubmit} style={{ backgroundColor: '#2563EB', color: '#fff', fontWeight: 'bold' }}>
+              <button className="modal-btn confirm" onClick={handleCreateSubmit} style={{ backgroundColor: '#FFD700', color: '#000', fontWeight: 'bold' }}>
                 🚀 즉시 출제하기
               </button>
             </div>
@@ -643,7 +643,7 @@ export default function AdminPage() {
 
             {/* Main Blue Box Banner Image URL Section */}
             <div style={{ backgroundColor: '#20222C', border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: '10px', padding: '16px', marginBottom: '20px' }}>
-              <h4 style={{ color: '#FFFFFF', fontSize: '14px', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <h4 style={{ color: '#FFD700', fontSize: '14px', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 🖼️ 메인 배너 박스 이미지 링크 (구글 드라이브 또는 웹 이미지 URL)
               </h4>
               <p style={{ color: '#aaa', fontSize: '12px', margin: '0 0 10px 0' }}>
@@ -665,8 +665,8 @@ export default function AdminPage() {
                     alert('메인 배너 이미지가 저장되었습니다!');
                   }}
                   style={{
-                    backgroundColor: '#2563EB',
-                    color: '#fff',
+                    backgroundColor: '#FFD700',
+                    color: '#000',
                     fontWeight: 'bold',
                     border: 'none',
                     borderRadius: '8px',
@@ -683,7 +683,7 @@ export default function AdminPage() {
 
             {/* Existing Banners List */}
             <div style={{ marginBottom: '20px' }}>
-              <h4 style={{ color: '#FFFFFF', fontSize: '14px', margin: '0 0 10px 0' }}>📌 현재 등록된 홍보 배너 ({promoBanners ? promoBanners.length : 0}개)</h4>
+              <h4 style={{ color: '#FFD700', fontSize: '14px', margin: '0 0 10px 0' }}>📌 현재 등록된 홍보 배너 ({promoBanners ? promoBanners.length : 0}개)</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {(promoBanners || []).map((banner, bIdx) => (
                   <div 
