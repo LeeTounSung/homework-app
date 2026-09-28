@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
-import { autoGradeProblemSubmission } from '../utils/gemini';
+import { autoGradeProblemSubmission, solveProblemWithAI } from '../utils/gemini';
 
 const formatGroupLabel = (label) => {
   if (!label || typeof label !== 'string') return label;
@@ -168,6 +168,8 @@ export default function HomeworkDetailPage() {
       .toLowerCase();
   };
 
+  const [isAiSolving, setIsAiSolving] = useState(false);
+
   const handleOpenAnswerKeyModal = () => {
     setEditedAnswers({ ...(hw.answers || {}) });
     setIsAnswerKeyModalOpen(true);
@@ -177,6 +179,60 @@ export default function HomeworkDetailPage() {
     updateHomeworkAnswers(hw.id, editedAnswers);
     setIsAnswerKeyModalOpen(false);
     alert('정답표가 성공적으로 저장되었습니다.');
+  };
+
+  const handleAutoSolveAnswers = async () => {
+    if (!isAiConfigured && !geminiApiKey) {
+      alert("우측 상단 관리자 설정에서 Gemini 또는 DeepSeek API 키를 먼저 등록해주세요.");
+      return;
+    }
+
+    const allProbs = [];
+    (hw.problemGroups || []).forEach(grp => {
+      (grp.problems || []).forEach(num => {
+        allProbs.push(num);
+      });
+    });
+
+    if (allProbs.length === 0) {
+      alert("등록된 문항이 없습니다.");
+      return;
+    }
+
+    if (!window.confirm(`총 ${allProbs.length}개 문항에 대해 AI가 문제를 직접 풀고 정답표를 자동으로 생성하시겠습니까?`)) {
+      return;
+    }
+
+    setIsAiSolving(true);
+    const newAnswers = { ...editedAnswers };
+    let solvedCount = 0;
+
+    try {
+      for (const num of allProbs) {
+        const details = (hw.problemDetails && (hw.problemDetails[num] || hw.problemDetails[String(num)])) || {};
+        const statement = details.statement || '';
+        let probImage = details.image || null;
+
+        if (!probImage) {
+          const sp = (hw.submittedProblems || []).find(p => p.problemNumber === num);
+          if (sp && sp.imageUrl) probImage = sp.imageUrl;
+        }
+
+        const answer = await solveProblemWithAI(aiConfig || geminiApiKey, statement, probImage);
+        if (answer) {
+          newAnswers[num] = answer;
+          solvedCount++;
+        }
+      }
+
+      setEditedAnswers(newAnswers);
+      alert(`총 ${solvedCount}개 문항의 정답을 AI로 자동 생성했습니다!\n입력된 정답을 검토하신 후 [💾 정답 저장]을 눌러주세요.`);
+    } catch (err) {
+      console.error("AI Auto-solve error:", err);
+      alert(`AI 정답 자동 생성 중 오류가 발생했습니다: ${err.message}`);
+    } finally {
+      setIsAiSolving(false);
+    }
   };
 
   const handleBulkAiGrade = async () => {
@@ -237,11 +293,11 @@ export default function HomeworkDetailPage() {
 
         let desc = `${hw.studentName} 학생의 ${hw.title} ${label ? `[${label}] ` : ''}${p.problemNumber}번 문제 풀이입니다.`;
         if (correctAns) {
-          desc += `\n[참고] 이 문제의 실제 정답은 [${correctAns}]입니다. 학생의 손글씨 풀이 결과가 이와 일치하는지 신속히 판정해주세요.`;
+          desc += `\n[참고] 이 문제의 공식 정답은 [${correctAns}]입니다. 문제를 직접 풀지 말고, 학생의 손글씨 답안과 공식 정답의 일치 여부만 판정해주세요.`;
         }
 
         try {
-          const feedback = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, p.imageUrl);
+          const feedback = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, p.imageUrl, '', correctAns);
           
           let gradeStatus = 'incorrect';
           if (feedback.includes('채점 불가') || feedback.includes('채점불가') || feedback.includes('🔺') || feedback.includes('확인 필요')) {
@@ -525,27 +581,29 @@ export default function HomeworkDetailPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={handleOpenAnswerKeyModal}
-                    style={{
-                      padding: '9px 14px',
-                      borderRadius: '8px',
-                      border: '1px solid #735914',
-                      backgroundColor: '#262215',
-                      color: '#FFD700',
-                      fontWeight: 'bold',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      transition: 'all 0.2s'
-                    }}
-                    title="단답형/객관식 정답을 등록해두면 AI 토큰 없이 즉시 채점됩니다"
-                  >
-                    <span>📝 정답표</span>
-                  </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={handleOpenAnswerKeyModal}
+                      style={{
+                        padding: '9px 14px',
+                        borderRadius: '8px',
+                        border: '1px solid #735914',
+                        backgroundColor: '#262215',
+                        color: '#FFD700',
+                        fontWeight: 'bold',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        transition: 'all 0.2s'
+                      }}
+                      title="단답형/객관식 정답을 등록해두면 AI 토큰 없이 즉시 채점됩니다"
+                    >
+                      <span>📝 정답표</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -903,28 +961,53 @@ export default function HomeworkDetailPage() {
               ))}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 type="button"
-                onClick={() => setIsAnswerKeyModalOpen(false)}
+                onClick={handleAutoSolveAnswers}
+                disabled={isAiSolving}
                 style={{
-                  padding: '8px 16px', borderRadius: '8px', border: '1px solid #555',
-                  backgroundColor: '#333', color: '#ccc', cursor: 'pointer', fontSize: '13px'
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #7E57C2',
+                  backgroundColor: '#261C38',
+                  color: '#D1C4E9',
+                  fontWeight: 'bold',
+                  cursor: isAiSolving ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s'
                 }}
+                title="AI가 문제 본문/이미지를 분석하여 정답을 자동으로 도출합니다"
               >
-                닫기
+                {isAiSolving ? '🤖 AI 정답 푸는 중...' : '🤖 AI 정답 자동 생성'}
               </button>
-              <button
-                type="button"
-                onClick={handleSaveAnswerKey}
-                style={{
-                  padding: '8px 18px', borderRadius: '8px', border: 'none',
-                  backgroundColor: '#FFD700', color: '#000', fontWeight: 'bold',
-                  cursor: 'pointer', fontSize: '13px'
-                }}
-              >
-                💾 정답 저장
-              </button>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAnswerKeyModalOpen(false)}
+                  style={{
+                    padding: '8px 16px', borderRadius: '8px', border: '1px solid #555',
+                    backgroundColor: '#333', color: '#ccc', cursor: 'pointer', fontSize: '13px'
+                  }}
+                >
+                  닫기
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAnswerKey}
+                  style={{
+                    padding: '8px 18px', borderRadius: '8px', border: 'none',
+                    backgroundColor: '#FFD700', color: '#000', fontWeight: 'bold',
+                    cursor: 'pointer', fontSize: '13px'
+                  }}
+                >
+                  💾 정답 저장
+                </button>
+              </div>
             </div>
           </div>
         </div>

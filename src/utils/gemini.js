@@ -270,8 +270,52 @@ export const analyzeProblemSubmission = async (aiConfig, problemDesc, base64Imag
   return await callAIAPI(aiConfig, prompt, base64Image);
 };
 
-export const autoGradeProblemSubmission = async (aiConfig, problemDesc, studentSolutionImage, customDetails = '') => {
-  let prompt = `당신은 실력 있고 친절한 전문 수학 선생님이자 채점관입니다.
+export const solveProblemWithAI = async (aiConfig, problemStatement, problemImage = null) => {
+  const prompt = `당신은 대한민국 최고 수준의 고등 수학 전문 강사입니다.
+제시된 고등학교 수학 문제를 정확하고 신속하게 풀고, 학생 채점용 기준 정답(객관식 선지 번호 1~5 또는 단답형 정수/분수)을 도출해주세요.
+
+[문제]
+${problemStatement || '첨부된 문제 이미지를 풀이해주세요.'}
+
+출력 규칙:
+1. 복잡한 풀이 과정이나 설명은 일절 작성하지 마십시오.
+2. 오직 학생 답안과 직접 비교할 수 있는 최종 정답 값만 간결하게 한 줄로 출력하십시오.
+- 객관식의 경우: 1, 2, 3, 4, 5 중 번호 하나만 출력 (예: 5)
+- 단답형 숫자의 경우: 계산된 최종 숫자만 출력 (예: 51, -12, 9/4)`;
+
+  const response = await callAIAPI(aiConfig, prompt, problemImage);
+  if (!response) return '';
+
+  let clean = response.trim().replace(/[*_#`]/g, '').trim();
+  const match = clean.match(/([0-9]+(?:\/[0-9]+)?)/);
+  if (match) {
+    return match[1];
+  }
+  return clean.split('\n')[0].trim();
+};
+
+export const autoGradeProblemSubmission = async (aiConfig, problemDesc, studentSolutionImage, customDetails = '', correctAns = null) => {
+  let prompt = '';
+
+  if (correctAns) {
+    prompt = `당신은 정확하고 빠른 고등수학 채점관입니다.
+선생님이 사전에 지정한 이 문제의 공식 정답은 [${correctAns}]입니다.
+
+첨부된 학생의 손글씨 풀이 사진을 보고 다음만 판정하세요:
+1. 학생이 도출하여 적은 최종 답안을 찾으세요.
+2. 학생의 최종 답안이 공식 정답 [${correctAns}]와 일치하면 [채점 결과]를 "⭕ 정답", 다르면 "❌ 오답", 글씨를 전혀 알아볼 수 없거나 다른 문제 풀이면 "🔺 채점 불가 (이미지 확인 필요)"로 판정하세요.
+3. 문제를 처음부터 직접 새로 풀 필요가 전혀 없으며, 학생의 손글씨 답안과 공식 정답 [${correctAns}]의 일치 여부만 신속하고 간결하게 판정하세요.
+
+응답 형식 (반드시 준수):
+[채점 결과]
+⭕ 정답 (또는 ❌ 오답, 또는 🔺 채점 불가)
+
+[풀이 첨삭 및 피드백]
+- 학생 도출 답안: (학생이 풀이 끝에 적은 답)
+- 공식 정답 비교: (정답과 일치 여부 확인)
+- 코멘트: (간결한 1~2줄 코멘트)`;
+  } else {
+    prompt = `당신은 실력 있고 친절한 전문 수학 선생님이자 채점관입니다.
 학생이 제출한 수학 문제 풀이(이미지 속 손글씨 및 수식)를 비전으로 정밀 분석하여 채점하고 명확한 피드백을 제공해주세요.
 
 [문제 정보]
@@ -291,6 +335,7 @@ ${problemDesc}
 - 잘한 점: (1~2줄)
 - 오류/보완 포인트: (실수가 있는 경우 친절하게 설명, 맞은 경우 생략 가능)
 - 핵심 개념 및 조언: (학생이 기억해야 할 핵심 팁)`;
+  }
 
   if (customDetails.trim()) {
     prompt += `\n\n[선생님의 추가 요청사항]\n${customDetails}`;
