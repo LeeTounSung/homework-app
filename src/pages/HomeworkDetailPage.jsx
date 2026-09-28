@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
-import { autoGradeProblemSubmission, solveProblemWithAI } from '../utils/gemini';
+import { autoGradeProblemSubmission, solveProblemWithAI, checkMathEquivalenceWithAI } from '../utils/gemini';
 
 const formatGroupLabel = (label) => {
   if (!label || typeof label !== 'string') return label;
@@ -270,17 +270,51 @@ export default function HomeworkDetailPage() {
 
         const correctAns = registeredAnswers[p.problemNumber] || registeredAnswers[String(p.problemNumber)];
 
-        // FAST-PATH 1: Student typed answer & answer key exists -> Instant 0-token grading!
+        // FAST-PATH 1: Student typed answer & answer key exists
         if (correctAns && p.studentAnswer && p.studentAnswer.trim()) {
-          const isMatch = normalizeAnswer(p.studentAnswer) === normalizeAnswer(correctAns);
-          const gradeStatus = isMatch ? 'correct' : 'incorrect';
-          const feedback = isMatch
-            ? `⭕ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 정답입니다!`
-            : `❌ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 오답입니다.`;
+          const normStudent = normalizeAnswer(p.studentAnswer);
+          const normCorrect = normalizeAnswer(correctAns);
+          const isExactMatch = normStudent === normCorrect;
 
-          evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, gradeStatus, feedback);
-          if (isMatch) correctCount++;
-          else incorrectCount++;
+          if (isExactMatch) {
+            // 100% exact match (0 tokens!)
+            const feedback = `⭕ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 정답입니다!`;
+            evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, 'correct', feedback);
+            correctCount++;
+            autoMatchedCount++;
+            continue;
+          }
+
+          // If simple single digit choices (1~5) and not matching, definitely incorrect (0 tokens)
+          if (/^[1-5]$/.test(normStudent) && /^[1-5]$/.test(normCorrect)) {
+            const feedback = `❌ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 오답입니다.`;
+            evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, 'incorrect', feedback);
+            incorrectCount++;
+            autoMatchedCount++;
+            continue;
+          }
+
+          // PATH 1.5: LaTeX / Math expression / Short-answer -> AI Mathematical Equivalence Check!
+          if (isAiConfigured || geminiApiKey) {
+            try {
+              const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, p.studentAnswer);
+              const isEquiv = equivRes.includes('⭕') || equivRes.includes('정답') || equivRes.includes('맞았습니다');
+              const gradeStatus = isEquiv ? 'correct' : 'incorrect';
+              const feedback = `${isEquiv ? '⭕' : '❌'} [수학적 동치 판정]\n입력 답안: ${p.studentAnswer}\n공식 정답: ${correctAns}\n\n${equivRes}`;
+              evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, gradeStatus, feedback);
+              if (isEquiv) correctCount++;
+              else incorrectCount++;
+              autoMatchedCount++;
+              continue;
+            } catch (err) {
+              console.warn('AI Equivalence check error, fallback to strict mismatch:', err);
+            }
+          }
+
+          // Fallback if AI not configured and strings don't match
+          const feedback = `❌ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 오답입니다.`;
+          evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, 'incorrect', feedback);
+          incorrectCount++;
           autoMatchedCount++;
           continue;
         }

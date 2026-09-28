@@ -293,6 +293,29 @@ ${problemStatement || '첨부된 문제 이미지를 풀이해주세요.'}
   return firstLine;
 };
 
+export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studentAnswer) => {
+  const prompt = `당신은 엄밀한 고등수학 정답 판정관입니다.
+선생님이 사전에 지정한 [공식 정답]과 학생이 제출한 [학생 답안]이 수학적으로 동치(동일한 의미와 값)인지 판정해주세요.
+
+[공식 정답]: ${correctAnswer}
+[학생 답안]: ${studentAnswer}
+
+판정 기준:
+1. 분수와 소수 (예: 9/4와 2.25), 약분 전후, 인수분해형과 전개형 (예: 2(x+1)과 2x+2), 항의 순서 교환 (예: 3+x와 x+3), LaTeX 표기법 차이(예: \\frac{9}{4}와 9/4, \\pm 등) 등 표현 형태가 달라도 수학적으로 완전히 같은 식이나 값이면 반드시 "⭕ 정답"으로 판정하십시오.
+2. 수치나 부호가 다르거나 수학적으로 동치가 아니면 "❌ 오답"으로 판정하십시오.
+
+응답 형식 (반드시 첫 줄에 판정만 출력):
+[채점 결과]
+⭕ 정답 (또는 ❌ 오답)
+
+[판정 근거]
+- 공식 정답: ${correctAnswer}
+- 학생 답안: ${studentAnswer}
+- 해설: (동치 여부에 대한 간결한 1줄 설명)`;
+
+  return await callAIAPI(aiConfig, prompt, null);
+};
+
 export const autoGradeProblemSubmission = async (aiConfig, problemDesc, studentSolutionImage, customDetails = '', correctAns = null) => {
   let prompt = '';
 
