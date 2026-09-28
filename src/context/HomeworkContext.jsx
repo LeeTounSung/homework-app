@@ -460,25 +460,27 @@ export const HomeworkProvider = ({ children }) => {
         shouldUploadToDrive = false;
       }
 
+      // Find homework and student info
+      let hw = null;
+      let hwDate = "";
+      for (const section of data) {
+        const found = (section.homeworks || []).find(h => h.id === parseInt(id));
+        if (found) {
+          hw = found;
+          hwDate = section.date;
+          break;
+        }
+      }
+
+      const studentName = hw ? hw.studentName : 'Unknown';
+      const hwTitle = hw ? hw.title : '과제';
+      const cleanStudent = studentName.replace(/[\/\\?%*:|"<>]/g, '-');
+      const cleanHwTitle = hwTitle.replace(/[\/\\?%*:|"<>]/g, '-');
+      const cleanDate = hwDate.split('(')[0].replace(/ /g, '') || "날짜미상";
+
       let finalImageUrl = imageBase64;
 
       if (shouldUploadToDrive) {
-        // Find homework and its section date
-        let hw = null;
-        let hwDate = "";
-        for (const section of data) {
-          const found = section.homeworks.find(h => h.id === parseInt(id));
-          if (found) {
-            hw = found;
-            hwDate = section.date;
-            break;
-          }
-        }
-
-        const studentName = hw ? hw.studentName.replace(/[\/\\?%*:|"<>]/g, '-') : 'Unknown';
-        const hwTitle = hw ? hw.title.replace(/[\/\\?%*:|"<>]/g, '-') : 'Unknown';
-        const cleanDate = hwDate.split('(')[0].replace(/ /g, '') || "날짜미상";
-        
         let label = '범위미상';
         if (hw && hw.problemGroups) {
           const group = hw.problemGroups.find(g => g.groupId === groupId);
@@ -487,7 +489,7 @@ export const HomeworkProvider = ({ children }) => {
           }
         }
         
-        const fileName = `${studentName}_${cleanDate}_${hwTitle}_${label}_${problemNumber}번.jpg`;
+        const fileName = `${cleanStudent}_${cleanDate}_${cleanHwTitle}_${label}_${problemNumber}번.jpg`;
 
         const response = await fetch(GAS_URL, {
           method: 'POST',
@@ -497,8 +499,8 @@ export const HomeworkProvider = ({ children }) => {
           },
           body: JSON.stringify({
             action: 'uploadImage',
-            studentName: studentName,
-            hwTitle: hwTitle,
+            studentName: cleanStudent,
+            hwTitle: cleanHwTitle,
             filename: fileName,
             mimeType: mimeType,
             base64: base64Data
@@ -514,6 +516,26 @@ export const HomeworkProvider = ({ children }) => {
           setIsSaving(false);
           return;
         }
+      }
+
+      // Send directly to Obsidian student folder (08. 학생관리/{studentName}/숙제제출/{hwTitle}/) via musespark1.3 / local agent
+      try {
+        const localAgentUrl = (agentApiUrl || 'http://127.0.0.1:8000').replace(/\/$/, '');
+        fetch(`${localAgentUrl}/api/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_name: studentName,
+            homework_title: hwTitle,
+            problem_number: parseInt(problemNumber),
+            image_data: imageBase64 || finalImageUrl,
+            student_answer: studentAnswer,
+            ai_feedback: aiFeedback,
+            ai_grade: aiGrade
+          })
+        }).catch(err => console.log('Local Obsidian sync notice:', err));
+      } catch (err) {
+        console.log('Local Obsidian sync error ignored:', err);
       }
       
       // Update state with the final image URL, AI feedback and status
