@@ -109,11 +109,108 @@ const StatusIndicator = ({ hw }) => {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { data, isLoading, createHomework, createTest, updateTestInfo, deleteHomework, currentUser, isAdmin, login, logout, geminiApiKey, aiConfig, isAiConfigured, schedules, addSchedule, updateSchedule, deleteSchedule, promoBanners, mainBannerImage } = useHomework();
+  const { data, isLoading, createHomework, createTest, updateTestInfo, deleteHomework, currentUser, isAdmin, login, logout, geminiApiKey, aiConfig, isAiConfigured, schedules, addSchedule, updateSchedule, deleteSchedule, promoBanners, mainBannerImage, addSelfStudyProblem, deleteSelfStudyProblem, updateSelfStudyProblem } = useHomework();
 
   const [activeTab, setActiveTab] = useState('homework'); // 'homework' | 'incorrect' | 'test' | 'schedule' | 'statistics'
-  const [incorrectViewMode, setIncorrectViewMode] = useState('current'); // 'current' | 'history'
+  const [incorrectViewMode, setIncorrectViewMode] = useState('history'); // 'history' | 'current' | 'bookmark' | 'selfStudy'
   const [zoomPromoImage, setZoomPromoImage] = useState(null);
+
+  // Self-Study Problem State & Modals (숙제 외 문제 보관함)
+  const [isSelfStudyModalOpen, setIsSelfStudyModalOpen] = useState(false);
+  const [selfStudyStudent, setSelfStudyStudent] = useState('');
+  const [selfStudyWorkbook, setSelfStudyWorkbook] = useState('쎈');
+  const [selfStudyCustomWorkbook, setSelfStudyCustomWorkbook] = useState('');
+  const [selfStudyChapter, setSelfStudyChapter] = useState('다항식의 연산');
+  const [selfStudyCustomChapter, setSelfStudyCustomChapter] = useState('');
+  const [selfStudyProblemNumber, setSelfStudyProblemNumber] = useState('');
+  const [selfStudyImage, setSelfStudyImage] = useState(null);
+  const [selfStudyMemo, setSelfStudyMemo] = useState('');
+  const [isSavingSelfStudy, setIsSavingSelfStudy] = useState(false);
+
+  // Self-Study Detail Modal (문제 보관함 상세 확인 모달)
+  const [selectedSelfStudyProblem, setSelectedSelfStudyProblem] = useState(null);
+  const [editMemoText, setEditMemoText] = useState('');
+  const [isEditingMemo, setIsEditingMemo] = useState(false);
+
+  const compressSelfStudyImage = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleSelfStudyImageFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const compressed = await compressSelfStudyImage(file);
+      setSelfStudyImage(compressed);
+    } catch (err) {
+      console.error(err);
+      alert('이미지를 불러오는데 실패했습니다.');
+    }
+  };
+
+  const handleSaveSelfStudyProblem = async () => {
+    const targetStudent = selfStudyStudent || (currentUser && currentUser !== 'mathkorea' ? currentUser : '강백');
+    const finalWorkbook = selfStudyWorkbook === '직접 입력' ? selfStudyCustomWorkbook.trim() || '자율학습' : selfStudyWorkbook;
+    const finalChapter = selfStudyChapter === '직접 입력' ? selfStudyCustomChapter.trim() || '단원 미지정' : selfStudyChapter;
+    const finalProbNum = selfStudyProblemNumber.trim() || '1';
+
+    if (!selfStudyImage && !selfStudyMemo.trim()) {
+      alert('문제 사진을 첨부하거나 메모 내용을 입력해주세요.');
+      return;
+    }
+
+    setIsSavingSelfStudy(true);
+    try {
+      await addSelfStudyProblem(targetStudent, {
+        workbook: finalWorkbook,
+        chapter: finalChapter,
+        problemNumber: finalProbNum,
+        imageUrl: selfStudyImage,
+        memo: selfStudyMemo.trim(),
+        status: 'incorrect'
+      });
+      alert('문제 보관함에 성공적으로 등록되었습니다!');
+      setIsSelfStudyModalOpen(false);
+      setSelfStudyImage(null);
+      setSelfStudyMemo('');
+      setSelfStudyProblemNumber('');
+      setIncorrectViewMode('selfStudy');
+    } catch (err) {
+      console.error(err);
+      alert(`등록 중 오류가 발생했습니다: ${err.message}`);
+    } finally {
+      setIsSavingSelfStudy(false);
+    }
+  };
 
   // Schedule State & Modals (과외용 학생별 주차별 진도표)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -338,13 +435,16 @@ export default function HomePage() {
         if (!isAdmin && hw.studentName !== currentUser) return;
         
         const targetProblems = (hw.submittedProblems || []).filter(p => {
+          const isSelf = p.isSelfStudy || hw.isSelfStudy;
           if (incorrectViewMode === 'current') {
             return p.status === 'incorrect';
           } else if (incorrectViewMode === 'bookmark') {
-            return p.isBookmarked;
+            return p.isBookmarked && !isSelf;
+          } else if (incorrectViewMode === 'selfStudy') {
+            return isSelf;
           } else {
-            // 'all' / history: all problems that are incorrect, was incorrect, attempts > 1, or bookmarked
-            return p.status === 'incorrect' || p.hasBeenIncorrect || (p.attempts > 1) || p.isBookmarked || (p.history && p.history.some(h => h.status === 'incorrect'));
+            // 'all' / history: all problems that are incorrect, was incorrect, attempts > 1, or bookmarked, or self-study
+            return p.status === 'incorrect' || p.hasBeenIncorrect || (p.attempts > 1) || p.isBookmarked || isSelf || (p.history && p.history.some(h => h.status === 'incorrect'));
           }
         });
 
@@ -353,17 +453,28 @@ export default function HomePage() {
           
           targetProblems.forEach(p => {
             const group = hw.problemGroups?.find(g => g.groupId === p.groupId);
+            const isSelf = p.isSelfStudy || hw.isSelfStudy;
+            let groupLabel = group ? group.label : (hw.title || '기본');
+            if (isSelf) {
+              groupLabel = p.workbook ? `[자율학습] ${p.workbook} - ${p.chapter || ''}` : (group?.label || '[자율학습] 숙제 외 보관');
+            }
+
             map[hw.studentName].push({
               hwId: hw.id,
               groupId: p.groupId,
               hwTitle: hw.title,
-              label: group ? group.label : (hw.title || '기본'),
+              label: groupLabel,
               problemNumber: p.problemNumber,
+              customDisplayNumber: p.customDisplayNumber || p.problemNumber,
               status: p.status,
               attempts: p.attempts || 1,
               imageUrl: p.imageUrl,
               aiFeedback: p.aiFeedback,
               isBookmarked: p.isBookmarked || false,
+              isSelfStudy: isSelf,
+              workbook: p.workbook || '',
+              chapter: p.chapter || '',
+              memo: p.memo || '',
               history: p.history || []
             });
           });
@@ -680,24 +791,54 @@ export default function HomePage() {
         ) : activeTab === 'incorrect' ? (
           // --- 오답 & 복습 보관함 탭 (단원별 직관적 그리드) ---
           <div>
-            <div style={{ marginBottom: '16px' }}>
-              <h2 style={{ color: '#FFD700', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                📚 단원별 문제 보관함
-              </h2>
-              <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
-                학생들이 직접 보관했거나 다시 풀어볼 문제들이 단원별로 누적 보관되어 언제든 스스로 다시 풀고 복습할 수 있습니다.
-              </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h2 style={{ color: '#FFD700', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  📚 단원별 문제 보관함
+                </h2>
+                <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
+                  숙제 오답은 물론, 혼자 공부하며 수집한 숙제 외 문제까지 단원별로 누적 보관되어 언제든 복습할 수 있습니다.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelfStudyStudent(currentUser && currentUser !== 'mathkorea' ? currentUser : (allStudentNames[0] || '강백'));
+                  setSelfStudyImage(null);
+                  setSelfStudyMemo('');
+                  setSelfStudyProblemNumber('');
+                  setIsSelfStudyModalOpen(true);
+                }}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '10px',
+                  border: '1.5px solid #FFD700',
+                  backgroundColor: '#FFD700',
+                  color: '#000',
+                  fontWeight: 'bold',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 10px rgba(255, 215, 0, 0.25)',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <span>➕ 숙제 외 문제 등록</span>
+              </button>
             </div>
 
-            {/* Filter Toggle: 전체 복습함 vs 미해결 오답 vs 어려웠던 문제 */}
+            {/* Filter Toggle: 전체 복습함 vs 미해결 오답 vs 어려웠던 문제 vs 숙제 외 자율학습 */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 onClick={() => setIncorrectViewMode('history')}
                 style={{
                   flex: 1,
-                  minWidth: '110px',
-                  padding: '9px 12px',
+                  minWidth: '100px',
+                  padding: '9px 10px',
                   borderRadius: '10px',
                   border: incorrectViewMode === 'history' ? '2px solid #1E88E5' : '1px solid #333',
                   backgroundColor: incorrectViewMode === 'history' ? '#142742' : '#1E2028',
@@ -708,7 +849,7 @@ export default function HomePage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
+                  gap: '5px',
                   transition: 'all 0.2s'
                 }}
               >
@@ -720,8 +861,8 @@ export default function HomePage() {
                 onClick={() => setIncorrectViewMode('current')}
                 style={{
                   flex: 1,
-                  minWidth: '110px',
-                  padding: '9px 12px',
+                  minWidth: '100px',
+                  padding: '9px 10px',
                   borderRadius: '10px',
                   border: incorrectViewMode === 'current' ? '2px solid #E53935' : '1px solid #333',
                   backgroundColor: incorrectViewMode === 'current' ? '#3B1A1E' : '#1E2028',
@@ -732,11 +873,11 @@ export default function HomePage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
+                  gap: '5px',
                   transition: 'all 0.2s'
                 }}
               >
-                <span>🚨 미해결 오답만</span>
+                <span>🚨 미해결 오답</span>
               </button>
 
               <button
@@ -744,8 +885,8 @@ export default function HomePage() {
                 onClick={() => setIncorrectViewMode('bookmark')}
                 style={{
                   flex: 1,
-                  minWidth: '110px',
-                  padding: '9px 12px',
+                  minWidth: '100px',
+                  padding: '9px 10px',
                   borderRadius: '10px',
                   border: incorrectViewMode === 'bookmark' ? '2px solid #FFD700' : '1px solid #333',
                   backgroundColor: incorrectViewMode === 'bookmark' ? '#3A3215' : '#1E2028',
@@ -756,11 +897,35 @@ export default function HomePage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
+                  gap: '5px',
                   transition: 'all 0.2s'
                 }}
               >
-                <span>⭐️ 문제 보관</span>
+                <span>⭐️ 보관한 숙제</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIncorrectViewMode('selfStudy')}
+                style={{
+                  flex: 1,
+                  minWidth: '100px',
+                  padding: '9px 10px',
+                  borderRadius: '10px',
+                  border: incorrectViewMode === 'selfStudy' ? '2px solid #FF9800' : '1px solid #333',
+                  backgroundColor: incorrectViewMode === 'selfStudy' ? '#382512' : '#1E2028',
+                  color: incorrectViewMode === 'selfStudy' ? '#FFB74D' : '#888',
+                  fontWeight: 'bold',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span>📖 숙제 외 문제</span>
               </button>
             </div>
 
@@ -804,6 +969,7 @@ export default function HomePage() {
                           {/* 4-Column Problem Squares Grid (Exact homework grid style) */}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                             {sec.items.map((prob, pIdx) => {
+                              const isSelf = prob.isSelfStudy;
                               const isCorrect = prob.status === 'correct';
                               const isIndeterminate = prob.status === 'indeterminate' || prob.status === 'unclear';
                               const isIncorrect = prob.status === 'incorrect';
@@ -811,8 +977,19 @@ export default function HomePage() {
                               let borderColor = '#E53935';
                               let labelText = '❌ 틀림';
                               let labelColor = '#B71C1C';
+                              let bgColor = '#FFD700';
 
-                              if (isCorrect) {
+                              if (isSelf) {
+                                if (isCorrect) {
+                                  borderColor = '#1E88E5';
+                                  labelText = '⭕ 해결';
+                                  labelColor = '#0D47A1';
+                                } else {
+                                  borderColor = '#FF9800';
+                                  labelText = prob.workbook ? prob.workbook : '📖 자율';
+                                  labelColor = '#E65100';
+                                }
+                              } else if (isCorrect) {
                                 borderColor = '#1E88E5';
                                 labelText = '⭕ 맞음';
                                 labelColor = '#0D47A1';
@@ -829,10 +1006,18 @@ export default function HomePage() {
                               return (
                                 <button
                                   key={pIdx}
-                                  onClick={() => navigate(`/upload/${prob.hwId}/${prob.groupId}/${prob.problemNumber}`)}
+                                  onClick={() => {
+                                    if (isSelf) {
+                                      setSelectedSelfStudyProblem(prob);
+                                      setEditMemoText(prob.memo || '');
+                                      setIsEditingMemo(false);
+                                    } else {
+                                      navigate(`/upload/${prob.hwId}/${prob.groupId}/${prob.problemNumber}`);
+                                    }
+                                  }}
                                   style={{
                                     aspectRatio: '1',
-                                    backgroundColor: '#FFD700',
+                                    backgroundColor: bgColor,
                                     border: `3.5px solid ${borderColor}`,
                                     borderRadius: '12px',
                                     color: '#000000',
@@ -850,10 +1035,14 @@ export default function HomePage() {
                                   onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
                                   onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                 >
-                                  {prob.isBookmarked && (
+                                  {isSelf ? (
+                                    <span style={{ position: 'absolute', top: '3px', left: '5px', fontSize: '11px' }}>📖</span>
+                                  ) : prob.isBookmarked ? (
                                     <span style={{ position: 'absolute', top: '3px', left: '5px', fontSize: '11px' }}>⭐️</span>
-                                  )}
-                                  <span>{prob.problemNumber}</span>
+                                  ) : null}
+                                  <span style={{ fontSize: (prob.customDisplayNumber && String(prob.customDisplayNumber).length > 4) ? '13px' : '18px' }}>
+                                    {prob.customDisplayNumber || prob.problemNumber}
+                                  </span>
                                   <span style={{ fontSize: '10px', marginTop: '2px', fontWeight: 'bold', color: labelColor }}>
                                     {labelText}
                                   </span>
@@ -879,7 +1068,11 @@ export default function HomePage() {
               <div style={{ color: '#888', textAlign: 'center', marginTop: '50px' }}>
                 {incorrectViewMode === 'current' 
                   ? '🎉 현재 미해결된 오답이 없습니다!' 
-                  : (incorrectViewMode === 'bookmark' ? '⭐️ 보관된 문제가 없습니다.' : '기록된 문제가 없습니다.')}
+                  : (incorrectViewMode === 'bookmark' 
+                      ? '⭐️ 보관된 숙제 문제가 없습니다.' 
+                      : (incorrectViewMode === 'selfStudy' 
+                          ? '📖 등록된 숙제 외 자율학습 문제가 없습니다. 위 [➕ 숙제 외 문제 등록] 버튼을 눌러 문제를 수집해보세요!' 
+                          : '기록된 문제가 없습니다.'))}
               </div>
             )}
           </div>
@@ -1453,7 +1646,7 @@ export default function HomePage() {
                   <h2 className="date-title">{section.date}</h2>
                 </div>
                 
-                {section.homeworks.map(hw => (
+                {section.homeworks.filter(hw => hw.type !== 'test' && !hw.isSelfStudy && hw.title !== '[자율학습] 숙제 외 문제 보관').map(hw => (
                   <div 
                     key={hw.id} 
                     className="homework-card" 
@@ -1507,7 +1700,7 @@ export default function HomePage() {
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#aaa' }}>빠른 선택</label>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {['강백', '이소은', '원장샘'].map((name) => (
+                  {['강백', '이소은', 'mathkorea'].map((name) => (
                     <button
                       key={name}
                       type="button"
@@ -1518,15 +1711,15 @@ export default function HomePage() {
                       style={{
                         padding: '6px 12px',
                         borderRadius: '16px',
-                        border: name === '원장샘' ? '1px solid #FFD700' : '1px solid #4CAF50',
-                        backgroundColor: name === '원장샘' ? '#3A3215' : '#1A3320',
-                        color: name === '원장샘' ? '#FFD700' : '#A5D6A7',
+                        border: name === 'mathkorea' || name === '원장샘' ? '1px solid #FFD700' : '1px solid #4CAF50',
+                        backgroundColor: name === 'mathkorea' || name === '원장샘' ? '#3A3215' : '#1A3320',
+                        color: name === 'mathkorea' || name === '원장샘' ? '#FFD700' : '#A5D6A7',
                         fontSize: '13px',
                         fontWeight: 'bold',
                         cursor: 'pointer'
                       }}
                     >
-                      {name === '원장샘' ? '👑 원장샘 (관리자)' : `👤 ${name}`}
+                      {name === 'mathkorea' ? '👑 mathkorea (운영자)' : (name === '원장샘' ? '👑 원장샘' : `👤 ${name}`)}
                     </button>
                   ))}
                 </div>
@@ -1808,6 +2001,452 @@ export default function HomePage() {
               alt="홍보 이미지 확대"
               style={{ maxWidth: '100%', maxHeight: '88vh', borderRadius: '12px', objectFit: 'contain' }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Self Study Problem Registration Modal */}
+      {isSelfStudyModalOpen && (
+        <div className="modal-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1000,
+          display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px'
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: '#1E1E24', borderRadius: '16px', padding: '24px',
+            maxWidth: '480px', width: '100%', maxHeight: '88vh', overflowY: 'auto',
+            border: '1px solid #FFD700', color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ margin: 0, color: '#FFD700', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📖 숙제 외 문제 직접 등록</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsSelfStudyModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#aaa', fontSize: '20px', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+            <p style={{ fontSize: '12.5px', color: '#aaa', margin: '0 0 16px 0', lineHeight: '1.4' }}>
+              혼자 공부하다 모르는 문제나 핵심 문제의 사진을 찍어 나만의 문제 보관함에 저장하고 언제든 복습하세요.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Student selector if Admin */}
+              {isAdmin && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
+                    등록할 학생
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {allStudentNames.map(name => (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => setSelfStudyStudent(name)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '16px',
+                          border: selfStudyStudent === name ? '1.5px solid #FFD700' : '1px solid #444',
+                          backgroundColor: selfStudyStudent === name ? '#3A3215' : '#2A2C38',
+                          color: selfStudyStudent === name ? '#FFD700' : '#888',
+                          fontSize: '12.5px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        👤 {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Textbook selection */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
+                  교재 / 출처
+                </label>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                  {['쎈', '블랙라벨', '일품', '자이스토리', '모의고사', '교과서', '직접 입력'].map(wb => (
+                    <button
+                      key={wb}
+                      type="button"
+                      onClick={() => setSelfStudyWorkbook(wb)}
+                      style={{
+                        padding: '5px 11px',
+                        borderRadius: '14px',
+                        border: selfStudyWorkbook === wb ? '1.5px solid #FFD700' : '1px solid #444',
+                        backgroundColor: selfStudyWorkbook === wb ? '#3A3215' : '#2A2C38',
+                        color: selfStudyWorkbook === wb ? '#FFD700' : '#aaa',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {wb}
+                    </button>
+                  ))}
+                </div>
+                {selfStudyWorkbook === '직접 입력' && (
+                  <input
+                    type="text"
+                    placeholder="교재명 직접 입력 (예: RPM, 수학의 정석)"
+                    value={selfStudyCustomWorkbook}
+                    onChange={(e) => setSelfStudyCustomWorkbook(e.target.value)}
+                    style={{
+                      width: '100%', padding: '9px 12px', backgroundColor: '#14151B',
+                      border: '1px solid #444', borderRadius: '8px', color: '#fff', fontSize: '13px'
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Chapter selection */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
+                  단원 / 영역
+                </label>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                  {['다항식의 연산', '나머지정리', '복소수', '이차방정식', '이차함수', '직접 입력'].map(ch => (
+                    <button
+                      key={ch}
+                      type="button"
+                      onClick={() => setSelfStudyChapter(ch)}
+                      style={{
+                        padding: '5px 11px',
+                        borderRadius: '14px',
+                        border: selfStudyChapter === ch ? '1.5px solid #FFD700' : '1px solid #444',
+                        backgroundColor: selfStudyChapter === ch ? '#3A3215' : '#2A2C38',
+                        color: selfStudyChapter === ch ? '#FFD700' : '#aaa',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {ch}
+                    </button>
+                  ))}
+                </div>
+                {selfStudyChapter === '직접 입력' && (
+                  <input
+                    type="text"
+                    placeholder="단원명 직접 입력 (예: 여러 가지 방정식, 평면좌표)"
+                    value={selfStudyCustomChapter}
+                    onChange={(e) => setSelfStudyCustomChapter(e.target.value)}
+                    style={{
+                      width: '100%', padding: '9px 12px', backgroundColor: '#14151B',
+                      border: '1px solid #444', borderRadius: '8px', color: '#fff', fontSize: '13px'
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Problem number & page */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
+                  문제 번호 / 페이지
+                </label>
+                <input
+                  type="text"
+                  placeholder="예: p.34 21번 또는 21"
+                  value={selfStudyProblemNumber}
+                  onChange={(e) => setSelfStudyProblemNumber(e.target.value)}
+                  style={{
+                    width: '100%', padding: '9px 12px', backgroundColor: '#14151B',
+                    border: '1px solid #444', borderRadius: '8px', color: '#fff', fontSize: '13px'
+                  }}
+                />
+              </div>
+
+              {/* Image Upload / Camera */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
+                  문제 사진 촬영 / 파일 첨부
+                </label>
+                {selfStudyImage ? (
+                  <div style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid #555' }}>
+                    <img
+                      src={selfStudyImage}
+                      alt="문제 미리보기"
+                      style={{ width: '100%', maxHeight: '200px', objectFit: 'contain', backgroundColor: '#000', display: 'block' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setSelfStudyImage(null)}
+                      style={{
+                        position: 'absolute', top: '8px', right: '8px',
+                        backgroundColor: 'rgba(0,0,0,0.7)', color: '#FF5252',
+                        border: '1px solid #FF5252', borderRadius: '6px',
+                        padding: '4px 8px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold'
+                      }}
+                    >
+                      ✕ 사진 삭제
+                    </button>
+                  </div>
+                ) : (
+                  <label style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    padding: '24px', border: '2px dashed #555', borderRadius: '10px',
+                    backgroundColor: '#161720', cursor: 'pointer', transition: 'border-color 0.2s'
+                  }}>
+                    <span style={{ fontSize: '28px', marginBottom: '6px' }}>📷</span>
+                    <span style={{ fontSize: '13px', color: '#FFD700', fontWeight: 'bold' }}>
+                      카메라로 촬영하거나 사진 선택
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
+                      터치하여 스마트폰 카메라 또는 갤러리 열기
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleSelfStudyImageFile}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Memo */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
+                  핵심 메모 / 질문할 점 (선택)
+                </label>
+                <textarea
+                  placeholder="예: 3차방정식 근과 계수의 관계 적용 시 켤레근 조건 유의, 치환 후 t의 범위 체크"
+                  value={selfStudyMemo}
+                  onChange={(e) => setSelfStudyMemo(e.target.value)}
+                  rows={3}
+                  style={{
+                    width: '100%', padding: '9px 12px', backgroundColor: '#14151B',
+                    border: '1px solid #444', borderRadius: '8px', color: '#fff', fontSize: '13px',
+                    resize: 'vertical', fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+              <button
+                type="button"
+                onClick={() => setIsSelfStudyModalOpen(false)}
+                style={{
+                  flex: 1, padding: '11px', borderRadius: '8px', border: '1px solid #555',
+                  backgroundColor: '#2A2C38', color: '#ccc', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveSelfStudyProblem}
+                disabled={isSavingSelfStudy}
+                style={{
+                  flex: 2, padding: '11px', borderRadius: '8px', border: 'none',
+                  backgroundColor: '#FFD700', color: '#000', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                {isSavingSelfStudy ? '저장 중...' : '💾 문제 보관함에 저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Self Study Problem Detail Modal */}
+      {selectedSelfStudyProblem && (
+        <div className="modal-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1000,
+          display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px'
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: '#1E1E24', borderRadius: '16px', padding: '24px',
+            maxWidth: '520px', width: '100%', maxHeight: '90vh', overflowY: 'auto',
+            border: '1px solid #FFD700', color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ backgroundColor: '#3A3215', color: '#FFD700', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold' }}>
+                    📖 {selectedSelfStudyProblem.workbook || '자율학습'}
+                  </span>
+                  <span style={{ color: '#888', fontSize: '12px' }}>
+                    {selectedSelfStudyProblem.chapter}
+                  </span>
+                </div>
+                <h3 style={{ margin: 0, color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                  {selectedSelfStudyProblem.customDisplayNumber || selectedSelfStudyProblem.problemNumber}번 문제
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedSelfStudyProblem(null)}
+                style={{ background: 'none', border: 'none', color: '#aaa', fontSize: '20px', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Problem Image with Tap-to-Zoom */}
+            {selectedSelfStudyProblem.imageUrl ? (
+              <div style={{ marginBottom: '16px' }}>
+                <div 
+                  onClick={() => setZoomPromoImage(selectedSelfStudyProblem.imageUrl)}
+                  style={{
+                    position: 'relative', borderRadius: '10px', overflow: 'hidden',
+                    border: '1px solid #444', backgroundColor: '#000', cursor: 'pointer'
+                  }}
+                >
+                  <img
+                    src={selectedSelfStudyProblem.imageUrl}
+                    alt="문제 이미지"
+                    style={{ width: '100%', maxHeight: '300px', objectFit: 'contain', display: 'block' }}
+                  />
+                  <div style={{
+                    position: 'absolute', bottom: '8px', right: '8px',
+                    backgroundColor: 'rgba(0,0,0,0.7)', color: '#FFD700',
+                    padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
+                    display: 'flex', alignItems: 'center', gap: '4px'
+                  }}>
+                    🔍 터치하면 고화질 확대
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Status Selector */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 'bold' }}>
+                학습 상태 변경
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateSelfStudyProblem(selectedSelfStudyProblem.hwId, selectedSelfStudyProblem.groupId, selectedSelfStudyProblem.problemNumber, { status: 'incorrect' });
+                    setSelectedSelfStudyProblem(prev => ({ ...prev, status: 'incorrect' }));
+                  }}
+                  style={{
+                    flex: 1, padding: '7px', borderRadius: '8px',
+                    border: selectedSelfStudyProblem.status === 'incorrect' ? '2px solid #E53935' : '1px solid #444',
+                    backgroundColor: selectedSelfStudyProblem.status === 'incorrect' ? '#3B1A1E' : '#2A2C38',
+                    color: selectedSelfStudyProblem.status === 'incorrect' ? '#FF8A80' : '#888',
+                    fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'
+                  }}
+                >
+                  🚨 복습 필요
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateSelfStudyProblem(selectedSelfStudyProblem.hwId, selectedSelfStudyProblem.groupId, selectedSelfStudyProblem.problemNumber, { status: 'correct' });
+                    setSelectedSelfStudyProblem(prev => ({ ...prev, status: 'correct' }));
+                  }}
+                  style={{
+                    flex: 1, padding: '7px', borderRadius: '8px',
+                    border: selectedSelfStudyProblem.status === 'correct' ? '2px solid #1E88E5' : '1px solid #444',
+                    backgroundColor: selectedSelfStudyProblem.status === 'correct' ? '#142742' : '#2A2C38',
+                    color: selectedSelfStudyProblem.status === 'correct' ? '#90CAF9' : '#888',
+                    fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'
+                  }}
+                >
+                  ⭕ 해결 완료
+                </button>
+              </div>
+            </div>
+
+            {/* Memo Display & Edit */}
+            <div style={{ marginBottom: '20px', backgroundColor: '#161720', borderRadius: '10px', padding: '12px', border: '1px solid #333' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', color: '#FFD700', fontWeight: 'bold' }}>
+                  📝 나의 오답 & 핵심 발상 메모
+                </span>
+                {!isEditingMemo && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditMemoText(selectedSelfStudyProblem.memo || '');
+                      setIsEditingMemo(true);
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#64B5F6', fontSize: '12px', cursor: 'pointer' }}
+                  >
+                    ✏️ 수정
+                  </button>
+                )}
+              </div>
+              {isEditingMemo ? (
+                <div>
+                  <textarea
+                    value={editMemoText}
+                    onChange={(e) => setEditMemoText(e.target.value)}
+                    rows={3}
+                    style={{
+                      width: '100%', padding: '8px', backgroundColor: '#0E0F14',
+                      border: '1px solid #555', borderRadius: '6px', color: '#fff', fontSize: '13px'
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingMemo(false)}
+                      style={{ padding: '4px 10px', borderRadius: '4px', border: '1px solid #555', backgroundColor: '#2A2C38', color: '#ccc', fontSize: '12px', cursor: 'pointer' }}
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateSelfStudyProblem(selectedSelfStudyProblem.hwId, selectedSelfStudyProblem.groupId, selectedSelfStudyProblem.problemNumber, { memo: editMemoText });
+                        setSelectedSelfStudyProblem(prev => ({ ...prev, memo: editMemoText }));
+                        setIsEditingMemo(false);
+                      }}
+                      style={{ padding: '4px 10px', borderRadius: '4px', border: 'none', backgroundColor: '#FFD700', color: '#000', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                      저장
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: '13px', color: selectedSelfStudyProblem.memo ? '#ddd' : '#777', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                  {selectedSelfStudyProblem.memo || '작성된 메모가 없습니다.'}
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Controls */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('이 문제를 문제 보관함에서 삭제하시겠습니까?')) {
+                    deleteSelfStudyProblem(selectedSelfStudyProblem.hwId, selectedSelfStudyProblem.groupId, selectedSelfStudyProblem.problemNumber);
+                    setSelectedSelfStudyProblem(null);
+                  }
+                }}
+                style={{
+                  padding: '9px 14px', borderRadius: '8px', border: '1px solid #E53935',
+                  backgroundColor: 'transparent', color: '#EF9A9A', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                🗑️ 보관함에서 삭제
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedSelfStudyProblem(null)}
+                style={{
+                  padding: '9px 20px', borderRadius: '8px', border: 'none',
+                  backgroundColor: '#333', color: '#fff', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                닫기
+              </button>
+            </div>
           </div>
         </div>
       )}

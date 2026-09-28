@@ -12,7 +12,7 @@ const fallbackInitialData = [
     homeworks: [
       {
         id: 1,
-        teacherName: "원장샘",
+        teacherName: "mathkorea",
         studentName: "이소은",
         title: "숙제의 의미",
         description: "내준 숙제 주변에 각종 표시 설명",
@@ -30,7 +30,7 @@ const fallbackInitialData = [
     homeworks: [
       {
         id: 2,
-        teacherName: "원장샘",
+        teacherName: "mathkorea",
         studentName: "늘푸른내신대비반",
         title: "숙제의 의미",
         description: "내준 숙제 주변에 각종 표시 설명",
@@ -73,7 +73,7 @@ export const HomeworkProvider = ({ children }) => {
     localStorage.removeItem('homeworkAppUser');
   };
 
-  const isAdmin = currentUser === '원장샘' || currentUser === 'admin' || currentUser === '선생님';
+  const isAdmin = currentUser === 'mathkorea' || currentUser === 'admin' || currentUser === '선생님' || currentUser === '원장샘';
 
   // AI Settings State (Gemini / DeepSeek)
   const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
@@ -873,6 +873,143 @@ export const HomeworkProvider = ({ children }) => {
     })));
   };
 
+  // Self-study problem management (숙제 외 자율학습 문제 수집 및 보관)
+  const addSelfStudyProblem = (studentName, problemData) => {
+    const {
+      workbook = '자율학습',
+      chapter = '단원 미지정',
+      problemNumber = '1',
+      imageUrl = null,
+      memo = '',
+      status = 'incorrect'
+    } = problemData;
+
+    const parsedNum = parseInt(problemNumber) || (Date.now() % 10000);
+    const grpId = `self_${workbook}_${chapter}`.replace(/[\s\.\-]+/g, '_');
+    const grpLabel = `[자율] ${workbook} - ${chapter}`;
+
+    updateStateAndSave(prevData => {
+      let newData = [...prevData];
+      let targetSection = newData[0];
+      if (!targetSection) {
+        targetSection = { date: '상시 자율학습', homeworks: [] };
+        newData.push(targetSection);
+      }
+
+      let foundSecIdx = -1;
+      let foundHwIdx = -1;
+
+      for (let sIdx = 0; sIdx < newData.length; sIdx++) {
+        const sec = newData[sIdx];
+        const hIdx = (sec.homeworks || []).findIndex(
+          h => (h.isSelfStudy || h.title === '[자율학습] 숙제 외 문제 보관') && h.studentName === studentName
+        );
+        if (hIdx >= 0) {
+          foundSecIdx = sIdx;
+          foundHwIdx = hIdx;
+          break;
+        }
+      }
+
+      const problemItem = {
+        groupId: grpId,
+        problemNumber: parsedNum,
+        customDisplayNumber: problemNumber || String(parsedNum),
+        workbook,
+        chapter,
+        imageUrl,
+        memo,
+        isBookmarked: true,
+        isSelfStudy: true,
+        status,
+        attempts: 1,
+        createdAt: new Date().toISOString()
+      };
+
+      if (foundHwIdx < 0) {
+        const newSelfStudyHw = {
+          id: Date.now(),
+          teacherName: 'mathkorea',
+          studentName,
+          title: '[자율학습] 숙제 외 문제 보관',
+          description: '학생이 스스로 공부하면서 수집한 문제 보관소',
+          tag: '자율학습',
+          isSelfStudy: true,
+          statusType: 'none',
+          statusValue: null,
+          problemGroups: [
+            {
+              groupId: grpId,
+              label: grpLabel,
+              problems: [parsedNum]
+            }
+          ],
+          submittedProblems: [problemItem],
+          evaluation: null
+        };
+        targetSection.homeworks = [newSelfStudyHw, ...(targetSection.homeworks || [])];
+      } else {
+        const existingHw = newData[foundSecIdx].homeworks[foundHwIdx];
+        let updatedGroups = [...(existingHw.problemGroups || [])];
+        let grp = updatedGroups.find(g => g.groupId === grpId);
+        if (!grp) {
+          grp = { groupId: grpId, label: grpLabel, problems: [parsedNum] };
+          updatedGroups.push(grp);
+        } else if (!grp.problems.includes(parsedNum)) {
+          grp.problems = [...grp.problems, parsedNum];
+        }
+
+        const updatedSubmitted = [...(existingHw.submittedProblems || []), problemItem];
+        newData[foundSecIdx].homeworks[foundHwIdx] = {
+          ...existingHw,
+          problemGroups: updatedGroups,
+          submittedProblems: updatedSubmitted
+        };
+      }
+
+      return newData;
+    });
+  };
+
+  const deleteSelfStudyProblem = (hwId, groupId, problemNumber) => {
+    updateStateAndSave(prevData => prevData.map(section => ({
+      ...section,
+      homeworks: (section.homeworks || []).map(hw => {
+        if (hw.id === parseInt(hwId)) {
+          const newSubmitted = (hw.submittedProblems || []).filter(
+            p => !(p.groupId === groupId && p.problemNumber === parseInt(problemNumber))
+          );
+          return {
+            ...hw,
+            submittedProblems: newSubmitted
+          };
+        }
+        return hw;
+      })
+    })));
+  };
+
+  const updateSelfStudyProblem = (hwId, groupId, problemNumber, updates) => {
+    updateStateAndSave(prevData => prevData.map(section => ({
+      ...section,
+      homeworks: (section.homeworks || []).map(hw => {
+        if (hw.id === parseInt(hwId)) {
+          const newSubmitted = (hw.submittedProblems || []).map(p => {
+            if (p.groupId === groupId && p.problemNumber === parseInt(problemNumber)) {
+              return { ...p, ...updates };
+            }
+            return p;
+          });
+          return {
+            ...hw,
+            submittedProblems: newSubmitted
+          };
+        }
+        return hw;
+      })
+    })));
+  };
+
   return (
     <HomeworkContext.Provider value={{
       data,
@@ -896,6 +1033,9 @@ export const HomeworkProvider = ({ children }) => {
       updateTestInfo,
       deleteHomework,
       evaluateHomework,
+      addSelfStudyProblem,
+      deleteSelfStudyProblem,
+      updateSelfStudyProblem,
       geminiApiKey,
       saveGeminiApiKey,
       aiProvider,

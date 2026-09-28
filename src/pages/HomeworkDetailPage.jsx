@@ -599,7 +599,7 @@ export default function HomeworkDetailPage() {
                         gap: '5px',
                         transition: 'all 0.2s'
                       }}
-                      title="원장샘 전용: 각 문항의 정답을 미리 등록하거나 AI로 자동 생성합니다"
+                      title="mathkorea 운영자 전용: 각 문항의 정답을 미리 등록하거나 AI로 자동 생성합니다"
                     >
                       <span>📝 정답표 관리</span>
                     </button>
@@ -920,7 +920,7 @@ export default function HomeworkDetailPage() {
             border: '1px solid #444', color: '#fff'
           }}>
             <h3 style={{ margin: '0 0 8px 0', color: '#81C784', fontSize: '17px' }}>
-              📝 과제 정답표 관리 (원장샘 전용)
+              📝 과제 정답표 관리 (mathkorea 운영자)
             </h3>
             <p style={{ fontSize: '12px', color: '#aaa', margin: '0 0 16px 0', lineHeight: '1.4' }}>
               각 문항의 정답(객관식 선지 번호, 단답형 숫자, 서술형 LaTeX 수식)을 등록합니다. 아래 <b>[🤖 AI 정답 자동 생성]</b>을 누르면 AI가 자동으로 풀어서 입력합니다.
