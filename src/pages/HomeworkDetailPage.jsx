@@ -5,6 +5,27 @@ import { autoGradeProblemSubmission, solveProblemWithAI, checkMathEquivalenceWit
 
 const formatGroupLabel = (label) => {
   if (!label || typeof label !== 'string') return label;
+  
+  const matches = [...label.matchAll(/\[([^\]]+)\]/g)].map(m => m[1]);
+  if (matches.length >= 3) {
+    const page = matches.find(m => m.startsWith('p.') || m.includes('p.'));
+    const range = matches.find(m => m.startsWith('번호:') || /^\d+~\d+$/.test(m));
+    const contentSegments = matches.filter(m => 
+      m !== matches[0] && 
+      m !== page && 
+      m !== range
+    );
+    let title = contentSegments.length > 0 ? contentSegments[contentSegments.length - 1] : matches[0];
+    const details = [];
+    if (page) details.push(page);
+    if (range) details.push(range.startsWith('번호:') ? `${range.replace('번호:', '')}번` : `${range}번`);
+    
+    if (details.length > 0) {
+      title += ` (${details.join(', ')})`;
+    }
+    return title;
+  }
+
   if (label.includes('번호:')) return label;
   return label.replace(/-?\[(\d+~\d+|\d+)\]$/, '-[번호:$1]');
 };

@@ -72,15 +72,30 @@ export default function UploadPage() {
     }
   }, [problemId, hw]);
 
-  // Find the group label
-  let groupLabel = '';
-  if (hw && hw.problemGroups) {
-    const group = hw.problemGroups.find(g => g.groupId === groupId);
-    if (group) groupLabel = formatGroupLabel(group.label);
-  }
-  const cleanLabel = groupLabel && groupLabel !== '문제' 
-    ? (groupLabel.startsWith('[') ? `${groupLabel} ` : `[${groupLabel}] `) 
-    : '';
+  // Extract clean sub-unit or chapter from group label (without textbook/출처 tags)
+  const extractSubUnit = (label) => {
+    if (!label || typeof label !== 'string') return '';
+    const matches = [...label.matchAll(/\[([^\]]+)\]/g)].map(m => m[1]);
+    if (matches.length >= 3) {
+      const page = matches.find(m => m.startsWith('p.') || m.includes('p.'));
+      const range = matches.find(m => m.startsWith('번호:') || /^\d+~\d+$/.test(m));
+      const contentSegments = matches.filter(m => 
+        m !== matches[0] && 
+        m !== page && 
+        m !== range
+      );
+      return contentSegments.length > 0 ? contentSegments[contentSegments.length - 1] : matches[0];
+    }
+    if (matches.length === 2 && !matches[1].startsWith('번호:')) {
+      return matches[1];
+    }
+    return '';
+  };
+
+  const currentGroup = hw?.problemGroups?.find(g => g.groupId === groupId);
+  const subUnit = currentGroup ? extractSubUnit(currentGroup.label) : '';
+  const cleanTitle = hw?.title ? hw.title.replace(/^\[[^\]]+\]\s*/, '') : '';
+  const subtitleText = [subUnit, cleanTitle, hw?.studentName].filter(Boolean).join(' · ');
 
   useEffect(() => {
     if (hw) {
@@ -255,7 +270,7 @@ export default function UploadPage() {
             <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <h1 className="header-title">{cleanLabel}{problemId}번 제출</h1>
+        <h1 className="header-title">{problemId}번 제출</h1>
         <div style={{width: '24px'}}></div> {/* Spacer for centering */}
       </header>
 
@@ -263,8 +278,8 @@ export default function UploadPage() {
       <main className="content-list upload-content">
         <div className="upload-instruction" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
           <div>
-            <h2 style={{ margin: 0 }}>{cleanLabel}{problemId}번 문제 풀이</h2>
-            <p style={{ margin: '4px 0 0 0' }}>{hw.title} · {hw.studentName}</p>
+            <h2 style={{ margin: 0 }}>{problemId}번 문제 풀이</h2>
+            <p style={{ margin: '4px 0 0 0', color: '#aaa', fontSize: '13px' }}>{subtitleText}</p>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -339,7 +354,7 @@ export default function UploadPage() {
           {driveImageUrl && !imageError && (
             <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '16px', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
               <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1565C0', marginBottom: '10px', textAlign: 'left' }}>
-                <span>📌 [문제] {cleanLabel}{problemId}번</span>
+                <span>📌 [문제] {problemId}번</span>
               </div>
               
               <div 
@@ -389,7 +404,7 @@ export default function UploadPage() {
           {(!driveImageUrl || imageError) && hw.problemDetails && (hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]) && (
             <div style={{ backgroundColor: '#ffffff', color: '#111', borderRadius: '12px', padding: '18px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', border: '1px solid #E0E0E0' }}>
               <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1565C0', marginBottom: '10px', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>📌 [문제 {problemId}번] {cleanLabel}{(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).concept || ''}</span>
+                <span>📌 [문제 {problemId}번]{(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).concept ? ` · ${(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).concept}` : ''}</span>
                 {(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).level && (
                   <span style={{ fontSize: '11px', backgroundColor: '#FFF3E0', color: '#E65100', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
                     Level {(hw.problemDetails[problemId] || hw.problemDetails[String(problemId)]).level}

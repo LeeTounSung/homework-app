@@ -1733,7 +1733,7 @@ export default function HomePage() {
                     }
                   }}
                   className="modal-input"
-                  placeholder="예: 강백, 이소은, mathkorea"
+                  placeholder="이름 또는 아이디를 입력하세요"
                   style={{ width: '100%', boxSizing: 'border-box' }}
                 />
               </div>
