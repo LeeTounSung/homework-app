@@ -1711,52 +1711,37 @@ export default function HomePage() {
       {/* Login Modal */}
       {isLoginModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#FFFFFF' }}>이름 확인</h3>
+          <div className="modal-content" style={{ maxWidth: '400px', width: '90%' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '8px', color: '#FFFFFF', fontSize: '18px' }}>로그인</h3>
+            <p style={{ color: '#888', fontSize: '13px', margin: '0 0 18px 0' }}>
+              본인의 이름(학생) 또는 관리자 아이디를 직접 입력해주세요.
+            </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#aaa' }}>빠른 선택</label>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {['강백', '이소은', 'mathkorea'].map((name) => (
-                    <button
-                      key={name}
-                      type="button"
-                      onClick={() => {
-                        login(name);
-                        setIsLoginModalOpen(false);
-                      }}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '16px',
-                        border: name === 'mathkorea' || name === '원장샘' ? '1.5px solid #2563EB' : '1px solid #4CAF50',
-                        backgroundColor: name === 'mathkorea' || name === '원장샘' ? 'rgba(37, 99, 235, 0.2)' : '#1A3320',
-                        color: name === 'mathkorea' || name === '원장샘' ? '#93C5FD' : '#A5D6A7',
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {name === 'mathkorea' ? '👑 mathkorea (운영자)' : (name === '원장샘' ? '👑 원장샘' : `👤 ${name}`)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#aaa' }}>직접 입력</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
+                  이름 / 아이디
+                </label>
                 <input 
                   type="text" 
+                  autoFocus
                   value={loginName} 
                   onChange={(e) => setLoginName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleLoginSubmit();
+                    }
+                  }}
                   className="modal-input"
-                  placeholder="본인의 이름을 입력하세요 (예: 강백)"
+                  placeholder="예: 강백, 이소은, mathkorea"
+                  style={{ width: '100%', boxSizing: 'border-box' }}
                 />
               </div>
             </div>
             
-            <div className="modal-buttons" style={{ marginTop: '20px' }}>
+            <div className="modal-buttons" style={{ marginTop: '22px' }}>
               <button className="modal-btn cancel" onClick={() => setIsLoginModalOpen(false)}>닫기</button>
-              <button className="modal-btn confirm" onClick={handleLoginSubmit}>접속하기</button>
+              <button className="modal-btn confirm" onClick={handleLoginSubmit}>로그인</button>
             </div>
           </div>
         </div>
