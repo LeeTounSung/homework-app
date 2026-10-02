@@ -6,44 +6,7 @@ export const useHomework = () => useContext(HomeworkContext);
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxaYVDgDHHkKz1wJazeMDlsYl3VGS8m05YQGpgdnyGxG4-12bWHsVP7I3pcKOMLBnU/exec';
 
-const fallbackInitialData = [
-  {
-    date: "1월 10일(수)까지",
-    homeworks: [
-      {
-        id: 1,
-        teacherName: "mathkorea",
-        studentName: "이소은",
-        title: "숙제의 의미",
-        description: "내준 숙제 주변에 각종 표시 설명",
-        tag: "to 이소은",
-        statusType: "none", 
-        statusValue: null,
-        problemGroups: [],
-        submittedProblems: [], 
-        evaluation: null 
-      }
-    ]
-  },
-  {
-    date: "1월 11일(목)까지",
-    homeworks: [
-      {
-        id: 2,
-        teacherName: "mathkorea",
-        studentName: "늘푸른내신대비반",
-        title: "숙제의 의미",
-        description: "내준 숙제 주변에 각종 표시 설명",
-        tag: "# 늘푸른내신대비반",
-        statusType: "none",
-        statusValue: null,
-        problemGroups: [],
-        submittedProblems: [],
-        evaluation: null
-      }
-    ]
-  }
-];
+const fallbackInitialData = [];
 
 export const HomeworkProvider = ({ children }) => {
   const [data, setData] = useState([]);
@@ -344,17 +307,14 @@ export const HomeworkProvider = ({ children }) => {
       try {
         const response = await fetch(GAS_URL);
         const result = await response.json();
-        if (Array.isArray(result) && result.length > 0) {
+        if (Array.isArray(result)) {
           setData(result);
         } else {
-          // If empty, initialize with fallback data and save to drive
-          setData(fallbackInitialData);
-          saveDataToDrive(fallbackInitialData);
+          setData([]);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        // Fallback to local memory if offline/error
-        setData(fallbackInitialData);
+        setData([]);
       } finally {
         setIsLoading(false);
       }
