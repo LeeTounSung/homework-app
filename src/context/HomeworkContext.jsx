@@ -301,19 +301,44 @@ export const HomeworkProvider = ({ children }) => {
                          (aiProvider === 'gemini' && !!geminiApiKey) ||
                          (aiProvider === 'musespark' && !!musesparkApiKey);
 
-  // Fetch data on mount
+  // Fetch data on mount with dual-layer safety (Cloud + Local Cache)
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(GAS_URL);
         const result = await response.json();
-        if (Array.isArray(result)) {
+        if (Array.isArray(result) && result.length > 0) {
           setData(result);
+          try {
+            localStorage.setItem('cachedHomeworkData', JSON.stringify(result));
+          } catch (e) {}
         } else {
-          setData([]);
+          // Cloud empty or invalid format - check local cache before blanking
+          const cached = localStorage.getItem('cachedHomeworkData');
+          if (cached) {
+            try {
+              const parsed = JSON.parse(cached);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setData(parsed);
+                return;
+              }
+            } catch (e) {}
+          }
+          setData(Array.isArray(result) ? result : []);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        // Network timeout / offline fallback to local cache
+        const cached = localStorage.getItem('cachedHomeworkData');
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed)) {
+              setData(parsed);
+              return;
+            }
+          } catch (e) {}
+        }
         setData([]);
       } finally {
         setIsLoading(false);
@@ -337,13 +362,16 @@ export const HomeworkProvider = ({ children }) => {
         })
       });
     } catch (error) {
-      console.error("Error saving data:", error);
+      console.error("Error saving data to cloud:", error);
     }
   };
 
   const updateStateAndSave = (updaterFn) => {
     setData(prevData => {
       const newData = updaterFn(prevData);
+      try {
+        localStorage.setItem('cachedHomeworkData', JSON.stringify(newData));
+      } catch (e) {}
       saveDataToDrive(newData); // Async save in background
       return newData;
     });
