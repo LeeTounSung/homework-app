@@ -24,10 +24,12 @@ const formatDriveImageUrl = (url) => {
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
     const cleanPath = url.startsWith('/') ? url : `/${url}`;
-    if (base && !cleanPath.startsWith(base + '/')) {
-      return `${base}${cleanPath}`;
+    const fullPath = (base && !cleanPath.startsWith(base + '/')) ? `${base}${cleanPath}` : cleanPath;
+    try {
+      return encodeURI(decodeURI(fullPath)).replace(/\[/g, '%5B').replace(/\]/g, '%5D');
+    } catch {
+      return encodeURI(fullPath).replace(/\[/g, '%5B').replace(/\]/g, '%5D');
     }
-    return cleanPath;
   }
 
   return url;
