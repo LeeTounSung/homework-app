@@ -109,10 +109,12 @@ export default function UploadPage() {
         }
       }
       
-      if (hw.problemImagesBaseUrl) {
-        const isGoogleDrive = hw.problemImagesBaseUrl.includes('drive.google.com');
+      const currentGroup = hw.problemGroups?.find(g => g.groupId === groupId);
+      const imagesBaseUrl = currentGroup?.problemImagesBaseUrl || hw.problemImagesBaseUrl;
+      if (imagesBaseUrl) {
+        const isGoogleDrive = imagesBaseUrl.includes('drive.google.com');
         if (isGoogleDrive && getProblemImageFromDrive) {
-          getProblemImageFromDrive(hw.problemImagesBaseUrl, `${problemId}.png`)
+          getProblemImageFromDrive(imagesBaseUrl, `${problemId}.png`)
             .then(res => {
               if (res && res.success) {
                 setDriveImageUrl(res.url);
@@ -128,7 +130,7 @@ export default function UploadPage() {
               setImageError(true);
             });
         } else {
-          const rawUrl = `${hw.problemImagesBaseUrl.replace(/\/$/, '')}/${problemId}.png`;
+          const rawUrl = `${imagesBaseUrl.replace(/\/$/, '')}/${problemId}.png`;
           setDriveImageUrl(formatDriveImageUrl(rawUrl));
           setImageError(false);
         }
