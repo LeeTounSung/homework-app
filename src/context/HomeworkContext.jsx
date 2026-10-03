@@ -9,8 +9,26 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxaYVDgDHHkKz1wJazeMDls
 const fallbackInitialData = [];
 
 export const HomeworkProvider = ({ children }) => {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cachedHomeworkData');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cachedHomeworkData');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return false;
+      }
+    } catch (e) {}
+    return true;
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   // Authentication State
@@ -304,42 +322,39 @@ export const HomeworkProvider = ({ children }) => {
   // Fetch data on mount with dual-layer safety (Cloud + Local Cache)
   useEffect(() => {
     const fetchData = async () => {
+      // 1. If we don't have cached data in state yet, try local public/homeworkData.json first
+      if (!data || data.length === 0) {
+        try {
+          const publicRes = await fetch('./homeworkData.json');
+          if (publicRes.ok) {
+            const publicData = await publicRes.json();
+            if (Array.isArray(publicData) && publicData.length > 0) {
+              setData(publicData);
+              setIsLoading(false);
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 2. Query cloud GAS in background with 4s timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
       try {
-        const response = await fetch(GAS_URL);
-        const result = await response.json();
-        if (Array.isArray(result) && result.length > 0) {
-          setData(result);
-          try {
-            localStorage.setItem('cachedHomeworkData', JSON.stringify(result));
-          } catch (e) {}
-        } else {
-          // Cloud empty or invalid format - check local cache before blanking
-          const cached = localStorage.getItem('cachedHomeworkData');
-          if (cached) {
+        const response = await fetch(GAS_URL, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (response.ok) {
+          const result = await response.json();
+          if (Array.isArray(result) && result.length > 0) {
+            setData(result);
             try {
-              const parsed = JSON.parse(cached);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                setData(parsed);
-                return;
-              }
+              localStorage.setItem('cachedHomeworkData', JSON.stringify(result));
             } catch (e) {}
           }
-          setData(Array.isArray(result) ? result : []);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
-        // Network timeout / offline fallback to local cache
-        const cached = localStorage.getItem('cachedHomeworkData');
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed)) {
-              setData(parsed);
-              return;
-            }
-          } catch (e) {}
-        }
-        setData([]);
+        // Network timeout / offline fallback
+        console.warn("GAS fetch skipped or timed out, relying on local cache:", error);
       } finally {
         setIsLoading(false);
       }
