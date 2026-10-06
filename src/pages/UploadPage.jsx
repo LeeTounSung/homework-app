@@ -672,7 +672,11 @@ export default function UploadPage() {
           <MathInkComponent 
             geminiApiKey={geminiApiKey}
             aiConfig={aiConfig}
-            onInsert={(img) => { setImagePreview(img); setUseMathType(false); }} 
+            onInsert={(img, latex) => { 
+              if (img) setImagePreview(img); 
+              if (latex) setStudentAnswer(latex);
+              setUseMathType(false); 
+            }} 
             onCancel={() => setUseMathType(false)} 
           />
         )}

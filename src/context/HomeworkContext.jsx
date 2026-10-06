@@ -101,6 +101,23 @@ export const HomeworkProvider = ({ children }) => {
     return localStorage.getItem('agentApiUrl') || 'http://127.0.0.1:8000';
   });
 
+  const [myscriptAppKey, setMyscriptAppKey] = useState(() => {
+    return localStorage.getItem('myscriptAppKey') || import.meta.env.VITE_MYSCRIPT_APP_KEY || '';
+  });
+
+  const [myscriptHmacKey, setMyscriptHmacKey] = useState(() => {
+    return localStorage.getItem('myscriptHmacKey') || import.meta.env.VITE_MYSCRIPT_HMAC_KEY || '';
+  });
+
+  const saveMyscriptSettings = (appKey, hmacKey) => {
+    const cleanApp = (appKey || '').trim();
+    const cleanHmac = (hmacKey || '').trim();
+    setMyscriptAppKey(cleanApp);
+    setMyscriptHmacKey(cleanHmac);
+    localStorage.setItem('myscriptAppKey', cleanApp);
+    localStorage.setItem('myscriptHmacKey', cleanHmac);
+  };
+
   // Student-specific Progress Plan by Subject (과목별 주차별 예상 진도 단원)
   const initialSchedules = [
     {
@@ -268,7 +285,7 @@ export const HomeworkProvider = ({ children }) => {
     localStorage.setItem('homework_app_main_banner_v1', url);
   };
 
-  const saveAiSettings = ({ provider, geminiKey, deepseekKey, model, musesparkKey, musesparkModel: mModel, openrouterKey, openrouterModel: oModel, agentUrl }) => {
+  const saveAiSettings = ({ provider, geminiKey, deepseekKey, model, musesparkKey, musesparkModel: mModel, openrouterKey, openrouterModel: oModel, agentUrl, myscriptAppKey: msApp, myscriptHmacKey: msHmac }) => {
     if (provider !== undefined) {
       setAiProvider(provider);
       localStorage.setItem('aiProvider', provider);
@@ -304,6 +321,14 @@ export const HomeworkProvider = ({ children }) => {
     if (agentUrl !== undefined) {
       setAgentApiUrl(agentUrl);
       localStorage.setItem('agentApiUrl', agentUrl);
+    }
+    if (msApp !== undefined) {
+      setMyscriptAppKey(msApp.trim());
+      localStorage.setItem('myscriptAppKey', msApp.trim());
+    }
+    if (msHmac !== undefined) {
+      setMyscriptHmacKey(msHmac.trim());
+      localStorage.setItem('myscriptHmacKey', msHmac.trim());
     }
   };
 
@@ -341,7 +366,9 @@ export const HomeworkProvider = ({ children }) => {
     deepseekModel: (deepseekModel && deepseekModel !== 'deepseek-chat') ? deepseekModel : 'deepseek-v4-flash-vision-exp',
     musesparkApiKey,
     musesparkModel: musesparkModel || 'muse-spark-1.3-contributor',
-    agentApiUrl: agentApiUrl || 'http://127.0.0.1:8000'
+    agentApiUrl: agentApiUrl || 'http://127.0.0.1:8000',
+    myscriptAppKey,
+    myscriptHmacKey
   };
 
   const isAiConfigured = (aiProvider === 'jev' && !!openrouterApiKey) ||
@@ -1188,6 +1215,9 @@ export const HomeworkProvider = ({ children }) => {
       musesparkApiKey,
       musesparkModel,
       saveMusesparkApiKey,
+      myscriptAppKey,
+      myscriptHmacKey,
+      saveMyscriptSettings,
       saveAiSettings,
       aiConfig,
       isAiConfigured,
