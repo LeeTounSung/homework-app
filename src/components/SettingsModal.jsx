@@ -12,8 +12,6 @@ export default function SettingsModal({ isOpen, onClose }) {
     deepseekModel,
     musesparkApiKey,
     musesparkModel,
-    myscriptAppKey,
-    myscriptHmacKey,
     saveAiSettings
   } = useHomework();
 
@@ -28,8 +26,6 @@ export default function SettingsModal({ isOpen, onClose }) {
   const [tempGeminiKey, setTempGeminiKey] = useState('');
   const [tempOpenrouterKey, setTempOpenrouterKey] = useState('');
   const [tempOpenrouterModel, setTempOpenrouterModel] = useState('typesafe/jev-1.13');
-  const [tempMyscriptAppKey, setTempMyscriptAppKey] = useState('');
-  const [tempMyscriptHmacKey, setTempMyscriptHmacKey] = useState('');
   const [showMetaKey, setShowMetaKey] = useState(false);
   const [showOpenrouterKey, setShowOpenrouterKey] = useState(false);
   const [isTestingJev, setIsTestingJev] = useState(false);
@@ -45,13 +41,11 @@ export default function SettingsModal({ isOpen, onClose }) {
       setTempGeminiKey(geminiApiKey || '');
       setTempOpenrouterKey(openrouterApiKey || DEFAULT_OPENROUTER_KEY);
       setTempOpenrouterModel(openrouterModel || 'typesafe/jev-1.13');
-      setTempMyscriptAppKey(myscriptAppKey || '');
-      setTempMyscriptHmacKey(myscriptHmacKey || '');
       setShowMetaKey(false);
       setShowOpenrouterKey(false);
       setJevTestResult(null);
     }
-  }, [isOpen, aiProvider, musesparkApiKey, musesparkModel, deepseekApiKey, deepseekModel, geminiApiKey, openrouterApiKey, openrouterModel, myscriptAppKey, myscriptHmacKey]);
+  }, [isOpen, aiProvider, musesparkApiKey, musesparkModel, deepseekApiKey, deepseekModel, geminiApiKey, openrouterApiKey, openrouterModel]);
 
   if (!isOpen) return null;
 
@@ -87,9 +81,7 @@ export default function SettingsModal({ isOpen, onClose }) {
       deepseekKey: tempDeepseekKey.trim(),
       model: cleanedDeepseekModel,
       musesparkKey: tempMusesparkKey.trim(),
-      musesparkModel: cleanedMusesparkModel,
-      myscriptAppKey: tempMyscriptAppKey.trim(),
-      myscriptHmacKey: tempMyscriptHmacKey.trim()
+      musesparkModel: cleanedMusesparkModel
     });
 
     onClose();
@@ -428,63 +420,6 @@ export default function SettingsModal({ isOpen, onClose }) {
 
             <div style={{ fontSize: '11px', color: '#d4af37', lineHeight: '1.4' }}>
               * TypeSafe Jev 1.13(<code>https://openrouter.ai/api/alpha/decisions</code>)을 호출하여 학생의 LaTeX 수식과 정답표 간의 수학적 동치(Algebraic Equivalence) 판정 및 10점 만점 루브릭 채점을 0.05초 만에 $0.000015 극초저비용으로 즉각 완료합니다.
-            </div>
-          </div>
-
-          {/* ✍️ MyScript Interactive Ink (iink Math) Configuration */}
-          <div style={{
-            padding: '14px',
-            backgroundColor: '#1E293B',
-            borderRadius: '10px',
-            border: '1.5px solid #0EA5E9',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ✍️ MyScript 전자 수식 필기 (iink Math)
-              </span>
-              <a 
-                href="https://developer.myscript.com" 
-                target="_blank" 
-                rel="noreferrer"
-                style={{ fontSize: '11px', color: '#7DD3FC', textDecoration: 'underline' }}
-              >
-                무료 키 발급 ↗
-              </a>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: '#aaa' }}>
-                Application Key
-              </label>
-              <input 
-                type="text" 
-                value={tempMyscriptAppKey} 
-                onChange={(e) => setTempMyscriptAppKey(e.target.value)}
-                className="modal-input"
-                placeholder="MyScript Cloud Application Key"
-                style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'monospace', fontSize: '12px' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: '#aaa' }}>
-                HMAC Key (Secret)
-              </label>
-              <input 
-                type="password" 
-                value={tempMyscriptHmacKey} 
-                onChange={(e) => setTempMyscriptHmacKey(e.target.value)}
-                className="modal-input"
-                placeholder="MyScript Cloud HMAC Key"
-                style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'monospace', fontSize: '12px' }}
-              />
-            </div>
-
-            <div style={{ fontSize: '11px', color: '#94A3B8', lineHeight: '1.4' }}>
-              * 학생이 전자 필기패드(수식 직접 입력)에서 디지털 펜/터치로 수식을 필기할 때, MyScript Interactive Ink 엔진이 실시간으로 LaTeX 수식으로 즉각 변환합니다. (키가 없으면 일반 필기 캔버스로 자동 동작합니다.)
             </div>
           </div>
 
