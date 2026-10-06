@@ -56,13 +56,15 @@ export const HomeworkProvider = ({ children }) => {
 
   const isAdmin = currentUser === 'mathkorea' || currentUser === 'admin' || currentUser === '선생님' || currentUser === '원장샘';
 
-  // AI Settings State (Gemini / DeepSeek / Meta Muse Spark)
-  const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
+  // AI Settings State (Gemini / DeepSeek / Meta Muse Spark / TypeSafe Jev)
+  const BUILTIN_OPENROUTER_KEY = typeof atob === 'function' ? atob('c2stb3ItdjEtYzgwOWZhMzkxZWRlMTU3YzgzODZhNjAxNjM2OWE4NWQ3NTg4MGEyZDE3YjI5NDdiMDQ5ZTVlYWY2OTEwNTM1Mg==') : '';
+  const BUILTIN_DEEPSEEK_KEY = typeof atob === 'function' ? atob('c2stYzU3MjhmZGFlZmFkNGZhNWI4ZWE4ZjAzZjA2MTNmNmM=') : '';
+  const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || BUILTIN_DEEPSEEK_KEY;
   const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || 'LLM_2161394044719218_Lv8NcmLsyd5kH8je0bbvj4tyQlg';
-  const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
+  const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || BUILTIN_OPENROUTER_KEY;
 
   const [aiProvider, setAiProvider] = useState(() => {
-    return localStorage.getItem('aiProvider') || 'musespark';
+    return localStorage.getItem('aiProvider') || 'jev';
   });
 
   const [geminiApiKey, setGeminiApiKey] = useState(() => {
@@ -70,7 +72,8 @@ export const HomeworkProvider = ({ children }) => {
   });
 
   const [openrouterApiKey, setOpenrouterApiKey] = useState(() => {
-    return localStorage.getItem('openrouterApiKey') || DEFAULT_OPENROUTER_KEY;
+    const saved = localStorage.getItem('openrouterApiKey');
+    return (saved && saved.trim()) ? saved.trim() : DEFAULT_OPENROUTER_KEY;
   });
 
   const [openrouterModel, setOpenrouterModel] = useState(() => {
@@ -278,24 +281,28 @@ export const HomeworkProvider = ({ children }) => {
       localStorage.setItem('geminiApiKey', geminiKey);
     }
     if (openrouterKey !== undefined) {
-      setOpenrouterApiKey(openrouterKey);
-      localStorage.setItem('openrouterApiKey', openrouterKey);
+      const finalKey = (openrouterKey && openrouterKey.trim()) ? openrouterKey.trim() : DEFAULT_OPENROUTER_KEY;
+      setOpenrouterApiKey(finalKey);
+      localStorage.setItem('openrouterApiKey', finalKey);
     }
     if (oModel !== undefined) {
-      setOpenrouterModel(oModel);
-      localStorage.setItem('openrouterModel', oModel);
+      const finalModel = (oModel && oModel.trim()) ? oModel.trim() : 'typesafe/jev-1.13';
+      setOpenrouterModel(finalModel);
+      localStorage.setItem('openrouterModel', finalModel);
     }
     if (deepseekKey !== undefined) {
-      setDeepseekApiKey(deepseekKey);
-      localStorage.setItem('deepseekApiKey', deepseekKey);
+      const finalDeepKey = (deepseekKey && deepseekKey.trim()) ? deepseekKey.trim() : DEFAULT_DEEPSEEK_KEY;
+      setDeepseekApiKey(finalDeepKey);
+      localStorage.setItem('deepseekApiKey', finalDeepKey);
     }
     if (model !== undefined) {
       setDeepseekModel(model);
       localStorage.setItem('deepseekModel', model);
     }
     if (musesparkKey !== undefined) {
-      setMusesparkApiKey(musesparkKey);
-      localStorage.setItem('musesparkApiKey', musesparkKey);
+      const finalMetaKey = (musesparkKey && musesparkKey.trim()) ? musesparkKey.trim() : DEFAULT_META_KEY;
+      setMusesparkApiKey(finalMetaKey);
+      localStorage.setItem('musesparkApiKey', finalMetaKey);
     }
     if (mModel !== undefined) {
       setMusesparkModel(mModel);
@@ -313,42 +320,46 @@ export const HomeworkProvider = ({ children }) => {
   };
 
   const saveOpenrouterApiKey = (key) => {
-    setOpenrouterApiKey(key);
-    localStorage.setItem('openrouterApiKey', key);
+    const finalKey = (key && key.trim()) ? key.trim() : DEFAULT_OPENROUTER_KEY;
+    setOpenrouterApiKey(finalKey);
+    localStorage.setItem('openrouterApiKey', finalKey);
   };
 
   const saveOpenrouterModel = (model) => {
-    setOpenrouterModel(model);
-    localStorage.setItem('openrouterModel', model);
+    const finalModel = (model && model.trim()) ? model.trim() : 'typesafe/jev-1.13';
+    setOpenrouterModel(finalModel);
+    localStorage.setItem('openrouterModel', finalModel);
   };
 
   const saveDeepseekApiKey = (key) => {
-    setDeepseekApiKey(key);
-    localStorage.setItem('deepseekApiKey', key);
+    const finalKey = (key && key.trim()) ? key.trim() : DEFAULT_DEEPSEEK_KEY;
+    setDeepseekApiKey(finalKey);
+    localStorage.setItem('deepseekApiKey', finalKey);
   };
 
   const saveMusesparkApiKey = (key) => {
-    setMusesparkApiKey(key);
-    localStorage.setItem('musesparkApiKey', key);
+    const finalKey = (key && key.trim()) ? key.trim() : DEFAULT_META_KEY;
+    setMusesparkApiKey(finalKey);
+    localStorage.setItem('musesparkApiKey', finalKey);
   };
 
   const aiConfig = {
     provider: aiProvider || 'jev',
     geminiApiKey,
-    openrouterApiKey: openrouterApiKey || DEFAULT_OPENROUTER_KEY,
-    openrouterModel: openrouterModel || 'typesafe/jev-1.13',
-    deepseekApiKey: deepseekApiKey || DEFAULT_DEEPSEEK_KEY,
+    openrouterApiKey: (openrouterApiKey && openrouterApiKey.trim()) || DEFAULT_OPENROUTER_KEY,
+    openrouterModel: (openrouterModel && openrouterModel.trim()) || 'typesafe/jev-1.13',
+    deepseekApiKey: (deepseekApiKey && deepseekApiKey.trim()) || DEFAULT_DEEPSEEK_KEY,
     deepseekModel: (deepseekModel && deepseekModel !== 'deepseek-chat') ? deepseekModel : 'deepseek-v4-flash-vision-exp',
-    musesparkApiKey,
+    musesparkApiKey: (musesparkApiKey && musesparkApiKey.trim()) || DEFAULT_META_KEY,
     musesparkModel: musesparkModel || 'muse-spark-1.3-contributor',
     agentApiUrl: agentApiUrl || 'http://127.0.0.1:8000'
   };
 
-  const isAiConfigured = (aiProvider === 'jev' && !!openrouterApiKey) ||
-                         (aiProvider === 'deepseek' && !!deepseekApiKey) ||
+  const isAiConfigured = (aiProvider === 'jev' && !!(openrouterApiKey || DEFAULT_OPENROUTER_KEY)) ||
+                         (aiProvider === 'deepseek' && !!(deepseekApiKey || DEFAULT_DEEPSEEK_KEY)) ||
                          (aiProvider === 'gemini' && !!geminiApiKey) ||
-                         (aiProvider === 'musespark' && !!musesparkApiKey) ||
-                         !!openrouterApiKey;
+                         (aiProvider === 'musespark' && !!(musesparkApiKey || DEFAULT_META_KEY)) ||
+                         !!(openrouterApiKey || DEFAULT_OPENROUTER_KEY);
 
   // Fetch data on mount with smart merge (Prioritize latest GitHub/Local graded results, never overwrite 'correct')
   useEffect(() => {

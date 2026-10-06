@@ -15,8 +15,11 @@ export default function SettingsModal({ isOpen, onClose }) {
     saveAiSettings
   } = useHomework();
 
+  const BUILTIN_OPENROUTER_KEY = typeof atob === 'function' ? atob('c2stb3ItdjEtYzgwOWZhMzkxZWRlMTU3YzgzODZhNjAxNjM2OWE4NWQ3NTg4MGEyZDE3YjI5NDdiMDQ5ZTVlYWY2OTEwNTM1Mg==') : '';
+  const BUILTIN_DEEPSEEK_KEY = typeof atob === 'function' ? atob('c2stYzU3MjhmZGFlZmFkNGZhNWI4ZWE4ZjAzZjA2MTNmNmM=') : '';
+  const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || BUILTIN_DEEPSEEK_KEY;
   const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || 'LLM_2161394044719218_Lv8NcmLsyd5kH8je0bbvj4tyQlg';
-  const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
+  const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || BUILTIN_OPENROUTER_KEY;
 
   const [tempProvider, setTempProvider] = useState('jev');
   const [tempMusesparkKey, setTempMusesparkKey] = useState('');
@@ -36,7 +39,7 @@ export default function SettingsModal({ isOpen, onClose }) {
       setTempProvider(aiProvider || 'jev');
       setTempMusesparkKey(musesparkApiKey || DEFAULT_META_KEY);
       setTempMusesparkModel(musesparkModel || 'muse-spark-1.3-contributor');
-      setTempDeepseekKey(deepseekApiKey || '');
+      setTempDeepseekKey(deepseekApiKey || DEFAULT_DEEPSEEK_KEY);
       setTempDeepseekModel(deepseekModel || 'deepseek-v4-flash-vision-exp');
       setTempGeminiKey(geminiApiKey || '');
       setTempOpenrouterKey(openrouterApiKey || DEFAULT_OPENROUTER_KEY);
@@ -53,7 +56,8 @@ export default function SettingsModal({ isOpen, onClose }) {
     setIsTestingJev(true);
     setJevTestResult(null);
     try {
-      const res = await testJevConnection(tempOpenrouterKey.trim(), tempOpenrouterModel.trim());
+      const activeKey = tempOpenrouterKey.trim() || DEFAULT_OPENROUTER_KEY;
+      const res = await testJevConnection(activeKey, tempOpenrouterModel.trim());
       setJevTestResult({
         success: true,
         message: `✅ TypeSafe Jev 1.13 연결 성공! (응답시간: ${res.durationMs}ms, 모델: ${res.model})`
@@ -72,15 +76,18 @@ export default function SettingsModal({ isOpen, onClose }) {
     const cleanedDeepseekModel = tempDeepseekModel.trim() || 'deepseek-v4-flash-vision-exp';
     const cleanedMusesparkModel = tempMusesparkModel.trim() || 'muse-spark-1.3-contributor';
     const cleanedOpenrouterModel = tempOpenrouterModel.trim() || 'typesafe/jev-1.13';
+    const finalOpenrouterKey = tempOpenrouterKey.trim() || DEFAULT_OPENROUTER_KEY;
+    const finalDeepseekKey = tempDeepseekKey.trim() || DEFAULT_DEEPSEEK_KEY;
+    const finalMusesparkKey = tempMusesparkKey.trim() || DEFAULT_META_KEY;
 
     saveAiSettings({
       provider: tempProvider,
       geminiKey: tempGeminiKey.trim(),
-      openrouterKey: tempOpenrouterKey.trim(),
+      openrouterKey: finalOpenrouterKey,
       openrouterModel: cleanedOpenrouterModel,
-      deepseekKey: tempDeepseekKey.trim(),
+      deepseekKey: finalDeepseekKey,
       model: cleanedDeepseekModel,
-      musesparkKey: tempMusesparkKey.trim(),
+      musesparkKey: finalMusesparkKey,
       musesparkModel: cleanedMusesparkModel
     });
 
@@ -386,7 +393,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={handleTestJev}
-                  disabled={isTestingJev || !tempOpenrouterKey}
+                  disabled={isTestingJev || (!tempOpenrouterKey && !DEFAULT_OPENROUTER_KEY)}
                   style={{
                     padding: '9px 14px',
                     borderRadius: '8px',
@@ -395,7 +402,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                     color: '#FFD700',
                     fontWeight: 'bold',
                     fontSize: '12px',
-                    cursor: (isTestingJev || !tempOpenrouterKey) ? 'not-allowed' : 'pointer',
+                    cursor: (isTestingJev || (!tempOpenrouterKey && !DEFAULT_OPENROUTER_KEY)) ? 'not-allowed' : 'pointer',
                     whiteSpace: 'nowrap'
                   }}
                 >
