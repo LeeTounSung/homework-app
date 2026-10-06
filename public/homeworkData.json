@@ -345,7 +345,347 @@
             "image": null
           }
         },
-        "submittedProblems": [],
+        "submittedProblems": [
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 1,
+            "imageUrl": "https://drive.google.com/file/d/1wWUDQDI1spTzI0KfytvwCABG7gszyJb3/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": null,
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 3\n- 공식 정답 비교: 공식 정답 3과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 00:09",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/1wWUDQDI1spTzI0KfytvwCABG7gszyJb3/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 3\n- 공식 정답 비교: 공식 정답 3과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ],
+            "hasBeenIncorrect": false
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 2,
+            "imageUrl": "https://drive.google.com/file/d/1r0fu1OjWCjf8Y7VoTixfltUKilIseA9m/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "3",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 3\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/1r0fu1OjWCjf8Y7VoTixfltUKilIseA9m/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 3\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 3,
+            "imageUrl": "https://drive.google.com/file/d/1xDhP4CYUITr1gKw1kWELB_F-2A0dW2rn/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "2",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 2\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/1xDhP4CYUITr1gKw1kWELB_F-2A0dW2rn/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 2\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 4,
+            "imageUrl": "https://drive.google.com/file/d/1csVCiOgDvB9cNSm9qko0yDR41VXER6dC/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "4",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 4\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/1csVCiOgDvB9cNSm9qko0yDR41VXER6dC/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 4\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 5,
+            "imageUrl": "https://drive.google.com/file/d/1k0dI3NgAvhBmDdIcXu53neT16gzyCGoS/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "2",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 2\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/1k0dI3NgAvhBmDdIcXu53neT16gzyCGoS/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 2\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 7,
+            "imageUrl": "https://drive.google.com/file/d/11PdAHMY2PfvZzA1PprLew_kTQc1cIWC-/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "4",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 4\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/11PdAHMY2PfvZzA1PprLew_kTQc1cIWC-/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 4\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 8,
+            "imageUrl": "https://drive.google.com/file/d/1os0QwA6sgdk9XUbEdT3SQOucF3A8pi7E/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "6",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 6\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/1os0QwA6sgdk9XUbEdT3SQOucF3A8pi7E/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 6\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 9,
+            "imageUrl": "https://drive.google.com/file/d/17p5zuC98VkQMyo5MzljbILrdP65zhAk0/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "5",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 5\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/17p5zuC98VkQMyo5MzljbILrdP65zhAk0/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 5\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 10,
+            "imageUrl": "https://drive.google.com/file/d/1oYl4gLTVN5RXTAz2fHRQY2FTRzRFCg0j/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "1/2",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 1/2\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/1oYl4gLTVN5RXTAz2fHRQY2FTRzRFCg0j/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 1/2\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 11,
+            "imageUrl": "https://drive.google.com/file/d/1XxOlg9poGyvMSLv1NNwYbKSMrH3OtCv4/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "ㄱ, ㄷ",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: ㄱ, ㄷ\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/1XxOlg9poGyvMSLv1NNwYbKSMrH3OtCv4/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: ㄱ, ㄷ\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 12,
+            "imageUrl": "https://drive.google.com/file/d/1k1wOywTm_H1P8i_312LcwENP8JjAZIgl/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "4",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 4\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/1k1wOywTm_H1P8i_312LcwENP8JjAZIgl/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: 4\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub1",
+            "problemNumber": 13,
+            "imageUrl": "https://drive.google.com/file/d/13CwWPvuWhTwUDdRRqMLeVQV8zW6zvSsh/view?usp=drivesdk",
+            "status": "correct",
+            "studentAnswer": "ㄱ, ㄴ, ㄹ",
+            "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: ㄱ, ㄴ, ㄹ\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다.",
+            "aiGrade": null,
+            "attempts": 1,
+            "hasBeenIncorrect": false,
+            "history": [
+              {
+                "attempt": 1,
+                "date": "10/6 09:15",
+                "status": "correct",
+                "imageUrl": "https://drive.google.com/file/d/13CwWPvuWhTwUDdRRqMLeVQV8zW6zvSsh/view?usp=drivesdk",
+                "aiFeedback": "[채점 결과]\n⭕ 정답\n\n[풀이 첨삭 및 피드백]\n- 학생 도출 답안: ㄱ, ㄴ, ㄹ\n- 공식 정답 비교: 공식 정답과 일치함\n- 코멘트: 최종 답안이 정답과 정확히 일치합니다."
+              }
+            ]
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 14,
+            "imageUrl": "https://drive.google.com/file/d/14B62L8pbZ0TOB_A2FTBE1l0iXa4oF_ry/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 15,
+            "imageUrl": "https://drive.google.com/file/d/14fV_L4I0kvW3-DWK2HEt-C8MpEMRKtOD/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 16,
+            "imageUrl": "https://drive.google.com/file/d/1QfsI96qcFVHjb3WS6_jP-HkPizGDWfYb/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 17,
+            "imageUrl": "https://drive.google.com/file/d/1RN8vua1XfUN730p23poksMBJFbNNLk61/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 18,
+            "imageUrl": "https://drive.google.com/file/d/1bV_qq4rrIdWkvVIyp9RC2Nwz_NwdUuoi/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 19,
+            "imageUrl": "https://drive.google.com/file/d/1ic3qkwkmgMnzlS72d6qgw0JfRXBW8Pdu/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 20,
+            "imageUrl": "https://drive.google.com/file/d/1gGu_p8UOahzccFnLzpXaRgJm665dGS-y/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 21,
+            "imageUrl": "https://drive.google.com/file/d/10w6xur8hQNsuuuCZ7IBaZkIeFsBNG9cu/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 22,
+            "imageUrl": "https://drive.google.com/file/d/1pX4Xnz3QTWDVDCjFHlSr_qsEoNmE5Baz/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 24,
+            "imageUrl": "https://drive.google.com/file/d/1X7afRm0X_fqZuZhskpAzv8MT4LCmtwdq/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          },
+          {
+            "groupId": "g_kpy_daesu_sub2",
+            "problemNumber": 25,
+            "imageUrl": "https://drive.google.com/file/d/1-EHvxQOkgAGkeNn_pQ7Z5nYTX7D1WMfE/view?usp=drivesdk",
+            "status": "submitted",
+            "studentAnswer": null,
+            "aiFeedback": null,
+            "aiGrade": null
+          }
+        ],
         "evaluation": null
       }
     ]
