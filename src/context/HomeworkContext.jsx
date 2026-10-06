@@ -59,6 +59,7 @@ export const HomeworkProvider = ({ children }) => {
   // AI Settings State (Gemini / DeepSeek / Meta Muse Spark)
   const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
   const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || 'LLM_2161394044719218_Lv8NcmLsyd5kH8je0bbvj4tyQlg';
+  const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 
   const [aiProvider, setAiProvider] = useState(() => {
     return localStorage.getItem('aiProvider') || 'musespark';
@@ -66,6 +67,14 @@ export const HomeworkProvider = ({ children }) => {
 
   const [geminiApiKey, setGeminiApiKey] = useState(() => {
     return localStorage.getItem('geminiApiKey') || '';
+  });
+
+  const [openrouterApiKey, setOpenrouterApiKey] = useState(() => {
+    return localStorage.getItem('openrouterApiKey') || DEFAULT_OPENROUTER_KEY;
+  });
+
+  const [openrouterModel, setOpenrouterModel] = useState(() => {
+    return localStorage.getItem('openrouterModel') || 'typesafe/jev-1.13';
   });
 
   const [deepseekApiKey, setDeepseekApiKey] = useState(() => {
@@ -259,7 +268,7 @@ export const HomeworkProvider = ({ children }) => {
     localStorage.setItem('homework_app_main_banner_v1', url);
   };
 
-  const saveAiSettings = ({ provider, geminiKey, deepseekKey, model, musesparkKey, musesparkModel: mModel, agentUrl }) => {
+  const saveAiSettings = ({ provider, geminiKey, deepseekKey, model, musesparkKey, musesparkModel: mModel, openrouterKey, openrouterModel: oModel, agentUrl }) => {
     if (provider !== undefined) {
       setAiProvider(provider);
       localStorage.setItem('aiProvider', provider);
@@ -267,6 +276,14 @@ export const HomeworkProvider = ({ children }) => {
     if (geminiKey !== undefined) {
       setGeminiApiKey(geminiKey);
       localStorage.setItem('geminiApiKey', geminiKey);
+    }
+    if (openrouterKey !== undefined) {
+      setOpenrouterApiKey(openrouterKey);
+      localStorage.setItem('openrouterApiKey', openrouterKey);
+    }
+    if (oModel !== undefined) {
+      setOpenrouterModel(oModel);
+      localStorage.setItem('openrouterModel', oModel);
     }
     if (deepseekKey !== undefined) {
       setDeepseekApiKey(deepseekKey);
@@ -295,6 +312,16 @@ export const HomeworkProvider = ({ children }) => {
     localStorage.setItem('geminiApiKey', key);
   };
 
+  const saveOpenrouterApiKey = (key) => {
+    setOpenrouterApiKey(key);
+    localStorage.setItem('openrouterApiKey', key);
+  };
+
+  const saveOpenrouterModel = (model) => {
+    setOpenrouterModel(model);
+    localStorage.setItem('openrouterModel', model);
+  };
+
   const saveDeepseekApiKey = (key) => {
     setDeepseekApiKey(key);
     localStorage.setItem('deepseekApiKey', key);
@@ -306,8 +333,10 @@ export const HomeworkProvider = ({ children }) => {
   };
 
   const aiConfig = {
-    provider: aiProvider || 'musespark',
+    provider: aiProvider || 'jev',
     geminiApiKey,
+    openrouterApiKey: openrouterApiKey || DEFAULT_OPENROUTER_KEY,
+    openrouterModel: openrouterModel || 'typesafe/jev-1.13',
     deepseekApiKey: deepseekApiKey || DEFAULT_DEEPSEEK_KEY,
     deepseekModel: (deepseekModel && deepseekModel !== 'deepseek-chat') ? deepseekModel : 'deepseek-v4-flash-vision-exp',
     musesparkApiKey,
@@ -315,9 +344,11 @@ export const HomeworkProvider = ({ children }) => {
     agentApiUrl: agentApiUrl || 'http://127.0.0.1:8000'
   };
 
-  const isAiConfigured = (aiProvider === 'deepseek' && !!deepseekApiKey) ||
+  const isAiConfigured = (aiProvider === 'jev' && !!openrouterApiKey) ||
+                         (aiProvider === 'deepseek' && !!deepseekApiKey) ||
                          (aiProvider === 'gemini' && !!geminiApiKey) ||
-                         (aiProvider === 'musespark' && !!musesparkApiKey);
+                         (aiProvider === 'musespark' && !!musesparkApiKey) ||
+                         !!openrouterApiKey;
 
   // Fetch data on mount with smart merge (Prioritize latest GitHub/Local graded results, never overwrite 'correct')
   useEffect(() => {
@@ -1146,6 +1177,10 @@ export const HomeworkProvider = ({ children }) => {
       updateSelfStudyProblem,
       geminiApiKey,
       saveGeminiApiKey,
+      openrouterApiKey,
+      saveOpenrouterApiKey,
+      openrouterModel,
+      saveOpenrouterModel,
       aiProvider,
       deepseekApiKey,
       deepseekModel,

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import MathInkComponent from '../components/MathInkComponent';
 import ProblemStatementView from '../components/ProblemStatementView';
-import { autoGradeProblemSubmission } from '../utils/gemini';
+import { autoGradeProblemSubmission, extractStudentMathToLatex, checkMathEquivalenceWithAI } from '../utils/gemini';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -46,6 +46,8 @@ export default function UploadPage() {
   const { id, groupId, problemId } = useParams();
   const { getHomeworkById, submitHomeworkProblem, exemptProblem, toggleBookmarkProblem, isSaving, getProblemImageFromDrive, geminiApiKey, aiConfig, isAiConfigured } = useHomework();
   const [imagePreview, setImagePreview] = useState(null);
+  const [studentAnswer, setStudentAnswer] = useState('');
+  const [isExtractingLatex, setIsExtractingLatex] = useState(false);
   const [aiFeedback, setAiFeedback] = useState('');
   const [aiGrade, setAiGrade] = useState('');
   const [isAiGrading, setIsAiGrading] = useState(false);
@@ -62,15 +64,22 @@ export default function UploadPage() {
   // MathInk State
   const [useMathType, setUseMathType] = useState(false);
   const problemTextRef = useRef(null);
+  const latexPreviewRef = useRef(null);
   
   const hw = getHomeworkById(id);
 
-  // MathJax typesetting for problem statement
+  // MathJax typesetting for problem statement & student latex answer
   useEffect(() => {
     if (window.MathJax && window.MathJax.typesetPromise && problemTextRef.current) {
       window.MathJax.typesetPromise([problemTextRef.current]).catch(err => console.warn(err));
     }
   }, [problemId, hw]);
+
+  useEffect(() => {
+    if (window.MathJax && window.MathJax.typesetPromise && latexPreviewRef.current) {
+      window.MathJax.typesetPromise([latexPreviewRef.current]).catch(err => console.warn(err));
+    }
+  }, [studentAnswer]);
 
   // Extract clean sub-unit or chapter from group label (without textbook/출처 tags)
   const extractSubUnit = (label) => {
@@ -103,6 +112,9 @@ export default function UploadPage() {
         p => p.groupId === groupId && p.problemNumber === parseInt(problemId)
       );
       if (existingProblem) {
+        if (existingProblem.studentAnswer) {
+          setStudentAnswer(existingProblem.studentAnswer);
+        }
         if (existingProblem.imageUrl && existingProblem.status !== 'exempt') {
           setImagePreview(existingProblem.imageUrl);
         }
@@ -153,14 +165,37 @@ export default function UploadPage() {
     }
   }, [hw, groupId, problemId, getProblemImageFromDrive]);
 
+  // Extract student handwriting/math from image to LaTeX using Gemini 2.5 Flash-Lite
+  const handleExtractLatex = async (imageInput) => {
+    const targetImg = imageInput || imagePreview;
+    if (!targetImg) return;
+    const activeGeminiKey = geminiApiKey || (aiConfig && aiConfig.geminiApiKey) || '';
+    if (!activeGeminiKey) {
+      console.log("Gemini API key not found; skipping automatic LaTeX extraction.");
+      return;
+    }
 
+    setIsExtractingLatex(true);
+    try {
+      const extracted = await extractStudentMathToLatex(activeGeminiKey, targetImg);
+      if (extracted && extracted.trim()) {
+        setStudentAnswer(extracted.trim());
+      }
+    } catch (err) {
+      console.warn("손글씨 수식(LaTeX) 자동 변환 실패:", err);
+    } finally {
+      setIsExtractingLatex(false);
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result);
+        const base64 = reader.result;
+        setImagePreview(base64);
+        handleExtractLatex(base64);
       };
       reader.readAsDataURL(file);
     }
@@ -193,20 +228,62 @@ export default function UploadPage() {
   };
 
   const handleAiAutoGrade = async () => {
-    if (!imagePreview) {
-      alert("먼저 사진을 첨부하거나 수식을 직접 입력해주세요.");
+    if (!imagePreview && !studentAnswer) {
+      alert("먼저 사진을 첨부하거나 답안(수식)을 입력해주세요.");
       return;
     }
 
-    if (!isAiConfigured && !geminiApiKey) {
-      alert("AI API 키가 설정되지 않았습니다. 관리자 페이지 환경 설정에서 AI(Meta Muse Spark, DeepSeek, Gemini) API 키를 먼저 입력해주세요.");
-      return;
-    }
+    const registeredAnswers = hw?.answers || hw?.answerKey || {};
+    const probDetail = (hw?.problemDetails && (hw.problemDetails[problemId] || hw.problemDetails[String(problemId)])) || {};
+    const correctAns = registeredAnswers[problemId] || registeredAnswers[String(problemId)] || probDetail.answer || probDetail.correctAnswer || '';
 
     setIsAiGrading(true);
     try {
+      // 1. FAST-PATH: If official answer is registered and student answer is present -> TypeSafe Jev 1.13 Decisions API!
+      if (correctAns && studentAnswer && studentAnswer.trim()) {
+        const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, studentAnswer.trim());
+        setAiFeedback(equivRes);
+        if (equivRes.includes('⭕') || equivRes.includes('정답')) {
+          setAiGrade('⭕ 정답');
+        } else if (equivRes.includes('❌') || equivRes.includes('오답')) {
+          setAiGrade('❌ 오답');
+        } else {
+          setAiGrade('⭕ 정답');
+        }
+        return;
+      }
+
+      // 1.5. Handwriting Image -> Vision OCR to LaTeX -> TypeSafe Jev 1.13 Decisions API!
+      if (correctAns && imagePreview && (!studentAnswer || !studentAnswer.trim()) && geminiApiKey) {
+        try {
+          const extracted = await extractStudentMathToLatex(geminiApiKey, imagePreview);
+          if (extracted) {
+            setStudentAnswer(extracted);
+            const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, extracted);
+            setAiFeedback(equivRes);
+            if (equivRes.includes('⭕') || equivRes.includes('정답')) {
+              setAiGrade('⭕ 정답');
+            } else if (equivRes.includes('❌') || equivRes.includes('오답')) {
+              setAiGrade('❌ 오답');
+            } else {
+              setAiGrade('⭕ 정답');
+            }
+            return;
+          }
+        } catch (ocrErr) {
+          console.warn("Handwriting extraction failed, falling back to Vision AI:", ocrErr);
+        }
+      }
+
+      // 2. SLOW-PATH: Vision AI grading if no registered answer or OCR not available
+      if (!isAiConfigured && !geminiApiKey) {
+        alert("AI API 키가 설정되지 않았습니다. 관리자 페이지 환경 설정에서 AI API 키를 먼저 입력해주세요.");
+        return;
+      }
+
+      const groupLabel = currentGroup?.label || '';
       const desc = `${hw.studentName} 학생의 ${hw.title} ${groupLabel ? `[${groupLabel}] ` : ''}${problemId}번 문제 풀이입니다.`;
-      const result = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, imagePreview);
+      const result = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, imagePreview, '', correctAns);
       
       setAiFeedback(result);
 
@@ -231,12 +308,12 @@ export default function UploadPage() {
   const handleSubmit = async () => {
     let finalData = imagePreview;
     
-    if (!finalData) {
+    if (!finalData && !studentAnswer) {
       alert("제출할 풀이 사진 또는 직접 입력한 수식이 없습니다.");
       return;
     }
 
-    await submitHomeworkProblem(id, groupId, problemId, finalData, aiFeedback, aiGrade, null);
+    await submitHomeworkProblem(id, groupId, problemId, finalData, aiFeedback, aiGrade, studentAnswer);
     navigate(-1);
   };
 
@@ -600,11 +677,132 @@ export default function UploadPage() {
           />
         )}
 
+        {/* Student Math Answer (LaTeX) & Real-time Jev 1.13 Grading Card */}
+        <div style={{
+          backgroundColor: '#1E2028',
+          border: '1.5px solid #3B82F6',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ color: '#60A5FA', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              ✍️ 학생 최종 답안 (LaTeX 수식)
+            </span>
+            {isExtractingLatex ? (
+              <span style={{ fontSize: '12px', color: '#FFD700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span className="spinner" style={{ width: '12px', height: '12px', border: '2px solid #555', borderTop: '2px solid #FFD700', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
+                Gemini 2.5 Flash-Lite 수식 추출 중...
+              </span>
+            ) : (
+              (hw?.answers?.[problemId] || hw?.answerKey?.[problemId] || hw?.problemDetails?.[problemId]?.answer || hw?.problemDetails?.[problemId]?.correctAnswer) ? (
+                <span style={{ fontSize: '11px', color: '#93C5FD', backgroundColor: 'rgba(59, 130, 246, 0.2)', padding: '3px 8px', borderRadius: '12px', border: '1px solid #3B82F6' }}>
+                  🎯 공식 정답 등록됨: {hw?.answers?.[problemId] || hw?.answerKey?.[problemId] || hw?.problemDetails?.[problemId]?.answer || hw?.problemDetails?.[problemId]?.correctAnswer}
+                </span>
+              ) : null
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input 
+              type="text" 
+              value={studentAnswer} 
+              onChange={(e) => setStudentAnswer(e.target.value)} 
+              placeholder="손글씨 자동 변환 또는 수식 직접 입력 (예: \frac{9}{4}, 5, x^2-4x+3)"
+              className="modal-input"
+              style={{
+                flex: 1,
+                fontSize: '15px',
+                fontFamily: 'monospace',
+                padding: '10px 12px',
+                backgroundColor: '#121318',
+                border: '1px solid #4B5563',
+                color: '#FFFFFF',
+                borderRadius: '8px'
+              }}
+            />
+            {imagePreview && (
+              <button 
+                type="button"
+                onClick={() => handleExtractLatex(imagePreview)}
+                disabled={isExtractingLatex}
+                style={{
+                  padding: '8px 14px',
+                  backgroundColor: '#2A2C38',
+                  color: '#93C5FD',
+                  border: '1px solid #3B82F6',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+                title="사진에서 손글씨 수식을 다시 인식합니다"
+              >
+                ✨ 수식 재인식
+              </button>
+            )}
+          </div>
+
+          {/* Real-time MathJax LaTeX Preview */}
+          {studentAnswer && (
+            <div style={{
+              backgroundColor: '#121318',
+              borderRadius: '8px',
+              padding: '12px',
+              border: '1px solid #2B2D3A',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textAlign: 'left' }}>렌더링 미리보기:</div>
+              <div ref={latexPreviewRef} style={{ fontSize: '18px', color: '#60A5FA', minHeight: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {`$$ ${studentAnswer} $$`}
+              </div>
+            </div>
+          )}
+
+          {/* Instant Jev 1.13 Grading Button */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+            <button 
+              type="button"
+              onClick={handleAiAutoGrade}
+              disabled={isAiGrading || (!imagePreview && !studentAnswer)}
+              style={{
+                flex: 1,
+                padding: '12px',
+                backgroundColor: isAiGrading ? '#444' : '#2563EB',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: (isAiGrading || (!imagePreview && !studentAnswer)) ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)'
+              }}
+            >
+              {isAiGrading ? (
+                <>
+                  <span className="spinner" style={{ width: '14px', height: '14px', border: '2px solid #888', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
+                  채점 판정 중...
+                </>
+              ) : (
+                <>⚡ 실시간 채점 (TypeSafe Jev 1.13)</>
+              )}
+            </button>
+          </div>
+        </div>
+
         <div className="submit-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
           <button 
-            className={`submit-btn ${(imagePreview) ? 'active' : ''}`}
+            className={`submit-btn ${(imagePreview || studentAnswer) ? 'active' : ''}`}
             onClick={handleSubmit}
-            disabled={!imagePreview}
+            disabled={!imagePreview && !studentAnswer}
           >
             저장하기
           </button>

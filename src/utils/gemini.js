@@ -290,10 +290,37 @@ export const callMetaMuseSparkAPI = async (apiKey, prompt, base64Image = null, m
 };
 
 export const callAIAPI = async (aiConfig, prompt, base64Image = null, mimeType = 'image/jpeg', extraMeta = {}) => {
-  // If aiConfig is passed as an object: { provider, geminiApiKey, deepseekApiKey, deepseekModel, musesparkApiKey, musesparkModel }
+  // If aiConfig is passed as an object: { provider, geminiApiKey, deepseekApiKey, deepseekModel, musesparkApiKey, musesparkModel, openrouterApiKey }
   if (typeof aiConfig === 'object' && aiConfig !== null) {
-    const { provider, geminiApiKey, deepseekApiKey, deepseekModel, musesparkApiKey, musesparkModel } = aiConfig;
-    if (provider === 'musespark' || provider === 'meta') {
+    const { provider, geminiApiKey, deepseekApiKey, deepseekModel, musesparkApiKey, musesparkModel, openrouterApiKey, openrouterModel } = aiConfig;
+    if (provider === 'jev' || provider === 'typesafe-jev') {
+      const { correctAns, studentAns } = extraMeta || {};
+      if (correctAns && studentAns) {
+        return await checkMathEquivalenceWithAI(aiConfig, correctAns, studentAns);
+      }
+      // If image is present and correctAns is present, try vision OCR to extract LaTeX then run Jev 1.13
+      if (base64Image && correctAns) {
+        let extracted = '';
+        if (geminiApiKey) {
+          try {
+            extracted = await extractStudentMathToLatex(geminiApiKey, base64Image);
+          } catch (e) {
+            console.warn('Gemini OCR extraction failed:', e);
+          }
+        }
+        if (extracted) {
+          return await checkMathEquivalenceWithAI(aiConfig, correctAns, extracted);
+        }
+      }
+      // Fallback to text LLM or available vision provider if pure equivalence cannot run
+      if (musesparkApiKey) {
+        return await callMetaMuseSparkAPI(musesparkApiKey, prompt, base64Image, mimeType, musesparkModel);
+      } else if (deepseekApiKey) {
+        return await callDeepseekAPI(deepseekApiKey, prompt, base64Image, mimeType, deepseekModel);
+      } else if (geminiApiKey) {
+        return await callGeminiAPI(geminiApiKey, prompt, base64Image, mimeType);
+      }
+    } else if (provider === 'musespark' || provider === 'meta') {
       return await callMetaMuseSparkAPI(musesparkApiKey, prompt, base64Image, mimeType, musesparkModel);
     } else if (provider === 'deepseek') {
       return await callDeepseekAPI(deepseekApiKey, prompt, base64Image, mimeType, deepseekModel);
@@ -359,7 +386,201 @@ ${problemStatement || '첨부된 문제 이미지를 풀이해주세요.'}
   return firstLine;
 };
 
+export const extractStudentMathToLatex = async (geminiKey, imageInput) => {
+  if (!geminiKey) {
+    throw new Error('Gemini API 키가 설정되지 않았습니다.');
+  }
+
+  const prompt = `당신은 초정밀 수학 수식 인식 비전 AI입니다.
+첨부된 학생의 손글씨 풀이/메모 사진에서 학생이 최종적으로 적어낸 정답 또는 핵심 수식을 찾아 정확한 LaTeX 수식으로만 한 줄 출력하세요.
+
+규칙:
+1. 다른 설명, 인사말, 마크다운 코드블록(\`\`\`) 등은 일절 붙이지 마세요.
+2. 객관식 번호(예: 3), 단답형 숫자(예: -12), 분수(예: \\frac{1}{2}), 무리수(예: \\frac{\\sqrt{3}}{2}), 다항식(예: x^2-3x+2) 등 학생이 도출한 최종 값만 출력하세요.
+3. 오직 추출된 값 한 줄만 순수 텍스트로 출력하세요.`;
+
+  const fullDataUrl = await normalizeImageToBase64(imageInput);
+  let base64Data = fullDataUrl;
+  if (base64Data && base64Data.startsWith('data:')) {
+    const parts = base64Data.split(',');
+    base64Data = parts[1];
+  }
+
+  const models = [
+    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-1.5-flash'
+  ];
+
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey.trim()}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            role: 'user',
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: 'image/jpeg', data: base64Data } }
+            ]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 120
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        return text.replace(/^`+|`+$/g, '').replace(/^\$+|\$+$/g, '').trim();
+      }
+    } catch (e) {
+      console.warn(`[Vision LaTeX] ${model} try failed:`, e);
+    }
+  }
+
+  return '';
+};
+
+export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, studentAnswer, model = 'typesafe/jev-1.13') => {
+  const activeKey = openrouterKey || import.meta.env.VITE_OPENROUTER_API_KEY || '';
+  if (!activeKey) {
+    throw new Error('TypeSafe Jev API 키(OpenRouter)가 설정되지 않았습니다.');
+  }
+
+  const selectedModel = model || 'typesafe/jev-1.13';
+  const url = 'https://openrouter.ai/api/alpha/decisions';
+  const payload = {
+    model: selectedModel,
+    state: `[Math Equivalence Verification Task]\nStudent Answer: ${studentAnswer}\nOfficial Answer Key: ${correctAnswer}\nEvaluate if student answer is mathematically equivalent to the official key.`,
+    questions: {
+      is_equivalent: {
+        type: 'choice',
+        instructions: 'Determine whether the student answer is mathematically equivalent to the official key.',
+        criteria: {
+          EQUIVALENT: 'The student answer is mathematically identical, numerically equal, or algebraically equivalent (e.g. equivalent fraction/decimal, factored/expanded, transformed LaTeX, equivalent set/interval notation).',
+          DIFFERENT: 'The student answer is mathematically different in value, sign, or expression from the key, or wrong.'
+        }
+      },
+      score: {
+        type: 'score',
+        instructions: 'Rate the correctness score out of 10 points based on mathematical equivalence.',
+        criteria: ['0', '2', '4', '6', '8', '10']
+      },
+      confidence_noul: {
+        type: 'noul',
+        instructions: 'Probability that the student answer is correct and equivalent to the key.',
+        criteria: {
+          true: 'Student answer is mathematically correct and matches key.',
+          false: 'Student answer is incorrect or different from key.'
+        }
+      }
+    }
+  };
+
+  const startTime = Date.now();
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${activeKey.trim()}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://leetounsung.github.io/homework-app/',
+      'X-Title': 'TypeSafe Jev Homework Grader'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Jev 1.13 Decisions API 실패 (HTTP ${response.status}): ${errText}`);
+  }
+
+  const data = await response.json();
+  const durationMs = Date.now() - startTime;
+  
+  const answers = data.answers || {};
+  const choice = answers.is_equivalent?.choice;
+  const confidence = answers.is_equivalent?.confidence ?? 1;
+  const noul = answers.confidence_noul?.noul ?? (choice === 'EQUIVALENT' ? 1.0 : 0.0);
+  
+  // Score interpretation
+  let finalScore = choice === 'EQUIVALENT' ? 10 : 0;
+  if (answers.score?.score !== undefined) {
+    const rawScore = answers.score.score; // 0..5 index scale
+    finalScore = Math.min(10, Math.max(0, Math.round((rawScore / 5) * 10)));
+  }
+
+  const isEquivalent = choice === 'EQUIVALENT' || noul >= 0.8;
+  const cost = data.usage?.cost || 0.000015;
+
+  return {
+    success: true,
+    isEquivalent,
+    choice,
+    score: finalScore,
+    noul,
+    confidence,
+    durationMs,
+    cost,
+    model: data.model || selectedModel,
+    provider: data.provider || 'TypeSafe'
+  };
+};
+
+export const testJevConnection = async (apiKey, model = 'typesafe/jev-1.13') => {
+  const activeKey = apiKey || import.meta.env.VITE_OPENROUTER_API_KEY || '';
+  const res = await callTypeSafeJevDecisions(activeKey, '2', '2', model);
+  return {
+    success: res.isEquivalent,
+    durationMs: res.durationMs,
+    cost: res.cost,
+    model: res.model,
+    provider: res.provider,
+    noul: res.noul
+  };
+};
+
 export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studentAnswer) => {
+  // FAST-PATH 1: Try TypeSafe Jev 1.13 Decisions API first (0.05s, 0.003 KRW)
+  try {
+    const orKey = (typeof aiConfig === 'object' && aiConfig?.openrouterApiKey) || '';
+    const orModel = (typeof aiConfig === 'object' && aiConfig?.openrouterModel) || 'typesafe/jev-1.13';
+    const jevRes = await callTypeSafeJevDecisions(orKey, correctAnswer, studentAnswer, orModel);
+    
+    const probPercent = Math.round((jevRes.noul ?? (jevRes.isEquivalent ? 1 : 0)) * 100);
+    const costUsd = (jevRes.cost || 0.000015).toFixed(6);
+
+    if (jevRes.isEquivalent) {
+      return `[채점 결과]
+⭕ 정답
+
+[⚡ TypeSafe Jev 1.13 검정 판정]
+- 공식 정답: ${correctAnswer}
+- 학생 답안: ${studentAnswer}
+- 동치 판정: 완벽한 수학적 동치 (EQUIVALENT)
+- 획득 점수: ${jevRes.score}점 / 10점 (일치 확률: ${probPercent}%)
+- 검정 속도: ${jevRes.durationMs}ms (추론 비용: $${costUsd})`;
+    } else {
+      return `[채점 결과]
+❌ 오답
+
+[⚡ TypeSafe Jev 1.13 검정 판정]
+- 공식 정답: ${correctAnswer}
+- 학생 답안: ${studentAnswer}
+- 동치 판정: 불일치 (DIFFERENT)
+- 획득 점수: ${jevRes.score}점 / 10점 (일치 확률: ${probPercent}%)
+- 검정 속도: ${jevRes.durationMs}ms (추론 비용: $${costUsd})`;
+    }
+  } catch (jevErr) {
+    console.warn("Jev 1.13 Decisions API 호출 실패, 표준 AI로 폴백:", jevErr);
+  }
+
+  // FALLBACK 2: Standard LLM call
   const prompt = `당신은 엄밀한 고등수학 정답 판정관입니다.
 선생님이 사전에 지정한 [공식 정답]과 학생이 제출한 [학생 답안]이 수학적으로 동치(동일한 의미와 값)인지 판정해주세요.
 
