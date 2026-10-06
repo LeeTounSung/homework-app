@@ -68,6 +68,8 @@ const normalizeImageToBase64 = async (imageInput, mimeType = 'image/jpeg') => {
 
 const BUILTIN_DEEPSEEK_KEY = typeof atob === 'function' ? atob('c2stYzU3MjhmZGFlZmFkNGZhNWI4ZWE4ZjAzZjA2MTNmNmM=') : '';
 const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || BUILTIN_DEEPSEEK_KEY;
+const BUILTIN_OPENROUTER_KEY = typeof atob === 'function' ? atob('c2stb3ItdjEtYzgwOWZhMzkxZWRlMTU3YzgzODZhNjAxNjM2OWE4NWQ3NTg4MGEyZDE3YjI5NDdiMDQ5ZTVlYWY2OTEwNTM1Mg==') : '';
+const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || BUILTIN_OPENROUTER_KEY;
 
 export const callDeepseekAPI = async (apiKey, prompt, base64Image = null, mimeType = 'image/jpeg', model = 'deepseek-v4-flash-vision-exp') => {
   const activeKey = apiKey || DEFAULT_DEEPSEEK_KEY;
@@ -129,8 +131,52 @@ export const callDeepseekAPI = async (apiKey, prompt, base64Image = null, mimeTy
   return '응답을 생성하지 못했습니다.';
 };
 
+export const callOpenRouterGeminiVision = async (openrouterKey, prompt, base64Image = null, mimeType = 'image/jpeg') => {
+  const activeKey = (openrouterKey && openrouterKey.trim()) || DEFAULT_OPENROUTER_KEY;
+  if (!activeKey) {
+    throw new Error('OpenRouter API 키가 설정되지 않았습니다.');
+  }
+
+  let content = [{ type: 'text', text: prompt }];
+
+  if (base64Image) {
+    const fullDataUrl = await normalizeImageToBase64(base64Image, mimeType);
+    content.push({
+      type: 'image_url',
+      image_url: { url: fullDataUrl }
+    });
+  }
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${activeKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://leetounsung.github.io/homework-app/',
+      'X-Title': 'Gemini 2.5 Flash-Lite Vision'
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash-lite',
+      messages: [{ role: 'user', content: content }],
+      temperature: 0.1,
+      max_tokens: 300
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`OpenRouter Gemini Vision API 오류 (HTTP ${response.status}): ${errText}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || '';
+};
+
 export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType = 'image/jpeg') => {
   if (!apiKey) {
+    if (DEFAULT_OPENROUTER_KEY) {
+      return await callOpenRouterGeminiVision(DEFAULT_OPENROUTER_KEY, prompt, base64Image, mimeType);
+    }
     throw new Error('Gemini API 키가 설정되지 않았습니다.');
   }
 
@@ -208,18 +254,18 @@ export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType
       } else {
         const errData = await response.json();
         lastError = new Error(errData.error?.message || `HTTP ${response.status}`);
-        if (response.status === 400 && !errData.error?.message?.includes('not found') && !errData.error?.message?.includes('not supported')) {
-          throw lastError;
-        }
-        if (response.status === 403) {
-          throw lastError;
-        }
       }
     } catch (e) {
-      if (e.message?.includes('API key') || e.message?.includes('quota') || e.message?.includes('Quota') || e.message?.includes('PERMISSION_DENIED')) {
-        throw e;
-      }
       lastError = e;
+    }
+  }
+
+  // Fallback to OpenRouter Gemini 2.5 Flash-Lite if direct Google API failed
+  if (DEFAULT_OPENROUTER_KEY) {
+    try {
+      return await callOpenRouterGeminiVision(DEFAULT_OPENROUTER_KEY, prompt, base64Image, mimeType);
+    } catch (orErr) {
+      console.warn("OpenRouter Gemini fallback error:", orErr);
     }
   }
 
@@ -387,68 +433,83 @@ ${problemStatement || '첨부된 문제 이미지를 풀이해주세요.'}
   return firstLine;
 };
 
-export const extractStudentMathToLatex = async (geminiKey, imageInput) => {
-  if (!geminiKey) {
-    throw new Error('Gemini API 키가 설정되지 않았습니다.');
-  }
+export const callGeminiVisionToLatex = async (imageInput, geminiKey = '', openrouterKey = '') => {
+  const activeGeminiKey = (geminiKey && geminiKey.trim()) || import.meta.env.VITE_GEMINI_API_KEY || '';
+  const activeOrKey = (openrouterKey && openrouterKey.trim()) || DEFAULT_OPENROUTER_KEY;
 
-  const prompt = `당신은 초정밀 수학 수식 인식 비전 AI입니다.
-첨부된 학생의 손글씨 풀이/메모 사진에서 학생이 최종적으로 적어낸 정답 또는 핵심 수식을 찾아 정확한 LaTeX 수식으로만 한 줄 출력하세요.
-
+  const prompt = `당신은 초정밀 수학 수식 인식 비전 AI(Gemini)입니다.
+첨부된 학생의 손글씨 풀이/메모/수식 사진에서 학생이 적은 수학 수식, 숫자, 또는 최종 정답을 찾아 정확한 LaTeX 수식으로만 한 줄 출력하세요.
 규칙:
 1. 다른 설명, 인사말, 마크다운 코드블록(\`\`\`) 등은 일절 붙이지 마세요.
-2. 객관식 번호(예: 3), 단답형 숫자(예: -12), 분수(예: \\frac{1}{2}), 무리수(예: \\frac{\\sqrt{3}}{2}), 다항식(예: x^2-3x+2) 등 학생이 도출한 최종 값만 출력하세요.
-3. 오직 추출된 값 한 줄만 순수 텍스트로 출력하세요.`;
+2. 예시: 4, -12, \\frac{9}{4}, x^2 - 4x + 3, \\sqrt{3}, 5 등
+3. 오직 순수 LaTeX 수식 문자열만 한 줄로 출력하세요.`;
 
-  const fullDataUrl = await normalizeImageToBase64(imageInput);
-  let base64Data = fullDataUrl;
-  if (base64Data && base64Data.startsWith('data:')) {
-    const parts = base64Data.split(',');
-    base64Data = parts[1];
-  }
-
-  const models = [
-    'gemini-2.5-flash-lite',
-    'gemini-2.0-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-1.5-flash'
-  ];
-
-  for (const model of models) {
+  // 1. Try Direct Google Gemini API first if a key is provided
+  if (activeGeminiKey) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey.trim()}`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            role: 'user',
-            parts: [
-              { text: prompt },
-              { inlineData: { mimeType: 'image/jpeg', data: base64Data } }
-            ]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 120
-          }
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-        return text.replace(/^`+|`+$/g, '').replace(/^\$+|\$+$/g, '').trim();
+      const fullDataUrl = await normalizeImageToBase64(imageInput);
+      let base64Data = fullDataUrl;
+      if (base64Data && base64Data.startsWith('data:')) {
+        const parts = base64Data.split(',');
+        base64Data = parts[1];
       }
-    } catch (e) {
-      console.warn(`[Vision LaTeX] ${model} try failed:`, e);
+
+      const models = [
+        'gemini-2.5-flash-lite',
+        'gemini-2.0-flash-lite',
+        'gemini-2.5-flash',
+        'gemini-1.5-flash'
+      ];
+
+      for (const model of models) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeGeminiKey.trim()}`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                role: 'user',
+                parts: [
+                  { text: prompt },
+                  { inlineData: { mimeType: 'image/jpeg', data: base64Data } }
+                ]
+              }],
+              generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 120
+              }
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+            const clean = text.replace(/^`+|`+$/g, '').replace(/^\$+|\$+$/g, '').trim();
+            if (clean) return clean;
+          }
+        } catch (e) {
+          // continue fallback
+        }
+      }
+    } catch (directErr) {
+      console.warn("Direct Google Gemini API failed, falling back to OpenRouter Gemini:", directErr);
     }
   }
 
-  return '';
+  // 2. OpenRouter Gemini 2.5 Flash-Lite (Google official model via OpenRouter)
+  if (activeOrKey) {
+    const rawContent = await callOpenRouterGeminiVision(activeOrKey, prompt, imageInput, 'image/jpeg');
+    const clean = rawContent.replace(/```latex/gi, '').replace(/```/g, '').replace(/^\$+|\$+$/g, '').trim();
+    if (clean) return clean;
+  }
+
+  throw new Error('사용 가능한 Gemini API(직접 연결 또는 OpenRouter)를 찾을 수 없습니다.');
 };
 
-const BUILTIN_OPENROUTER_KEY = typeof atob === 'function' ? atob('c2stb3ItdjEtYzgwOWZhMzkxZWRlMTU3YzgzODZhNjAxNjM2OWE4NWQ3NTg4MGEyZDE3YjI5NDdiMDQ5ZTVlYWY2OTEwNTM1Mg==') : '';
+export const extractStudentMathToLatex = async (geminiKey, imageInput, openrouterKey = '') => {
+  return await callGeminiVisionToLatex(imageInput, geminiKey, openrouterKey);
+};
 
 export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, studentAnswer, model = 'typesafe/jev-1.13') => {
   const activeKey = (openrouterKey && openrouterKey.trim()) || import.meta.env.VITE_OPENROUTER_API_KEY || BUILTIN_OPENROUTER_KEY;

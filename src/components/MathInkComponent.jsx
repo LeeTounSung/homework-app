@@ -195,24 +195,8 @@ export default function MathInkComponent({ onInsert, onCancel, geminiApiKey, aiC
     });
   };
 
-  // 1. ✨ 글씨+수식 자동인식 (AI OCR + LaTeX 렌더링)
+  // 1. ✨ 손글씨 수식 자동인식 (Gemini 비전 AI -> LaTeX 실시간 변환)
   const handleAutoRecognize = async () => {
-    const config = typeof aiConfig === 'object' && aiConfig !== null 
-      ? aiConfig
-      : { provider: 'deepseek', geminiApiKey: geminiApiKey, deepseekApiKey: geminiApiKey };
-
-    const provider = config.provider || 'musespark';
-    const hasKey = (provider === 'musespark' || provider === 'meta')
-      ? (config.musesparkApiKey || import.meta.env.VITE_META_API_KEY || 'LLM_2161394044719218_Lv8NcmLsyd5kH8je0bbvj4tyQlg')
-      : (provider === 'deepseek'
-        ? (config.deepseekApiKey || (typeof geminiApiKey === 'string' && geminiApiKey.startsWith('sk-') ? geminiApiKey : null))
-        : (config.geminiApiKey || geminiApiKey));
-
-    if (!hasKey) {
-      showMsg('API 키가 설정되지 않았습니다. 관리자 페이지에서 API 키를 등록해주세요.', true);
-      return;
-    }
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -231,18 +215,15 @@ export default function MathInkComponent({ onInsert, onCancel, geminiApiKey, aiC
     const base64Img = tempCanvas.toDataURL('image/jpeg', 0.9);
 
     setIsRecognizing(true);
-    showMsg('✨ AI가 글씨와 수식을 인식하여 변환 중입니다...');
+    showMsg('✨ 제미나이(Gemini)가 손글씨 수식을 LaTeX으로 변환 중입니다...');
 
     try {
-      const prompt = `이 이미지는 학생이 손으로 쓴 글씨와 수학 수식입니다.
-텍스트와 수식을 모두 읽어서 단일 줄의 LaTeX 문자열로 출력해주세요.
-일반 텍스트(한글, 영어 등)는 반드시 \\text{...} 안에 넣어주시고, 수식은 그 외 부분에 올바른 LaTeX로 작성해주세요.
-마크다운 코드 블록(\`\`\`latex 등)이나 설명 없이, 오직 LaTeX 결과 문자열만 반환해주세요.
-예시: \\text{다음 } 3 \\text{이}`;
-      
-      const { callAIAPI } = await import('../utils/gemini');
-      let result = await callAIAPI(config, prompt, base64Img);
-      result = result.replace(/```latex/gi, '').replace(/```/g, '').trim();
+      const { callGeminiVisionToLatex } = await import('../utils/gemini');
+      const activeGeminiKey = (aiConfig && aiConfig.geminiApiKey) || geminiApiKey || '';
+      const activeOrKey = (aiConfig && aiConfig.openrouterApiKey) || '';
+
+      let result = await callGeminiVisionToLatex(base64Img, activeGeminiKey, activeOrKey);
+      result = result.replace(/```latex/gi, '').replace(/```/g, '').replace(/^\$+|\$+$/g, '').trim();
 
       const png = await latexToPng(result);
       if (png) {
@@ -251,6 +232,7 @@ export default function MathInkComponent({ onInsert, onCancel, geminiApiKey, aiC
         onInsert(tempCanvas.toDataURL('image/png'), result);
       }
     } catch (err) {
+      console.error('Auto recognize error:', err);
       showMsg(`자동인식 실패: ${err.message}. [필기 넣기]로 바로 제출하실 수 있습니다.`, true);
     } finally {
       setIsRecognizing(false);

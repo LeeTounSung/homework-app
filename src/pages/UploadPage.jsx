@@ -50,7 +50,6 @@ export default function UploadPage() {
   const [isExtractingLatex, setIsExtractingLatex] = useState(false);
   const [aiFeedback, setAiFeedback] = useState('');
   const [aiGrade, setAiGrade] = useState('');
-  const [isAiGrading, setIsAiGrading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [driveImageUrl, setDriveImageUrl] = useState(null);
@@ -169,15 +168,12 @@ export default function UploadPage() {
   const handleExtractLatex = async (imageInput) => {
     const targetImg = imageInput || imagePreview;
     if (!targetImg) return;
-    const activeGeminiKey = geminiApiKey || (aiConfig && aiConfig.geminiApiKey) || '';
-    if (!activeGeminiKey) {
-      console.log("Gemini API key not found; skipping automatic LaTeX extraction.");
-      return;
-    }
 
     setIsExtractingLatex(true);
     try {
-      const extracted = await extractStudentMathToLatex(activeGeminiKey, targetImg);
+      const activeGeminiKey = geminiApiKey || (aiConfig && aiConfig.geminiApiKey) || '';
+      const activeOrKey = (aiConfig && aiConfig.openrouterApiKey) || '';
+      const extracted = await extractStudentMathToLatex(activeGeminiKey, targetImg, activeOrKey);
       if (extracted && extracted.trim()) {
         setStudentAnswer(extracted.trim());
       }
@@ -227,84 +223,6 @@ export default function UploadPage() {
     });
   };
 
-  const handleAiAutoGrade = async () => {
-    if (!imagePreview && !studentAnswer) {
-      alert("먼저 사진을 첨부하거나 답안(수식)을 입력해주세요.");
-      return;
-    }
-
-    const registeredAnswers = hw?.answers || hw?.answerKey || {};
-    const probDetail = (hw?.problemDetails && (hw.problemDetails[problemId] || hw.problemDetails[String(problemId)])) || {};
-    const correctAns = registeredAnswers[problemId] || registeredAnswers[String(problemId)] || probDetail.answer || probDetail.correctAnswer || '';
-
-    setIsAiGrading(true);
-    try {
-      // 1. FAST-PATH: If official answer is registered and student answer is present -> TypeSafe Jev 1.13 Decisions API!
-      if (correctAns && studentAnswer && studentAnswer.trim()) {
-        const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, studentAnswer.trim());
-        setAiFeedback(equivRes);
-        if (equivRes.includes('⭕') || equivRes.includes('정답')) {
-          setAiGrade('⭕ 정답');
-        } else if (equivRes.includes('❌') || equivRes.includes('오답')) {
-          setAiGrade('❌ 오답');
-        } else {
-          setAiGrade('⭕ 정답');
-        }
-        return;
-      }
-
-      // 1.5. Handwriting Image -> Vision OCR to LaTeX -> TypeSafe Jev 1.13 Decisions API!
-      if (correctAns && imagePreview && (!studentAnswer || !studentAnswer.trim()) && geminiApiKey) {
-        try {
-          const extracted = await extractStudentMathToLatex(geminiApiKey, imagePreview);
-          if (extracted) {
-            setStudentAnswer(extracted);
-            const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, extracted);
-            setAiFeedback(equivRes);
-            if (equivRes.includes('⭕') || equivRes.includes('정답')) {
-              setAiGrade('⭕ 정답');
-            } else if (equivRes.includes('❌') || equivRes.includes('오답')) {
-              setAiGrade('❌ 오답');
-            } else {
-              setAiGrade('⭕ 정답');
-            }
-            return;
-          }
-        } catch (ocrErr) {
-          console.warn("Handwriting extraction failed, falling back to Vision AI:", ocrErr);
-        }
-      }
-
-      // 2. SLOW-PATH: Vision AI grading if no registered answer or OCR not available
-      if (!isAiConfigured && !geminiApiKey) {
-        alert("AI API 키가 설정되지 않았습니다. 관리자 페이지 환경 설정에서 AI API 키를 먼저 입력해주세요.");
-        return;
-      }
-
-      const groupLabel = currentGroup?.label || '';
-      const desc = `${hw.studentName} 학생의 ${hw.title} ${groupLabel ? `[${groupLabel}] ` : ''}${problemId}번 문제 풀이입니다.`;
-      const result = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, imagePreview, '', correctAns);
-      
-      setAiFeedback(result);
-
-      // Auto detect grade status
-      if (result.includes('⭕') || result.includes('정답')) {
-        setAiGrade('⭕ 정답');
-      } else if (result.includes('❌') || result.includes('오답')) {
-        setAiGrade('❌ 오답');
-      } else if (result.includes('🔺') || result.includes('부분')) {
-        setAiGrade('🔺 부분 정답');
-      } else {
-        setAiGrade('⭕ 정답');
-      }
-    } catch (err) {
-      console.error(err);
-      alert(`AI 채점 중 오류가 발생했습니다: ${err.message}`);
-    } finally {
-      setIsAiGrading(false);
-    }
-  };
-
   const handleSubmit = async () => {
     let finalData = imagePreview;
     
@@ -313,7 +231,71 @@ export default function UploadPage() {
       return;
     }
 
-    await submitHomeworkProblem(id, groupId, problemId, finalData, aiFeedback, aiGrade, studentAnswer);
+    const registeredAnswers = hw?.answers || hw?.answerKey || {};
+    const probDetail = (hw?.problemDetails && (hw.problemDetails[problemId] || hw.problemDetails[String(problemId)])) || {};
+    const correctAns = registeredAnswers[problemId] || registeredAnswers[String(problemId)] || probDetail.answer || probDetail.correctAnswer || '';
+
+    let finalFeedback = aiFeedback;
+    let finalGrade = aiGrade;
+
+    // 1. If official answer is registered and student answer (or image) is present -> TypeSafe Jev 1.13!
+    if (!finalGrade && correctAns) {
+      let currentAns = studentAnswer ? studentAnswer.trim() : '';
+
+      // If only image was submitted, extract LaTeX via Gemini first
+      if (!currentAns && finalData) {
+        try {
+          const { callGeminiVisionToLatex } = await import('../utils/gemini');
+          const activeGeminiKey = geminiApiKey || (aiConfig && aiConfig.geminiApiKey) || '';
+          const activeOrKey = (aiConfig && aiConfig.openrouterApiKey) || '';
+          currentAns = await callGeminiVisionToLatex(finalData, activeGeminiKey, activeOrKey);
+          if (currentAns) setStudentAnswer(currentAns);
+        } catch (ocrErr) {
+          console.warn("제출 시 Gemini 수식 추출 실패:", ocrErr);
+        }
+      }
+
+      if (currentAns) {
+        try {
+          const { checkMathEquivalenceWithAI } = await import('../utils/gemini');
+          const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, currentAns);
+          finalFeedback = equivRes;
+          if (equivRes.includes('⭕') || equivRes.includes('정답')) {
+            finalGrade = '⭕ 정답';
+          } else if (equivRes.includes('❌') || equivRes.includes('오답')) {
+            finalGrade = '❌ 오답';
+          } else {
+            finalGrade = '⭕ 정답';
+          }
+        } catch (err) {
+          console.warn("제출 시 Jev 자동 채점 실패:", err);
+        }
+      }
+    }
+
+    // 2. Fallback to vision AI if no registered answer or no equivalence reached
+    if (!finalGrade && finalData) {
+      try {
+        const groupLabel = currentGroup?.label || '';
+        const desc = `${hw.studentName} 학생의 ${hw.title} ${groupLabel ? `[${groupLabel}] ` : ''}${problemId}번 문제 풀이입니다.`;
+        const { autoGradeProblemSubmission } = await import('../utils/gemini');
+        const result = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, finalData, '', correctAns);
+        finalFeedback = result;
+        if (result.includes('⭕') || result.includes('정답')) {
+          finalGrade = '⭕ 정답';
+        } else if (result.includes('❌') || result.includes('오답')) {
+          finalGrade = '❌ 오답';
+        } else if (result.includes('🔺') || result.includes('부분')) {
+          finalGrade = '🔺 부분 정답';
+        } else {
+          finalGrade = '⭕ 정답';
+        }
+      } catch (err) {
+        console.warn("Vision AI 자동 채점 실패:", err);
+      }
+    }
+
+    await submitHomeworkProblem(id, groupId, problemId, finalData, finalFeedback, finalGrade, studentAnswer);
     navigate(-1);
   };
 
@@ -728,27 +710,6 @@ export default function UploadPage() {
                 borderRadius: '8px'
               }}
             />
-            {imagePreview && (
-              <button 
-                type="button"
-                onClick={() => handleExtractLatex(imagePreview)}
-                disabled={isExtractingLatex}
-                style={{
-                  padding: '8px 14px',
-                  backgroundColor: '#2A2C38',
-                  color: '#93C5FD',
-                  border: '1px solid #3B82F6',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-                title="사진에서 손글씨 수식을 다시 인식합니다"
-              >
-                ✨ 수식 재인식
-              </button>
-            )}
           </div>
 
           {/* Real-time MathJax LaTeX Preview */}
@@ -766,40 +727,6 @@ export default function UploadPage() {
               </div>
             </div>
           )}
-
-          {/* Instant Jev 1.13 Grading Button */}
-          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-            <button 
-              type="button"
-              onClick={handleAiAutoGrade}
-              disabled={isAiGrading || (!imagePreview && !studentAnswer)}
-              style={{
-                flex: 1,
-                padding: '12px',
-                backgroundColor: isAiGrading ? '#444' : '#2563EB',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                cursor: (isAiGrading || (!imagePreview && !studentAnswer)) ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)'
-              }}
-            >
-              {isAiGrading ? (
-                <>
-                  <span className="spinner" style={{ width: '14px', height: '14px', border: '2px solid #888', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
-                  채점 판정 중...
-                </>
-              ) : (
-                <>⚡ 실시간 채점 (TypeSafe Jev 1.13)</>
-              )}
-            </button>
-          </div>
         </div>
 
         <div className="submit-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
