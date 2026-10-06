@@ -319,42 +319,89 @@ export const HomeworkProvider = ({ children }) => {
                          (aiProvider === 'gemini' && !!geminiApiKey) ||
                          (aiProvider === 'musespark' && !!musesparkApiKey);
 
-  // Fetch data on mount with dual-layer safety (Cloud + Local Cache)
+  // Fetch data on mount with smart merge (Prioritize latest GitHub/Local graded results, never overwrite 'correct')
   useEffect(() => {
     const fetchData = async () => {
-      // 1. If we don't have cached data in state yet, try local public/homeworkData.json first
-      if (!data || data.length === 0) {
-        try {
-          const publicRes = await fetch('./homeworkData.json');
-          if (publicRes.ok) {
-            const publicData = await publicRes.json();
-            if (Array.isArray(publicData) && publicData.length > 0) {
-              setData(publicData);
-              setIsLoading(false);
-            }
+      let currentBaseData = data;
+
+      // 1. Fetch latest public/homeworkData.json (GitHub Pages / Local build)
+      try {
+        const publicRes = await fetch('./homeworkData.json?t=' + Date.now());
+        if (publicRes.ok) {
+          const publicData = await publicRes.json();
+          if (Array.isArray(publicData) && publicData.length > 0) {
+            currentBaseData = publicData;
+            setData(publicData);
+            try {
+              localStorage.setItem('cachedHomeworkData', JSON.stringify(publicData));
+            } catch (e) {}
+            setIsLoading(false);
           }
-        } catch (e) {}
+        }
+      } catch (e) {
+        console.warn("Local homeworkData.json fetch skipped:", e);
       }
 
-      // 2. Query cloud GAS in background with 4s timeout
+      // 2. Query cloud GAS in background with 3s timeout for new student uploads only,
+      //    safely merging without ever overwriting graded (correct) status!
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
 
       try {
         const response = await fetch(GAS_URL, { signal: controller.signal });
         clearTimeout(timeoutId);
         if (response.ok) {
-          const result = await response.json();
-          if (Array.isArray(result) && result.length > 0) {
-            setData(result);
-            try {
-              localStorage.setItem('cachedHomeworkData', JSON.stringify(result));
-            } catch (e) {}
+          const cloudData = await response.json();
+          if (Array.isArray(cloudData) && cloudData.length > 0) {
+            // Smart Merge: Preserve 'correct' statuses and AI feedback from base data
+            setData(prev => {
+              const base = (prev && prev.length > 0) ? prev : (currentBaseData || cloudData);
+              const merged = base.map(section => {
+                const cloudSec = cloudData.find(cs => cs.date === section.date) || section;
+                return {
+                  ...section,
+                  homeworks: section.homeworks.map(hw => {
+                    const cloudHw = cloudSec.homeworks?.find(ch => String(ch.id) === String(hw.id));
+                    if (!cloudHw) return hw;
+
+                    // Merge submittedProblems safely
+                    const baseSubmitted = hw.submittedProblems || [];
+                    const cloudSubmitted = cloudHw.submittedProblems || [];
+                    
+                    const mergedSubmitted = [...baseSubmitted];
+                    cloudSubmitted.forEach(cProb => {
+                      const existingIdx = mergedSubmitted.findIndex(b => b.problemNumber === cProb.problemNumber);
+                      if (existingIdx === -1) {
+                        // New problem submitted from student
+                        mergedSubmitted.push(cProb);
+                      } else {
+                        // If base already graded it as correct, NEVER revert back to submitted!
+                        const existing = mergedSubmitted[existingIdx];
+                        if (existing.status !== 'correct' && cProb.status === 'correct') {
+                          mergedSubmitted[existingIdx] = cProb;
+                        } else if (existing.status !== 'correct' && cProb.imageUrl && !existing.imageUrl) {
+                          mergedSubmitted[existingIdx] = cProb;
+                        }
+                      }
+                    });
+
+                    return {
+                      ...hw,
+                      submittedProblems: mergedSubmitted
+                    };
+                  })
+                };
+              });
+
+              try {
+                localStorage.setItem('cachedHomeworkData', JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
           }
         }
       } catch (error) {
-        // Network timeout / offline fallback
-        console.warn("GAS fetch skipped or timed out, relying on local cache:", error);
+        console.warn("GAS fetch skipped or timed out, safely using local/GitHub data:", error);
       } finally {
         setIsLoading(false);
       }
