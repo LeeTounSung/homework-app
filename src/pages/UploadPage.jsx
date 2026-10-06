@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import MathInkComponent from '../components/MathInkComponent';
 import ProblemStatementView from '../components/ProblemStatementView';
-import { autoGradeProblemSubmission, extractStudentMathToLatex, checkMathEquivalenceWithAI } from '../utils/gemini';
+import { autoGradeProblemSubmission, extractStudentMathToLatex, checkMathEquivalenceWithAI, normalizeChoiceNumber } from '../utils/gemini';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -676,20 +676,86 @@ export default function UploadPage() {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
             <span style={{ color: '#60A5FA', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ✍️ 학생 최종 답안 (LaTeX 수식)
+              ✍️ 학생 최종 답안 (객관식 번호 / 수식)
             </span>
-            {isExtractingLatex ? (
+            {isExtractingLatex && (
               <span style={{ fontSize: '12px', color: '#FFD700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span className="spinner" style={{ width: '12px', height: '12px', border: '2px solid #555', borderTop: '2px solid #FFD700', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
                 Gemini 2.5 Flash-Lite 수식 추출 중...
               </span>
-            ) : (
-              (hw?.answers?.[problemId] || hw?.answerKey?.[problemId] || hw?.problemDetails?.[problemId]?.answer || hw?.problemDetails?.[problemId]?.correctAnswer) ? (
-                <span style={{ fontSize: '11px', color: '#93C5FD', backgroundColor: 'rgba(59, 130, 246, 0.2)', padding: '3px 8px', borderRadius: '12px', border: '1px solid #3B82F6' }}>
-                  🎯 공식 정답 등록됨: {hw?.answers?.[problemId] || hw?.answerKey?.[problemId] || hw?.problemDetails?.[problemId]?.answer || hw?.problemDetails?.[problemId]?.correctAnswer}
-                </span>
-              ) : null
             )}
+          </div>
+
+          {/* 객관식 1~5번 원클릭 선택 버튼 바 */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            backgroundColor: '#161822',
+            padding: '10px 12px',
+            borderRadius: '10px',
+            border: '1px solid #2B2F40'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: '600' }}>
+                🔘 객관식 빠른 선택 (1~5번)
+              </span>
+              {studentAnswer && ['1', '2', '3', '4', '5'].includes(normalizeChoiceNumber(studentAnswer)) && (
+                <button
+                  type="button"
+                  onClick={() => setStudentAnswer('')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#EF4444',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    padding: '2px 6px'
+                  }}
+                >
+                  선택 취소 ✕
+                </button>
+              )}
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+              {[1, 2, 3, 4, 5].map((num) => {
+                const circled = ['①', '②', '③', '④', '⑤'][num - 1];
+                const isSelected = normalizeChoiceNumber(studentAnswer) === String(num);
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        setStudentAnswer('');
+                      } else {
+                        setStudentAnswer(String(num));
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      height: '42px',
+                      borderRadius: '8px',
+                      border: isSelected ? '2px solid #3B82F6' : '1px solid #374151',
+                      backgroundColor: isSelected ? '#1D4ED8' : '#1F2937',
+                      color: isSelected ? '#FFFFFF' : '#D1D5DB',
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.15s ease',
+                      boxShadow: isSelected ? '0 0 10px rgba(59, 130, 246, 0.6)' : 'none',
+                      transform: isSelected ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                  >
+                    {circled}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -697,7 +763,7 @@ export default function UploadPage() {
               type="text" 
               value={studentAnswer} 
               onChange={(e) => setStudentAnswer(e.target.value)} 
-              placeholder="손글씨 자동 변환 또는 수식 직접 입력 (예: \frac{9}{4}, 5, x^2-4x+3)"
+              placeholder="선택지 번호(1~5) 또는 직접 수식 입력 (예: 3, \frac{9}{4}, x^2-4x+3)"
               className="modal-input"
               style={{
                 flex: 1,
@@ -712,7 +778,7 @@ export default function UploadPage() {
             />
           </div>
 
-          {/* Real-time MathJax LaTeX Preview */}
+          {/* Real-time MathJax LaTeX Preview / Choice Preview */}
           {studentAnswer && (
             <div style={{
               backgroundColor: '#121318',
@@ -721,9 +787,17 @@ export default function UploadPage() {
               border: '1px solid #2B2D3A',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textAlign: 'left' }}>렌더링 미리보기:</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textAlign: 'left' }}>
+                {['1', '2', '3', '4', '5'].includes(normalizeChoiceNumber(studentAnswer)) ? '선택된 객관식 답안:' : '렌더링 미리보기:'}
+              </div>
               <div ref={latexPreviewRef} style={{ fontSize: '18px', color: '#60A5FA', minHeight: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {`$$ ${studentAnswer} $$`}
+                {['1', '2', '3', '4', '5'].includes(normalizeChoiceNumber(studentAnswer)) ? (
+                  <span style={{ fontWeight: 'bold', fontSize: '20px', color: '#38BDF8' }}>
+                    {['①', '②', '③', '④', '⑤'][parseInt(normalizeChoiceNumber(studentAnswer)) - 1]} ({normalizeChoiceNumber(studentAnswer)}번)
+                  </span>
+                ) : (
+                  `$$ ${studentAnswer} $$`
+                )}
               </div>
             </div>
           )}

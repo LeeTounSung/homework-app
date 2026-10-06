@@ -521,14 +521,14 @@ export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, stu
   const url = 'https://openrouter.ai/api/alpha/decisions';
   const payload = {
     model: selectedModel,
-    state: `[Math Equivalence Verification Task]\nStudent Answer: ${studentAnswer}\nOfficial Answer Key: ${correctAnswer}\nEvaluate if student answer is mathematically equivalent to the official key.`,
+    state: `[Math Equivalence Verification Task]\nStudent Answer: ${studentAnswer}\nOfficial Answer Key: ${correctAnswer}\nEvaluate if student answer is mathematically equivalent to the official key, or matches the correct multiple-choice option number (1~5 or ①~⑤).`,
     questions: {
       is_equivalent: {
         type: 'choice',
-        instructions: 'Determine whether the student answer is mathematically equivalent to the official key.',
+        instructions: 'Determine whether the student answer is mathematically equivalent to the official key or is the correct choice number.',
         criteria: {
-          EQUIVALENT: 'The student answer is mathematically identical, numerically equal, or algebraically equivalent (e.g. equivalent fraction/decimal, factored/expanded, transformed LaTeX, equivalent set/interval notation).',
-          DIFFERENT: 'The student answer is mathematically different in value, sign, or expression from the key, or wrong.'
+          EQUIVALENT: 'The student answer is mathematically identical, numerically equal, algebraically equivalent, or is the matching multiple choice option number (1~5 or ①~⑤).',
+          DIFFERENT: 'The student answer is mathematically different in value, sign, or wrong option number.'
         }
       },
       score: {
@@ -609,7 +609,70 @@ export const testJevConnection = async (apiKey, model = 'typesafe/jev-1.13') => 
   };
 };
 
+export const normalizeChoiceNumber = (str) => {
+  if (str === null || str === undefined) return '';
+  let s = String(str).trim();
+  const circledMap = {
+    '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5',
+    '❶': '1', '❷': '2', '❸': '3', '❹': '4', '❺': '5',
+    '⑴': '1', '⑵': '2', '⑶': '3', '⑷': '4', '⑸': '5'
+  };
+  s = s.replace(/[①②③④⑤❶❷❸❹❺⑴⑵⑶⑷⑸]/g, ch => circledMap[ch] || ch);
+  const m = s.match(/^([1-5])\s*(?:번|\.)?$/);
+  if (m) return m[1];
+  return s.trim();
+};
+
 export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studentAnswer) => {
+  const rawKey = String(correctAnswer || '').trim();
+  const rawStudent = String(studentAnswer || '').trim();
+
+  // Normalize backslashes (JSON-escaped \\frac -> \frac) and spaces
+  const cleanKey = rawKey.replace(/\\\\+/g, '\\').replace(/\s+/g, ' ').trim();
+  const cleanStudent = rawStudent.replace(/\\\\+/g, '\\').replace(/\s+/g, ' ').trim();
+
+  // FAST-PATH 0A: Exact string match (ignoring spaces & backslash differences)
+  if (cleanKey && cleanStudent && cleanKey.toLowerCase().replace(/\s+/g, '') === cleanStudent.toLowerCase().replace(/\s+/g, '')) {
+    return `[채점 결과]
+⭕ 정답
+
+[⚡ 즉시 일치 판정]
+- 공식 정답: ${correctAnswer}
+- 학생 답안: ${studentAnswer}
+- 동치 판정: 완전 일치 (EXACT_MATCH)
+- 획득 점수: 10점 / 10점 (일치 확률: 100%)
+- 검정 속도: 0ms (0비용)`;
+  }
+
+  // FAST-PATH 0B: Multiple Choice Number Match (1~5 or ①~⑤ or 3번)
+  const normKey = normalizeChoiceNumber(cleanKey);
+  const normStudent = normalizeChoiceNumber(cleanStudent);
+  const validChoices = ['1', '2', '3', '4', '5'];
+
+  if (validChoices.includes(normKey) && validChoices.includes(normStudent)) {
+    if (normKey === normStudent) {
+      return `[채점 결과]
+⭕ 정답
+
+[⚡ 객관식 정답 판정]
+- 공식 정답: ${correctAnswer} (${normKey}번)
+- 학생 답안: ${studentAnswer} (${normStudent}번)
+- 동치 판정: 선택지 일치 (EQUIVALENT)
+- 획득 점수: 10점 / 10점 (일치 확률: 100%)
+- 검정 속도: 0ms (0비용)`;
+    } else {
+      return `[채점 결과]
+❌ 오답
+
+[⚡ 객관식 오답 판정]
+- 공식 정답: ${correctAnswer} (${normKey}번)
+- 학생 답안: ${studentAnswer} (${normStudent}번)
+- 동치 판정: 선택지 불일치 (DIFFERENT)
+- 획득 점수: 0점 / 10점
+- 검정 속도: 0ms (0비용)`;
+    }
+  }
+
   // FAST-PATH 1: Try TypeSafe Jev 1.13 Decisions API first (0.05s, 0.003 KRW)
   try {
     const orKey = ((typeof aiConfig === 'object' && aiConfig?.openrouterApiKey) || '').trim() || BUILTIN_OPENROUTER_KEY;
