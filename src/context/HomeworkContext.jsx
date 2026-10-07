@@ -557,23 +557,27 @@ export const HomeworkProvider = ({ children }) => {
   const submitHomeworkProblem = async (id, groupId, problemNumber, imageBase64, aiFeedback = null, aiGrade = null, studentAnswer = null) => {
     setIsSaving(true);
     try {
-      let shouldUploadToDrive = true;
+      let shouldUploadToDrive = false;
       let mimeType = 'image/jpeg';
-      let base64Data = imageBase64;
+      let base64Data = null;
+      let finalImageUrl = imageBase64 || null;
       
-      if (imageBase64.startsWith('data:')) {
-        // Extract base64 if it is base64 encoded
-        const matches = imageBase64.match(/^data:([a-zA-Z0-9-+\/]+);(?:charset=[^;]+;)?base64,(.+)$/);
-        if (matches && matches.length === 3) {
-          mimeType = matches[1];
-          base64Data = matches[2];
-        } else {
-          // It's a data URL but not base64 (e.g. SVG utf8 from MathType)
+      if (imageBase64 && typeof imageBase64 === 'string') {
+        if (imageBase64.startsWith('data:')) {
+          // Extract base64 if it is base64 encoded
+          const matches = imageBase64.match(/^data:([a-zA-Z0-9-+\/]+);(?:charset=[^;]+;)?base64,(.+)$/);
+          if (matches && matches.length === 3) {
+            mimeType = matches[1];
+            base64Data = matches[2];
+            shouldUploadToDrive = true;
+          } else {
+            // It's a data URL but not base64 (e.g. SVG utf8 from MathType)
+            shouldUploadToDrive = false;
+          }
+        } else if (imageBase64.startsWith('http')) {
+          // It's an external URL (e.g. from MathType server or already hosted)
           shouldUploadToDrive = false;
         }
-      } else if (imageBase64.startsWith('http')) {
-        // It's an external URL (e.g. from MathType server)
-        shouldUploadToDrive = false;
       }
 
       // Find homework and student info
@@ -594,9 +598,7 @@ export const HomeworkProvider = ({ children }) => {
       const cleanHwTitle = hwTitle.replace(/[\/\\?%*:|"<>]/g, '-');
       const cleanDate = hwDate.split('(')[0].replace(/ /g, '') || "날짜미상";
 
-      let finalImageUrl = imageBase64;
-
-      if (shouldUploadToDrive) {
+      if (shouldUploadToDrive && base64Data) {
         let label = '범위미상';
         if (hw && hw.problemGroups) {
           const group = hw.problemGroups.find(g => g.groupId === groupId);
@@ -670,7 +672,7 @@ export const HomeworkProvider = ({ children }) => {
             if (existingIndex >= 0) {
               newSubmitted[existingIndex] = { 
                 ...newSubmitted[existingIndex], 
-                imageUrl: finalImageUrl, 
+                imageUrl: finalImageUrl || newSubmitted[existingIndex].imageUrl || null, 
                 status: statusToSet,
                 studentAnswer: studentAnswer !== null ? studentAnswer : (newSubmitted[existingIndex].studentAnswer || null),
                 aiFeedback: aiFeedback || newSubmitted[existingIndex].aiFeedback || null,
@@ -680,7 +682,7 @@ export const HomeworkProvider = ({ children }) => {
               newSubmitted.push({ 
                 groupId, 
                 problemNumber: parseInt(problemNumber), 
-                imageUrl: finalImageUrl, 
+                imageUrl: finalImageUrl || null, 
                 status: statusToSet,
                 studentAnswer: studentAnswer || null,
                 aiFeedback: aiFeedback || null,
@@ -695,8 +697,8 @@ export const HomeworkProvider = ({ children }) => {
       })));
 
     } catch (error) {
-      console.error("Upload error:", error);
-      alert("이미지 전송 중 오류가 발생했습니다.");
+      console.error("과제 저장 오류:", error);
+      alert("과제 저장 중 오류가 발생했습니다: " + (error.message || "다시 시도해주세요."));
     } finally {
       setIsSaving(false);
     }
