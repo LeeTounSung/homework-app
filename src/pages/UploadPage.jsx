@@ -489,39 +489,7 @@ export default function UploadPage() {
 
 
 
-        {/* Problem Attempt History Timeline (Admin only) */}
-        {problemHistory && problemHistory.length > 1 && isAdmin && (
-          <div style={{ backgroundColor: '#181A22', border: '1px solid #333', borderRadius: '8px', padding: '14px', marginBottom: '20px' }}>
-            <h4 style={{ margin: '0 0 10px 0', color: '#FFD700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              📜 누적 풀이 및 오답 히스토리 ({problemHistory.length}회 기록)
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {problemHistory.map((h, hIdx) => (
-                <div 
-                  key={hIdx} 
-                  style={{ 
-                    backgroundColor: '#222530', 
-                    borderRadius: '6px', 
-                    padding: '10px 12px', 
-                    borderLeft: `3px solid ${h.status === 'correct' ? '#1E88E5' : '#E53935'}` 
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 'bold', fontSize: '12px', color: h.status === 'correct' ? '#90CAF9' : '#EF9A9A' }}>
-                      {h.attempt || hIdx + 1}회차 제출 ({h.status === 'correct' ? '⭕ 정답' : '❌ 오답'})
-                    </span>
-                    <span style={{ fontSize: '11px', color: '#888' }}>{h.date}</span>
-                  </div>
-                  {h.aiFeedback && (
-                    <p style={{ margin: 0, fontSize: '12px', color: '#bbb', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
-                      {h.aiFeedback.length > 120 ? `${h.aiFeedback.slice(0, 120)}...` : h.aiFeedback}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
 
 
         {/* Toggle MathType / Image Upload */}

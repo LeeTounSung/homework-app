@@ -319,7 +319,8 @@ export default function HomeworkDetailPage() {
           if (isAiConfigured || geminiApiKey) {
             try {
               const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, p.studentAnswer);
-              const isEquiv = equivRes.includes('⭕') || equivRes.includes('정답') || equivRes.includes('맞았습니다');
+              const isWrong = equivRes.includes('❌') || equivRes.includes('오답') || equivRes.includes('DIFFERENT') || /\[채점 결과\]\s*❌/.test(equivRes);
+              const isEquiv = (equivRes.includes('⭕') || equivRes.includes('EQUIVALENT') || /\[채점 결과\]\s*⭕/.test(equivRes)) && !isWrong;
               const gradeStatus = isEquiv ? 'correct' : 'incorrect';
               const feedback = `${isEquiv ? '⭕' : '❌'} [수학적 동치 판정]\n입력 답안: ${p.studentAnswer}\n공식 정답: ${correctAns}\n\n${equivRes}`;
               evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, gradeStatus, feedback);
@@ -355,10 +356,14 @@ export default function HomeworkDetailPage() {
           const feedback = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, p.imageUrl, '', correctAns);
           
           let gradeStatus = 'incorrect';
-          if (feedback.includes('채점 불가') || feedback.includes('채점불가') || feedback.includes('🔺') || feedback.includes('확인 필요')) {
+          const isIndeterminate = feedback.includes('채점 불가') || feedback.includes('채점불가') || feedback.includes('🔺') || feedback.includes('확인 필요');
+          const isWrong = feedback.includes('❌') || feedback.includes('오답') || feedback.includes('틀렸습니다');
+          const isRight = (feedback.includes('⭕') || feedback.includes('맞았습니다') || /\[채점 결과\]\s*⭕/.test(feedback)) && !isWrong;
+
+          if (isIndeterminate) {
             gradeStatus = 'indeterminate';
             indeterminateCount++;
-          } else if (feedback.includes('⭕') || feedback.includes('정답') || feedback.includes('맞았습니다')) {
+          } else if (isRight) {
             gradeStatus = 'correct';
             correctCount++;
           } else {
