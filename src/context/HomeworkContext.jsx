@@ -670,13 +670,17 @@ export const HomeworkProvider = ({ children }) => {
             const statusToSet = aiGrade === '⭕ 정답' ? 'correct' : (aiGrade === '❌ 오답' ? 'incorrect' : 'submitted');
 
             if (existingIndex >= 0) {
+              const prev = newSubmitted[existingIndex];
+              const wasIncorrect = prev.status === 'incorrect' || (prev.wrongCount > 0) || Boolean(prev.hasBeenIncorrect);
               newSubmitted[existingIndex] = { 
-                ...newSubmitted[existingIndex], 
-                imageUrl: finalImageUrl || newSubmitted[existingIndex].imageUrl || null, 
+                ...prev, 
+                imageUrl: finalImageUrl || prev.imageUrl || null, 
                 status: statusToSet,
-                studentAnswer: studentAnswer !== null ? studentAnswer : (newSubmitted[existingIndex].studentAnswer || null),
+                studentAnswer: studentAnswer !== null ? studentAnswer : (prev.studentAnswer || null),
                 aiFeedback: aiFeedback !== undefined ? aiFeedback : null,
-                aiGrade: aiGrade !== undefined ? aiGrade : null
+                aiGrade: aiGrade !== undefined ? aiGrade : null,
+                hasBeenIncorrect: wasIncorrect,
+                wrongCount: prev.wrongCount || (prev.status === 'incorrect' ? 1 : 0)
               };
             } else {
               newSubmitted.push({ 
@@ -686,7 +690,9 @@ export const HomeworkProvider = ({ children }) => {
                 status: statusToSet,
                 studentAnswer: studentAnswer || null,
                 aiFeedback: aiFeedback || null,
-                aiGrade: aiGrade || null
+                aiGrade: aiGrade || null,
+                wrongCount: 0,
+                hasBeenIncorrect: false
               });
             }
             
@@ -773,6 +779,7 @@ export const HomeworkProvider = ({ children }) => {
             let newSubmitted = [...hw.submittedProblems];
             const currentItem = newSubmitted[existingIndex];
             const currentAttempts = currentItem.attempts || 1;
+            const currentWrongCount = currentItem.wrongCount || (currentItem.status === 'incorrect' ? 1 : 0);
             
             let statusToSet = 'incorrect';
             if (gradeResult === true || gradeResult === 'correct') {
@@ -783,16 +790,22 @@ export const HomeworkProvider = ({ children }) => {
               statusToSet = 'incorrect';
             }
 
-            const newAttempts = (statusToSet === 'incorrect' && currentItem.status !== 'incorrect') || (statusToSet === 'correct' && currentItem.status === 'incorrect')
-              ? currentAttempts + 1
-              : currentAttempts;
+            // 오답 횟수(wrongCount): 이번 채점에서 오답이면 +1 누적, 맞았으면 기존 오답 횟수 유지
+            let newWrongCount = currentWrongCount;
+            if (statusToSet === 'incorrect') {
+              newWrongCount = currentWrongCount + 1;
+            }
+
+            const newAttempts = currentAttempts + 1;
 
             const existingHistory = Array.isArray(currentItem.history) ? currentItem.history : [];
             const newHistoryEntry = {
               attempt: newAttempts,
               date: dateStr,
               status: statusToSet,
+              wrongCount: newWrongCount,
               imageUrl: currentItem.imageUrl,
+              studentAnswer: currentItem.studentAnswer,
               aiFeedback: aiFeedback !== null ? aiFeedback : currentItem.aiFeedback
             };
 
@@ -800,9 +813,10 @@ export const HomeworkProvider = ({ children }) => {
               ...currentItem, 
               status: statusToSet,
               attempts: newAttempts,
+              wrongCount: newWrongCount,
               aiFeedback: aiFeedback !== null ? aiFeedback : currentItem.aiFeedback,
               history: [...existingHistory, newHistoryEntry],
-              hasBeenIncorrect: currentItem.hasBeenIncorrect || statusToSet === 'incorrect'
+              hasBeenIncorrect: currentItem.hasBeenIncorrect || statusToSet === 'incorrect' || newWrongCount > 0
             };
             return { ...hw, submittedProblems: newSubmitted };
           }
@@ -823,11 +837,16 @@ export const HomeworkProvider = ({ children }) => {
             
             const isWrong = wrongNumbersArray.includes(p.problemNumber);
             const currentAttempts = p.attempts || 1;
+            const currentWrongCount = p.wrongCount || (p.status === 'incorrect' ? 1 : 0);
+            const newWrongCount = isWrong ? currentWrongCount + 1 : currentWrongCount;
+            const wasIncorrect = p.hasBeenIncorrect || isWrong || currentWrongCount > 0;
             
             return {
               ...p,
               status: isWrong ? 'incorrect' : 'correct',
-              attempts: isWrong && p.status !== 'incorrect' ? currentAttempts + 1 : currentAttempts,
+              attempts: currentAttempts + 1,
+              wrongCount: newWrongCount,
+              hasBeenIncorrect: wasIncorrect,
               aiFeedback: bulkFeedback !== '' ? bulkFeedback : p.aiFeedback
             };
           });

@@ -257,15 +257,24 @@ export default function HomeworkDetailPage() {
   };
 
   const handleBulkAiGrade = async () => {
-    const toGrade = (hw.submittedProblems || []).filter(p => p.status !== 'exempt' && (p.imageUrl || p.studentAnswer));
+    // 💡 이미 맞은 문제(status === 'correct')는 그대로 두고, 미채점(submitted) 또는 오답(incorrect, indeterminate) 문제만 선별하여 채점
+    const toGrade = (hw.submittedProblems || []).filter(
+      p => p.status !== 'correct' && p.status !== 'exempt' && (p.imageUrl || p.studentAnswer)
+    );
+
     if (toGrade.length === 0) {
-      alert("채점할 제출물이 없습니다. 먼저 문제를 제출해주세요.");
+      const alreadyCorrectCount = (hw.submittedProblems || []).filter(p => p.status === 'correct').length;
+      if (alreadyCorrectCount > 0) {
+        alert(`채점할 대상이 없습니다. 제출된 ${alreadyCorrectCount}개 문제가 이미 모두 '⭕ 맞음'으로 완료되었습니다! 🎉`);
+      } else {
+        alert("채점할 제출물이 없습니다. 먼저 문제를 제출해주세요.");
+      }
       return;
     }
 
     const registeredAnswers = hw.answers || hw.answerKey || {};
 
-    if (!window.confirm(`총 ${toGrade.length}개의 제출된 문제를 채점하시겠습니까?`)) {
+    if (!window.confirm(`총 ${toGrade.length}개의 미채점/오답 문제를 채점하시겠습니까?\n(이미 맞은 문제는 그대로 유지됩니다)`)) {
       return;
     }
 
@@ -431,9 +440,20 @@ export default function HomeworkDetailPage() {
     }
   };
 
-  const getProblemStyle = (status) => {
+  const getProblemStyle = (status, subProb = null) => {
     switch (status) {
-      case 'correct':
+      case 'correct': {
+        const wasIncorrect = (subProb?.wrongCount > 0) || Boolean(subProb?.hasBeenIncorrect);
+        if (wasIncorrect) {
+          return { 
+            bg: '#1E293B', 
+            border: '#F59E0B', 
+            borderWidth: '2.5px',
+            text: '#FFFFFF', 
+            label: '⭕ 틀림후 맞춤',
+            labelColor: '#FBBF24'
+          }; // 주황/골드 테두리 + 슬레이트 배경 (오답 후 재풀이 정답)
+        }
         return { 
           bg: '#1E293B', 
           border: '#3B82F6', 
@@ -442,6 +462,7 @@ export default function HomeworkDetailPage() {
           label: '⭕ 맞음',
           labelColor: '#60A5FA'
         }; // 블루 테두리 + 슬레이트 배경
+      }
       case 'incorrect':
         return { 
           bg: '#1E293B', 
@@ -620,8 +641,16 @@ export default function HomeworkDetailPage() {
                   {submittedProblems.some(p => p.status === 'correct' || p.status === 'incorrect' || p.status === 'indeterminate') ? (
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ color: '#90CAF9', fontWeight: 'bold' }}>
-                        ⭕ 맞음: {submittedProblems.filter(p => p.status === 'correct').length}개
+                        ⭕ 맞음: {submittedProblems.filter(p => p.status === 'correct' && !((p.wrongCount > 0) || p.hasBeenIncorrect)).length}개
                       </span>
+                      {submittedProblems.filter(p => p.status === 'correct' && ((p.wrongCount > 0) || p.hasBeenIncorrect)).length > 0 && (
+                        <>
+                          <span style={{ color: '#666' }}>|</span>
+                          <span style={{ color: '#FBBF24', fontWeight: 'bold' }}>
+                            ⭕ 틀림후 맞춤: {submittedProblems.filter(p => p.status === 'correct' && ((p.wrongCount > 0) || p.hasBeenIncorrect)).length}개
+                          </span>
+                        </>
+                      )}
                       <span style={{ color: '#666' }}>|</span>
                       <span style={{ color: '#EF9A9A', fontWeight: 'bold' }}>
                         ❌ 틀림: {submittedProblems.filter(p => p.status === 'incorrect').length}개
@@ -744,7 +773,7 @@ export default function HomeworkDetailPage() {
               {group.problems.map(problemNum => {
                 const subProb = submittedProblems.find(p => p.groupId === group.groupId && p.problemNumber === problemNum);
                 const status = subProb ? subProb.status : 'unsubmitted';
-                const style = getProblemStyle(status);
+                const style = getProblemStyle(status, subProb);
                 
                 return (
                   <button 
@@ -783,12 +812,19 @@ export default function HomeworkDetailPage() {
                     {status === 'submitted' && (
                       <div style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', backgroundColor: '#3B82F6', borderRadius: '50%' }}></div>
                     )}
-                    {(status === 'correct' || status === 'incorrect' || status === 'indeterminate') && subProb?.attempts > 1 && (
+                    {/* 오답 횟수 또는 재도전 횟수 표시 */}
+                    {(subProb?.wrongCount > 0 || subProb?.attempts > 1) && (status === 'correct' || status === 'incorrect' || status === 'indeterminate') && (
                       <div style={{ 
-                        position: 'absolute', bottom: '2px', right: '4px', 
-                        fontSize: '10px', color: style.text, fontWeight: 'normal' 
+                        position: 'absolute', bottom: '3px', right: '5px', 
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        color: status === 'incorrect' ? '#F87171' : (subProb?.wrongCount > 0 ? '#FBBF24' : '#94A3B8'),
+                        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                        lineHeight: '1.2'
                       }}>
-                        {subProb.attempts}회
+                        {subProb?.wrongCount > 0 ? `오답 ${subProb.wrongCount}회` : `${subProb.attempts}회차`}
                       </div>
                     )}
                   </button>

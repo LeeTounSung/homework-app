@@ -999,10 +999,18 @@ export default function HomePage() {
                                   bgColor = 'rgba(2, 132, 199, 0.16)';
                                 }
                               } else if (isCorrect) {
-                                borderColor = '#3B82F6';
-                                labelText = '⭕ 맞음';
-                                labelColor = '#93C5FD';
-                                bgColor = 'rgba(59, 130, 246, 0.18)';
+                                const wasIncorrect = (prob.wrongCount > 0) || Boolean(prob.hasBeenIncorrect);
+                                if (wasIncorrect) {
+                                  borderColor = '#F59E0B';
+                                  labelText = '⭕ 틀림후 맞춤';
+                                  labelColor = '#FDE68A';
+                                  bgColor = 'rgba(245, 158, 11, 0.18)';
+                                } else {
+                                  borderColor = '#3B82F6';
+                                  labelText = '⭕ 맞음';
+                                  labelColor = '#93C5FD';
+                                  bgColor = 'rgba(59, 130, 246, 0.18)';
+                                }
                               } else if (isIndeterminate) {
                                 borderColor = '#10B981';
                                 labelText = '🔺 확인';
@@ -1063,12 +1071,12 @@ export default function HomePage() {
                                   <span style={{ fontSize: '10px', marginTop: '2px', fontWeight: 'bold', color: labelColor }}>
                                     {labelText}
                                   </span>
-                                  {prob.attempts > 1 && (
+                                  {(prob.wrongCount > 0 || prob.attempts > 1) && (
                                     <div style={{ 
                                       position: 'absolute', bottom: '3px', right: '5px', 
                                       fontSize: '10px', color: labelColor, fontWeight: 'bold' 
                                     }}>
-                                      {prob.attempts}회
+                                      {prob.wrongCount > 0 ? `오답 ${prob.wrongCount}회` : `${prob.attempts}회차`}
                                     </div>
                                   )}
                                 </button>
