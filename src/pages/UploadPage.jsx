@@ -44,7 +44,7 @@ const formatGroupLabel = (label) => {
 export default function UploadPage() {
   const navigate = useNavigate();
   const { id, groupId, problemId } = useParams();
-  const { getHomeworkById, submitHomeworkProblem, exemptProblem, toggleBookmarkProblem, isSaving, getProblemImageFromDrive, geminiApiKey, aiConfig, isAiConfigured } = useHomework();
+  const { getHomeworkById, submitHomeworkProblem, exemptProblem, toggleBookmarkProblem, isSaving, getProblemImageFromDrive, geminiApiKey, aiConfig, isAiConfigured, isAdmin } = useHomework();
   const [imagePreview, setImagePreview] = useState(null);
   const [studentAnswer, setStudentAnswer] = useState('');
   const [isExtractingLatex, setIsExtractingLatex] = useState(false);
@@ -231,71 +231,8 @@ export default function UploadPage() {
       return;
     }
 
-    const registeredAnswers = hw?.answers || hw?.answerKey || {};
-    const probDetail = (hw?.problemDetails && (hw.problemDetails[problemId] || hw.problemDetails[String(problemId)])) || {};
-    const correctAns = registeredAnswers[problemId] || registeredAnswers[String(problemId)] || probDetail.answer || probDetail.correctAnswer || '';
-
-    let finalFeedback = aiFeedback;
-    let finalGrade = aiGrade;
-
-    // 1. If official answer is registered and student answer (or image) is present -> TypeSafe Jev 1.13!
-    if (!finalGrade && correctAns) {
-      let currentAns = studentAnswer ? studentAnswer.trim() : '';
-
-      // If only image was submitted, extract LaTeX via Gemini first
-      if (!currentAns && finalData) {
-        try {
-          const { callGeminiVisionToLatex } = await import('../utils/gemini');
-          const activeGeminiKey = geminiApiKey || (aiConfig && aiConfig.geminiApiKey) || '';
-          const activeOrKey = (aiConfig && aiConfig.openrouterApiKey) || '';
-          currentAns = await callGeminiVisionToLatex(finalData, activeGeminiKey, activeOrKey);
-          if (currentAns) setStudentAnswer(currentAns);
-        } catch (ocrErr) {
-          console.warn("제출 시 Gemini 수식 추출 실패:", ocrErr);
-        }
-      }
-
-      if (currentAns) {
-        try {
-          const { checkMathEquivalenceWithAI } = await import('../utils/gemini');
-          const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, currentAns);
-          finalFeedback = equivRes;
-          if (equivRes.includes('⭕') || equivRes.includes('정답')) {
-            finalGrade = '⭕ 정답';
-          } else if (equivRes.includes('❌') || equivRes.includes('오답')) {
-            finalGrade = '❌ 오답';
-          } else {
-            finalGrade = '⭕ 정답';
-          }
-        } catch (err) {
-          console.warn("제출 시 Jev 자동 채점 실패:", err);
-        }
-      }
-    }
-
-    // 2. Fallback to vision AI if no registered answer or no equivalence reached
-    if (!finalGrade && finalData) {
-      try {
-        const groupLabel = currentGroup?.label || '';
-        const desc = `${hw.studentName} 학생의 ${hw.title} ${groupLabel ? `[${groupLabel}] ` : ''}${problemId}번 문제 풀이입니다.`;
-        const { autoGradeProblemSubmission } = await import('../utils/gemini');
-        const result = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, finalData, '', correctAns);
-        finalFeedback = result;
-        if (result.includes('⭕') || result.includes('정답')) {
-          finalGrade = '⭕ 정답';
-        } else if (result.includes('❌') || result.includes('오답')) {
-          finalGrade = '❌ 오답';
-        } else if (result.includes('🔺') || result.includes('부분')) {
-          finalGrade = '🔺 부분 정답';
-        } else {
-          finalGrade = '⭕ 정답';
-        }
-      } catch (err) {
-        console.warn("Vision AI 자동 채점 실패:", err);
-      }
-    }
-
-    await submitHomeworkProblem(id, groupId, problemId, finalData, finalFeedback, finalGrade, studentAnswer);
+    // 채점은 개별 문제 제출 시 실시간으로 하지 않고, 모든 문제 제출 후 [채점하기]로 일괄 진행합니다.
+    await submitHomeworkProblem(id, groupId, problemId, finalData, null, null, studentAnswer);
     navigate(-1);
   };
 
@@ -550,34 +487,10 @@ export default function UploadPage() {
           )}
         </div>
 
-        {/* Existing AI Feedback if any */}
-        {aiFeedback && (
-          <div style={{ 
-            backgroundColor: aiFeedback.includes('채점 불가') || aiFeedback.includes('🔺') ? '#152E20' : (aiGrade?.includes('오답') ? '#35181C' : '#14253B'),
-            borderLeft: `4px solid ${aiFeedback.includes('채점 불가') || aiFeedback.includes('🔺') ? '#81C784' : (aiGrade?.includes('오답') ? '#EF5350' : '#42A5F5')}`, 
-            padding: '16px', 
-            borderRadius: '0 8px 8px 0', 
-            marginBottom: '20px' 
-          }}>
-            <h3 style={{ 
-              color: aiFeedback.includes('채점 불가') || aiFeedback.includes('🔺') ? '#A5D6A7' : (aiGrade?.includes('오답') ? '#EF9A9A' : '#90CAF9'), 
-              marginTop: 0, 
-              marginBottom: '8px', 
-              fontSize: '14px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px' 
-            }}>
-              🤖 AI 채점 및 피드백 {aiFeedback.includes('채점 불가') || aiFeedback.includes('🔺') ? '(🔺 채점 불가 / 확인 필요)' : (aiGrade ? `(${aiGrade})` : '')}
-            </h3>
-            <p style={{ color: '#ECEFF1', margin: 0, fontSize: '14px', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-              {aiFeedback}
-            </p>
-          </div>
-        )}
 
-        {/* Problem Attempt History Timeline */}
-        {problemHistory && problemHistory.length > 1 && (
+
+        {/* Problem Attempt History Timeline (Admin only) */}
+        {problemHistory && problemHistory.length > 1 && isAdmin && (
           <div style={{ backgroundColor: '#181A22', border: '1px solid #333', borderRadius: '8px', padding: '14px', marginBottom: '20px' }}>
             <h4 style={{ margin: '0 0 10px 0', color: '#FFD700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               📜 누적 풀이 및 오답 히스토리 ({problemHistory.length}회 기록)

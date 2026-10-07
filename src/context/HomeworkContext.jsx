@@ -675,8 +675,8 @@ export const HomeworkProvider = ({ children }) => {
                 imageUrl: finalImageUrl || newSubmitted[existingIndex].imageUrl || null, 
                 status: statusToSet,
                 studentAnswer: studentAnswer !== null ? studentAnswer : (newSubmitted[existingIndex].studentAnswer || null),
-                aiFeedback: aiFeedback || newSubmitted[existingIndex].aiFeedback || null,
-                aiGrade: aiGrade || newSubmitted[existingIndex].aiGrade || null
+                aiFeedback: aiFeedback !== undefined ? aiFeedback : null,
+                aiGrade: aiGrade !== undefined ? aiGrade : null
               };
             } else {
               newSubmitted.push({ 
