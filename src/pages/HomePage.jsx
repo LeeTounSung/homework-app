@@ -1217,99 +1217,269 @@ export default function HomePage() {
             ))
           )
         ) : activeTab === 'statistics' ? (
-          // --- 성적 통계 탭 ---
+          // --- 성적 통계 탭 (1행 3열: 이름 / 날짜 / 맞은거 틀린것 개수) ---
           filteredData.length === 0 ? (
             <div style={{ color: '#888', textAlign: 'center', marginTop: '50px' }}>
               등록된 성적 기록이 없습니다.
             </div>
           ) : (
-            <div style={{ padding: '0 16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', color: '#FFD700', margin: 0 }}>📊 전체 성적 통계표</h2>
+            <div style={{ padding: '0 12px' }}>
+              {/* 상단 1행 3열 요약 대시보드 카드 */}
+              {(() => {
+                let totalCorrect = 0;
+                let totalIncorrect = 0;
+                let totalSubmitted = 0;
+                let totalProblems = 0;
+
+                filteredData.forEach(section => {
+                  section.homeworks.forEach(hw => {
+                    const sub = hw.submittedProblems || [];
+                    totalCorrect += sub.filter(p => p.status === 'correct').length;
+                    totalIncorrect += sub.filter(p => p.status === 'incorrect').length;
+                    totalSubmitted += sub.filter(p => p.status === 'submitted').length;
+                    if (hw.problemGroups) {
+                      totalProblems += hw.problemGroups.reduce((sum, g) => sum + (g.problems ? g.problems.length : 0), 0);
+                    }
+                  });
+                });
+
+                const gradedTotal = totalCorrect + totalIncorrect;
+                const accuracy = gradedTotal > 0 ? Math.round((totalCorrect / gradedTotal) * 100) : 0;
+
+                return (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '8px',
+                    marginBottom: '16px'
+                  }}>
+                    <div style={{
+                      backgroundColor: '#1E2028',
+                      border: '1px solid rgba(76, 175, 80, 0.3)',
+                      borderRadius: '12px',
+                      padding: '10px 8px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '11px', color: '#81C784', marginBottom: '2px', fontWeight: 'bold' }}>⭕ 맞은 문제</div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#4CAF50' }}>{totalCorrect}<span style={{ fontSize: '12px', fontWeight: 'normal', color: '#888' }}>개</span></div>
+                    </div>
+                    <div style={{
+                      backgroundColor: '#1E2028',
+                      border: '1px solid rgba(244, 67, 54, 0.3)',
+                      borderRadius: '12px',
+                      padding: '10px 8px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '11px', color: '#E57373', marginBottom: '2px', fontWeight: 'bold' }}>❌ 틀린 문제</div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#EF5350' }}>{totalIncorrect}<span style={{ fontSize: '12px', fontWeight: 'normal', color: '#888' }}>개</span></div>
+                    </div>
+                    <div style={{
+                      backgroundColor: '#1E2028',
+                      border: '1px solid rgba(255, 215, 0, 0.3)',
+                      borderRadius: '12px',
+                      padding: '10px 8px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '11px', color: '#FFD700', marginBottom: '2px', fontWeight: 'bold' }}>🎯 정답률</div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#FFD700' }}>{gradedTotal > 0 ? `${accuracy}%` : (totalSubmitted > 0 ? '채점대기' : '미응시')}</div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h2 style={{ fontSize: '16px', color: '#FFD700', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  📊 성적 및 정오답 현황표
+                </h2>
               </div>
-              <div style={{ overflowX: 'auto', backgroundColor: '#1A1B23', borderRadius: '12px', border: '1px solid #333' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', color: '#ddd', textAlign: 'left' }}>
+
+              {/* 1행 3열 (3셀) 메인 테이블 */}
+              <div style={{ backgroundColor: '#1A1B23', borderRadius: '12px', border: '1px solid #333', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13.5px', color: '#ddd', textAlign: 'left', tableLayout: 'fixed' }}>
                   <thead>
-                    <tr style={{ backgroundColor: '#252631', borderBottom: '1px solid #444' }}>
-                      <th style={{ padding: '12px 16px', fontWeight: 'bold' }}>학생 이름</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 'bold' }}>시험명</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 'bold' }}>일자</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 'bold' }}>성적 / 평가</th>
-                      {isAdmin && <th style={{ padding: '12px 16px', fontWeight: 'bold' }}>관리</th>}
+                    <tr style={{ backgroundColor: '#252631', borderBottom: '2px solid #3b4252' }}>
+                      <th style={{ padding: '12px 10px', fontWeight: 'bold', width: '42%', color: '#FFD700' }}>이름</th>
+                      <th style={{ padding: '12px 6px', fontWeight: 'bold', width: '25%', textAlign: 'center', color: '#90CAF9' }}>날짜</th>
+                      <th style={{ padding: '12px 10px', fontWeight: 'bold', width: '33%', textAlign: 'center', color: '#A5D6A7' }}>맞은것 / 틀린것</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredData.map(section => 
                       section.homeworks.map(test => {
-                        let scoreDisplay = '-';
-                        if (test.type === 'test') {
-                          scoreDisplay = test.score ? `${test.score}점` : '미입력';
-                        } else if (test.isOnlineTest) {
-                          const rawTotal = test.problemGroups ? test.problemGroups.reduce((sum, group) => sum + group.problems.length, 0) : 0;
-                          const exemptCount = test.submittedProblems ? test.submittedProblems.filter(p => p.status === 'exempt').length : 0;
-                          const total = rawTotal - exemptCount;
-                          const correctCount = test.submittedProblems ? test.submittedProblems.filter(p => p.status === 'correct').length : 0;
-                          
-                          if (total > 0) {
-                            const percent = Math.round((correctCount / total) * 100);
-                            scoreDisplay = `정답 ${correctCount}/${total} (${percent}점)`;
-                          } else {
-                            scoreDisplay = '응시 전';
-                          }
-                        }
+                        const rawTotal = test.problemGroups ? test.problemGroups.reduce((sum, group) => sum + (group.problems ? group.problems.length : 0), 0) : 0;
+                        const subList = test.submittedProblems || [];
+                        const correctCount = subList.filter(p => p.status === 'correct').length;
+                        const incorrectCount = subList.filter(p => p.status === 'incorrect').length;
+                        const submittedCount = subList.filter(p => p.status === 'submitted').length;
+                        const hasGrading = correctCount > 0 || incorrectCount > 0;
                         
                         return (
-                          <tr key={test.id} style={{ borderBottom: '1px solid #333' }}>
-                            <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                {test.studentName}
-                                <button 
-                                  onClick={() => handleAiAnalyzeStudentOpen(test.studentName)}
-                                  title="AI 성적 분석"
-                                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}
+                          <tr key={test.id} style={{ borderBottom: '1px solid #2A2C38' }}>
+                            {/* 1열: 이름 (학생 이름 + 과제명 + AI 버튼) */}
+                            <td style={{ padding: '12px 10px', verticalAlign: 'middle' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
+                                    {test.studentName}
+                                  </span>
+                                  <button 
+                                    onClick={() => handleAiAnalyzeStudentOpen(test.studentName)}
+                                    title="AI 성적 분석"
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: 0, lineHeight: 1 }}
+                                  >
+                                    🤖
+                                  </button>
+                                  {isAdmin && (
+                                    <span style={{ display: 'inline-flex', gap: '4px', marginLeft: 'auto' }}>
+                                      {test.type === 'test' && (
+                                        <button
+                                          onClick={() => {
+                                            setEditTestStudent(test.studentName);
+                                            setEditTestTitle(test.title);
+                                            setEditTestScore(test.score || '');
+                                            setEditTestComment(test.comment || '');
+                                            setEditTestId(test.id);
+                                            setIsEditTestModalOpen(true);
+                                          }}
+                                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', padding: '0 2px' }}
+                                          title="수정"
+                                        >
+                                          ✏️
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => {
+                                          if (window.confirm(`${test.studentName} 학생의 [${test.title}] 기록을 정말 삭제하시겠습니까?`)) {
+                                            deleteHomework(test.id);
+                                          }
+                                        }}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', padding: '0 2px' }}
+                                        title="삭제"
+                                      >
+                                        🗑️
+                                      </button>
+                                    </span>
+                                  )}
+                                </div>
+                                <div 
+                                  onClick={() => navigate(`/detail/${test.id}`)}
+                                  style={{ 
+                                    fontSize: '11.5px', 
+                                    color: '#9E9E9E', 
+                                    cursor: 'pointer', 
+                                    overflow: 'hidden', 
+                                    textOverflow: 'ellipsis', 
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  title={test.title}
                                 >
-                                  🤖
-                                </button>
+                                  {test.title}
+                                </div>
                               </div>
                             </td>
-                            <td style={{ padding: '12px 16px' }}>{test.title}</td>
-                            <td style={{ padding: '12px 16px', whiteSpace: 'nowrap', color: '#888' }}>{section.date}</td>
-                            <td style={{ padding: '12px 16px', fontWeight: 'bold', color: test.type === 'test' ? '#4CAF50' : '#2196F3' }}>
-                              {scoreDisplay}
+
+                            {/* 2열: 날짜 */}
+                            <td style={{ padding: '12px 6px', textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                              <span style={{ 
+                                display: 'inline-block',
+                                backgroundColor: '#212430', 
+                                color: '#B0BEC5', 
+                                padding: '3px 6px', 
+                                borderRadius: '6px', 
+                                fontSize: '11.5px',
+                                border: '1px solid #333'
+                              }}>
+                                {section.date ? section.date.replace('까지', '').trim() : '-'}
+                              </span>
                             </td>
-                            {isAdmin && (
-                              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                  <button
-                                    onClick={() => {
-                                      if (test.type === 'test') {
-                                        setEditTestStudent(test.studentName);
-                                        setEditTestTitle(test.title);
-                                        setEditTestScore(test.score || '');
-                                        setEditTestComment(test.comment || '');
-                                        setEditTestId(test.id);
-                                        setIsEditTestModalOpen(true);
-                                      } else {
-                                        alert("온라인 시험 성적은 학생들이 제출한 문제를 기준으로 자동 계산되므로 직접 수정할 수 없습니다.");
-                                      }
-                                    }}
-                                    style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px' }}
-                                  >
-                                    수정
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (window.confirm(`${test.studentName} 학생의 [${test.title}] 기록을 정말 삭제하시겠습니까?`)) {
-                                        deleteHomework(test.id);
-                                      }
-                                    }}
-                                    style={{ background: '#f44336', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px' }}
-                                  >
-                                    삭제
-                                  </button>
+
+                            {/* 3열: 맞은 것 / 틀린 것 개수 */}
+                            <td style={{ padding: '12px 10px', textAlign: 'center', verticalAlign: 'middle' }}>
+                              {test.type === 'test' ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                                  <span style={{ 
+                                    backgroundColor: 'rgba(76, 175, 80, 0.15)', 
+                                    color: '#4CAF50', 
+                                    border: '1px solid rgba(76, 175, 80, 0.4)', 
+                                    padding: '2px 8px', 
+                                    borderRadius: '10px', 
+                                    fontSize: '12px', 
+                                    fontWeight: 'bold' 
+                                  }}>
+                                    🏆 {test.score ? `${test.score}점` : '미입력'}
+                                  </span>
+                                  {test.comment && (
+                                    <span style={{ fontSize: '10.5px', color: '#888', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {test.comment}
+                                    </span>
+                                  )}
                                 </div>
-                              </td>
-                            )}
+                              ) : hasGrading ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                                    <span style={{ 
+                                      backgroundColor: 'rgba(76, 175, 80, 0.15)', 
+                                      color: '#4CAF50', 
+                                      border: '1px solid rgba(76, 175, 80, 0.4)', 
+                                      padding: '2px 6px', 
+                                      borderRadius: '8px', 
+                                      fontSize: '11.5px', 
+                                      fontWeight: 'bold',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      ⭕ 맞음 {correctCount}개
+                                    </span>
+                                    <span style={{ 
+                                      backgroundColor: 'rgba(244, 67, 54, 0.15)', 
+                                      color: '#EF5350', 
+                                      border: '1px solid rgba(244, 67, 54, 0.4)', 
+                                      padding: '2px 6px', 
+                                      borderRadius: '8px', 
+                                      fontSize: '11.5px', 
+                                      fontWeight: 'bold',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      ❌ 틀림 {incorrectCount}개
+                                    </span>
+                                  </div>
+                                  {rawTotal > 0 && (
+                                    <span style={{ fontSize: '10.5px', color: '#78909C' }}>
+                                      (채점 {correctCount + incorrectCount}/{rawTotal}문항)
+                                    </span>
+                                  )}
+                                </div>
+                              ) : submittedCount > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                                  <span style={{ 
+                                    backgroundColor: 'rgba(33, 150, 243, 0.15)', 
+                                    color: '#42A5F5', 
+                                    border: '1px solid rgba(33, 150, 243, 0.4)', 
+                                    padding: '2px 8px', 
+                                    borderRadius: '10px', 
+                                    fontSize: '11.5px', 
+                                    fontWeight: 'bold',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    📝 채점 대기 ({submittedCount}개)
+                                  </span>
+                                  <span style={{ fontSize: '10px', color: '#78909C' }}>풀이 제출 완료</span>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                                  <span style={{ 
+                                    backgroundColor: 'rgba(158, 158, 158, 0.1)', 
+                                    color: '#9E9E9E', 
+                                    border: '1px solid rgba(158, 158, 158, 0.25)', 
+                                    padding: '2px 8px', 
+                                    borderRadius: '10px', 
+                                    fontSize: '11.5px',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    ⏳ 미제출 {rawTotal > 0 ? `(${rawTotal}문항)` : ''}
+                                  </span>
+                                </div>
+                              )}
+                            </td>
                           </tr>
                         );
                       })
