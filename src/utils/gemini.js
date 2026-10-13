@@ -275,9 +275,9 @@ export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType
 const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || '';
 
 export const callMetaMuseSparkAPI = async (apiKey, prompt, base64Image = null, mimeType = 'image/jpeg', model = 'muse-spark-1.3-contributor') => {
-  const activeKey = apiKey || DEFAULT_META_KEY;
+  const activeKey = apiKey ? apiKey.trim() : '';
   if (!activeKey) {
-    throw new Error('Meta Muse Spark API 키가 설정되지 않았습니다. 관리자 환경 설정에서 API 키를 입력해주세요.');
+    throw new Error('Meta Muse Spark API 키가 설정되지 않았거나 삭제되었습니다. 호출을 차단합니다.');
   }
 
   const url = 'https://api.meta.ai/v1/chat/completions';
@@ -360,14 +360,16 @@ export const callAIAPI = async (aiConfig, prompt, base64Image = null, mimeType =
         }
       }
       // Fallback to text LLM or available vision provider if pure equivalence cannot run
-      if (deepseekApiKey) {
+      if (deepseekApiKey && deepseekApiKey.trim()) {
         return await callDeepseekAPI(deepseekApiKey, prompt, base64Image, mimeType, deepseekModel);
-      } else if (geminiApiKey) {
+      } else if (geminiApiKey && geminiApiKey.trim()) {
         return await callGeminiAPI(geminiApiKey, prompt, base64Image, mimeType);
-      } else if (musesparkApiKey) {
-        return await callMetaMuseSparkAPI(musesparkApiKey, prompt, base64Image, mimeType, musesparkModel);
       }
+      throw new Error('AI 자동 채점을 위한 API 키(DeepSeek 또는 Gemini)가 설정되지 않았습니다.');
     } else if (provider === 'musespark' || provider === 'meta') {
+      if (!musesparkApiKey || !musesparkApiKey.trim()) {
+        throw new Error('Meta Muse Spark API 키가 설정되지 않았거나 삭제되었습니다. 호출을 차단합니다.');
+      }
       return await callMetaMuseSparkAPI(musesparkApiKey, prompt, base64Image, mimeType, musesparkModel);
     } else if (provider === 'deepseek') {
       return await callDeepseekAPI(deepseekApiKey, prompt, base64Image, mimeType, deepseekModel);

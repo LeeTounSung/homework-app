@@ -37,7 +37,7 @@ export default function SettingsModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen) {
       setTempProvider(aiProvider || 'jev');
-      setTempMusesparkKey(musesparkApiKey || DEFAULT_META_KEY);
+      setTempMusesparkKey(musesparkApiKey || '');
       setTempMusesparkModel(musesparkModel || 'muse-spark-1.3-contributor');
       setTempDeepseekKey(deepseekApiKey || DEFAULT_DEEPSEEK_KEY);
       setTempDeepseekModel(deepseekModel || 'deepseek-v4-flash-vision-exp');
@@ -78,7 +78,7 @@ export default function SettingsModal({ isOpen, onClose }) {
     const cleanedOpenrouterModel = tempOpenrouterModel.trim() || 'typesafe/jev-1.13';
     const finalOpenrouterKey = tempOpenrouterKey.trim() || DEFAULT_OPENROUTER_KEY;
     const finalDeepseekKey = tempDeepseekKey.trim() || DEFAULT_DEEPSEEK_KEY;
-    const finalMusesparkKey = tempMusesparkKey.trim() || DEFAULT_META_KEY;
+    const finalMusesparkKey = tempMusesparkKey.trim();
 
     saveAiSettings({
       provider: tempProvider,

@@ -93,7 +93,7 @@ export const HomeworkProvider = ({ children }) => {
   });
 
   const [musesparkApiKey, setMusesparkApiKey] = useState(() => {
-    return localStorage.getItem('musesparkApiKey') || DEFAULT_META_KEY;
+    return localStorage.getItem('musesparkApiKey') || '';
   });
 
   const [musesparkModel, setMusesparkModel] = useState(() => {
@@ -300,9 +300,13 @@ export const HomeworkProvider = ({ children }) => {
       localStorage.setItem('deepseekModel', model);
     }
     if (musesparkKey !== undefined) {
-      const finalMetaKey = (musesparkKey && musesparkKey.trim()) ? musesparkKey.trim() : DEFAULT_META_KEY;
+      const finalMetaKey = (musesparkKey || '').trim();
       setMusesparkApiKey(finalMetaKey);
-      localStorage.setItem('musesparkApiKey', finalMetaKey);
+      if (finalMetaKey) {
+        localStorage.setItem('musesparkApiKey', finalMetaKey);
+      } else {
+        localStorage.removeItem('musesparkApiKey');
+      }
     }
     if (mModel !== undefined) {
       setMusesparkModel(mModel);
@@ -338,9 +342,13 @@ export const HomeworkProvider = ({ children }) => {
   };
 
   const saveMusesparkApiKey = (key) => {
-    const finalKey = (key && key.trim()) ? key.trim() : DEFAULT_META_KEY;
+    const finalKey = (key || '').trim();
     setMusesparkApiKey(finalKey);
-    localStorage.setItem('musesparkApiKey', finalKey);
+    if (finalKey) {
+      localStorage.setItem('musesparkApiKey', finalKey);
+    } else {
+      localStorage.removeItem('musesparkApiKey');
+    }
   };
 
   const aiConfig = {
@@ -350,7 +358,7 @@ export const HomeworkProvider = ({ children }) => {
     openrouterModel: (openrouterModel && openrouterModel.trim()) || 'typesafe/jev-1.13',
     deepseekApiKey: (deepseekApiKey && deepseekApiKey.trim()) || DEFAULT_DEEPSEEK_KEY,
     deepseekModel: (deepseekModel && deepseekModel !== 'deepseek-chat') ? deepseekModel : 'deepseek-v4-flash-vision-exp',
-    musesparkApiKey: (musesparkApiKey && musesparkApiKey.trim()) || DEFAULT_META_KEY,
+    musesparkApiKey: (musesparkApiKey && musesparkApiKey.trim()) || '',
     musesparkModel: musesparkModel || 'muse-spark-1.3-contributor',
     agentApiUrl: agentApiUrl || 'http://127.0.0.1:8000'
   };
@@ -358,7 +366,7 @@ export const HomeworkProvider = ({ children }) => {
   const isAiConfigured = (aiProvider === 'jev' && !!(openrouterApiKey || DEFAULT_OPENROUTER_KEY)) ||
                          (aiProvider === 'deepseek' && !!(deepseekApiKey || DEFAULT_DEEPSEEK_KEY)) ||
                          (aiProvider === 'gemini' && !!geminiApiKey) ||
-                         (aiProvider === 'musespark' && !!(musesparkApiKey || DEFAULT_META_KEY)) ||
+                         (aiProvider === 'musespark' && !!(musesparkApiKey && musesparkApiKey.trim())) ||
                          !!(openrouterApiKey || DEFAULT_OPENROUTER_KEY);
 
   // Fetch data on mount with smart merge (Prioritize latest GitHub/Local graded results, never overwrite 'correct')
