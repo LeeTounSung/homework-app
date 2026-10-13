@@ -418,7 +418,9 @@ export default function HomePage() {
         
         // Student Role filtering
         if (!isAdmin && currentUser) {
-          return hw.studentName === currentUser;
+          const normCurrent = String(currentUser).trim().replace(/이$/, '');
+          const normHw = String(hw.studentName || '').trim();
+          return normHw === String(currentUser).trim() || normHw === normCurrent || (normHw && normCurrent && normHw.includes(normCurrent));
         }
         return true;
       })
@@ -432,7 +434,12 @@ export default function HomePage() {
     
     targetData.forEach(section => {
       section.homeworks.forEach(hw => {
-        if (!isAdmin && hw.studentName !== currentUser) return;
+        if (!isAdmin && currentUser) {
+          const normCurrent = String(currentUser).trim().replace(/이$/, '');
+          const normHw = String(hw.studentName || '').trim();
+          const matches = normHw === String(currentUser).trim() || normHw === normCurrent || (normHw && normCurrent && normHw.includes(normCurrent));
+          if (!matches) return;
+        }
         
         const targetProblems = (hw.submittedProblems || []).filter(p => {
           const isSelf = p.isSelfStudy || hw.isSelfStudy;

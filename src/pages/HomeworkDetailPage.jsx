@@ -298,7 +298,14 @@ export default function HomeworkDetailPage() {
           if (g) label = g.label;
         }
 
-        const correctAns = registeredAnswers[p.problemNumber] || registeredAnswers[String(p.problemNumber)];
+        let correctAns = null;
+        if (Array.isArray(registeredAnswers)) {
+          const item = registeredAnswers.find(a => a && (a.problemNumber === p.problemNumber || a.problemNumber === Number(p.problemNumber)));
+          correctAns = item ? (typeof item === 'object' && item.answer !== undefined ? item.answer : item) : null;
+        } else if (typeof registeredAnswers === 'object' && registeredAnswers !== null) {
+          const raw = registeredAnswers[p.problemNumber] || registeredAnswers[String(p.problemNumber)];
+          correctAns = (raw && typeof raw === 'object' && raw.answer !== undefined) ? raw.answer : raw;
+        }
 
         // FAST-PATH 1: Student typed answer & answer key exists
         if (correctAns && p.studentAnswer && p.studentAnswer.trim()) {

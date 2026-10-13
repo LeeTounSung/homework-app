@@ -384,10 +384,10 @@ export const HomeworkProvider = ({ children }) => {
         console.warn("Local homeworkData.json fetch skipped:", e);
       }
 
-      // 2. Query cloud GAS in background with 3s timeout for new student uploads only,
+      // 2. Query cloud GAS in background with 12s timeout for live sync,
       //    safely merging without ever overwriting graded (correct) status!
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
       try {
         const response = await fetch(GAS_URL, { signal: controller.signal });
@@ -417,18 +417,19 @@ export const HomeworkProvider = ({ children }) => {
                         // New problem submitted from student
                         mergedSubmitted.push(cProb);
                       } else {
-                        // If base already graded it as correct, NEVER revert back to submitted!
                         const existing = mergedSubmitted[existingIdx];
-                        if (existing.status !== 'correct' && cProb.status === 'correct') {
-                          mergedSubmitted[existingIdx] = cProb;
-                        } else if (existing.status !== 'correct' && cProb.imageUrl && !existing.imageUrl) {
-                          mergedSubmitted[existingIdx] = cProb;
+                        if (cProb.status === 'correct') {
+                          // Cloud is correct: adopt it along with latest score & feedback
+                          mergedSubmitted[existingIdx] = { ...existing, ...cProb };
+                        } else if (existing.status !== 'correct' && (cProb.status === 'incorrect' || cProb.imageUrl || cProb.studentAnswer)) {
+                          mergedSubmitted[existingIdx] = { ...existing, ...cProb };
                         }
                       }
                     });
 
                     return {
                       ...hw,
+                      answers: cloudHw.answers || hw.answers,
                       submittedProblems: mergedSubmitted
                     };
                   })
