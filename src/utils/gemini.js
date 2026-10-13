@@ -272,7 +272,7 @@ export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType
   throw lastError || new Error('사용 가능한 Gemini 모델을 찾을 수 없습니다.');
 };
 
-const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || 'LLM_2161394044719218_Lv8NcmLsyd5kH8je0bbvj4tyQlg';
+const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || '';
 
 export const callMetaMuseSparkAPI = async (apiKey, prompt, base64Image = null, mimeType = 'image/jpeg', model = 'muse-spark-1.3-contributor') => {
   const activeKey = apiKey || DEFAULT_META_KEY;
@@ -360,12 +360,12 @@ export const callAIAPI = async (aiConfig, prompt, base64Image = null, mimeType =
         }
       }
       // Fallback to text LLM or available vision provider if pure equivalence cannot run
-      if (musesparkApiKey) {
-        return await callMetaMuseSparkAPI(musesparkApiKey, prompt, base64Image, mimeType, musesparkModel);
-      } else if (deepseekApiKey) {
+      if (deepseekApiKey) {
         return await callDeepseekAPI(deepseekApiKey, prompt, base64Image, mimeType, deepseekModel);
       } else if (geminiApiKey) {
         return await callGeminiAPI(geminiApiKey, prompt, base64Image, mimeType);
+      } else if (musesparkApiKey) {
+        return await callMetaMuseSparkAPI(musesparkApiKey, prompt, base64Image, mimeType, musesparkModel);
       }
     } else if (provider === 'musespark' || provider === 'meta') {
       return await callMetaMuseSparkAPI(musesparkApiKey, prompt, base64Image, mimeType, musesparkModel);

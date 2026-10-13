@@ -60,7 +60,7 @@ export const HomeworkProvider = ({ children }) => {
   const BUILTIN_OPENROUTER_KEY = typeof atob === 'function' ? atob('c2stb3ItdjEtYzgwOWZhMzkxZWRlMTU3YzgzODZhNjAxNjM2OWE4NWQ3NTg4MGEyZDE3YjI5NDdiMDQ5ZTVlYWY2OTEwNTM1Mg==') : '';
   const BUILTIN_DEEPSEEK_KEY = typeof atob === 'function' ? atob('c2stYzU3MjhmZGFlZmFkNGZhNWI4ZWE4ZjAzZjA2MTNmNmM=') : '';
   const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || BUILTIN_DEEPSEEK_KEY;
-  const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || 'LLM_2161394044719218_Lv8NcmLsyd5kH8je0bbvj4tyQlg';
+  const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || '';
   const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || BUILTIN_OPENROUTER_KEY;
 
   const [aiProvider, setAiProvider] = useState(() => {
