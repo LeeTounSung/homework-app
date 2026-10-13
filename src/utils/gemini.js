@@ -66,15 +66,15 @@ const normalizeImageToBase64 = async (imageInput, mimeType = 'image/jpeg') => {
   return `data:${mimeType};base64,${imageInput}`;
 };
 
-const BUILTIN_DEEPSEEK_KEY = typeof atob === 'function' ? atob('c2stYzU3MjhmZGFlZmFkNGZhNWI4ZWE4ZjAzZjA2MTNmNmM=') : '';
-const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || BUILTIN_DEEPSEEK_KEY;
-const BUILTIN_OPENROUTER_KEY = typeof atob === 'function' ? atob('c2stb3ItdjEtYzgwOWZhMzkxZWRlMTU3YzgzODZhNjAxNjM2OWE4NWQ3NTg4MGEyZDE3YjI5NDdiMDQ5ZTVlYWY2OTEwNTM1Mg==') : '';
-const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || BUILTIN_OPENROUTER_KEY;
+const BUILTIN_DEEPSEEK_KEY = '';
+const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
+const BUILTIN_OPENROUTER_KEY = '';
+const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 
 export const callDeepseekAPI = async (apiKey, prompt, base64Image = null, mimeType = 'image/jpeg', model = 'deepseek-v4-flash-vision-exp') => {
-  const activeKey = apiKey || DEFAULT_DEEPSEEK_KEY;
+  const activeKey = (apiKey && apiKey.trim()) || '';
   if (!activeKey) {
-    throw new Error('DeepSeek API 키가 설정되지 않았습니다.');
+    throw new Error('DeepSeek API 키가 설정되지 않았거나 삭제되었습니다. 호출을 차단합니다.');
   }
 
   const selectedModel = (model ? String(model).trim() : '') || 'deepseek-v4-flash-vision-exp';
@@ -132,9 +132,9 @@ export const callDeepseekAPI = async (apiKey, prompt, base64Image = null, mimeTy
 };
 
 export const callOpenRouterGeminiVision = async (openrouterKey, prompt, base64Image = null, mimeType = 'image/jpeg') => {
-  const activeKey = (openrouterKey && openrouterKey.trim()) || DEFAULT_OPENROUTER_KEY;
+  const activeKey = (openrouterKey && openrouterKey.trim()) || '';
   if (!activeKey) {
-    throw new Error('OpenRouter API 키가 설정되지 않았습니다.');
+    throw new Error('OpenRouter API 키가 설정되지 않았거나 삭제되었습니다. 호출을 차단합니다.');
   }
 
   let content = [{ type: 'text', text: prompt }];
@@ -173,11 +173,9 @@ export const callOpenRouterGeminiVision = async (openrouterKey, prompt, base64Im
 };
 
 export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType = 'image/jpeg') => {
-  if (!apiKey) {
-    if (DEFAULT_OPENROUTER_KEY) {
-      return await callOpenRouterGeminiVision(DEFAULT_OPENROUTER_KEY, prompt, base64Image, mimeType);
-    }
-    throw new Error('Gemini API 키가 설정되지 않았습니다.');
+  const activeKey = (apiKey && apiKey.trim()) || '';
+  if (!activeKey) {
+    throw new Error('Gemini API 키가 설정되지 않았거나 삭제되었습니다. 호출을 차단합니다.');
   }
 
   const models = [
@@ -231,7 +229,7 @@ export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType
 
   for (const model of models) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`;
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -257,15 +255,6 @@ export const callGeminiAPI = async (apiKey, prompt, base64Image = null, mimeType
       }
     } catch (e) {
       lastError = e;
-    }
-  }
-
-  // Fallback to OpenRouter Gemini 2.5 Flash-Lite if direct Google API failed
-  if (DEFAULT_OPENROUTER_KEY) {
-    try {
-      return await callOpenRouterGeminiVision(DEFAULT_OPENROUTER_KEY, prompt, base64Image, mimeType);
-    } catch (orErr) {
-      console.warn("OpenRouter Gemini fallback error:", orErr);
     }
   }
 
@@ -436,8 +425,8 @@ ${problemStatement || '첨부된 문제 이미지를 풀이해주세요.'}
 };
 
 export const callGeminiVisionToLatex = async (imageInput, geminiKey = '', openrouterKey = '') => {
-  const activeGeminiKey = (geminiKey && geminiKey.trim()) || import.meta.env.VITE_GEMINI_API_KEY || '';
-  const activeOrKey = (openrouterKey && openrouterKey.trim()) || DEFAULT_OPENROUTER_KEY;
+  const activeGeminiKey = (geminiKey && geminiKey.trim()) || '';
+  const activeOrKey = (openrouterKey && openrouterKey.trim()) || '';
 
   const prompt = `당신은 초정밀 수학 수식 인식 비전 AI(Gemini)입니다.
 첨부된 학생의 손글씨 풀이/메모/수식 사진에서 학생이 적은 수학 수식, 숫자, 또는 최종 정답을 찾아 정확한 LaTeX 수식으로만 한 줄 출력하세요.
@@ -514,9 +503,9 @@ export const extractStudentMathToLatex = async (geminiKey, imageInput, openroute
 };
 
 export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, studentAnswer, model = 'typesafe/jev-1.13') => {
-  const activeKey = (openrouterKey && openrouterKey.trim()) || import.meta.env.VITE_OPENROUTER_API_KEY || BUILTIN_OPENROUTER_KEY;
+  const activeKey = (openrouterKey && openrouterKey.trim()) || '';
   if (!activeKey) {
-    throw new Error('TypeSafe Jev API 키(OpenRouter)가 설정되지 않았습니다.');
+    throw new Error('TypeSafe Jev API 키(OpenRouter)가 설정되지 않았거나 삭제되었습니다. 호출을 차단합니다.');
   }
 
   const selectedModel = model || 'typesafe/jev-1.13';
@@ -599,7 +588,10 @@ export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, stu
 };
 
 export const testJevConnection = async (apiKey, model = 'typesafe/jev-1.13') => {
-  const activeKey = (apiKey && apiKey.trim()) || import.meta.env.VITE_OPENROUTER_API_KEY || BUILTIN_OPENROUTER_KEY;
+  const activeKey = (apiKey && apiKey.trim()) || '';
+  if (!activeKey) {
+    throw new Error('OpenRouter API 키가 설정되지 않았습니다.');
+  }
   const res = await callTypeSafeJevDecisions(activeKey, '2', '2', model);
   return {
     success: res.isEquivalent,
@@ -675,17 +667,18 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
     }
   }
 
-  // FAST-PATH 1: Try TypeSafe Jev 1.13 Decisions API first (0.05s, 0.003 KRW)
-  try {
-    const orKey = ((typeof aiConfig === 'object' && aiConfig?.openrouterApiKey) || '').trim() || BUILTIN_OPENROUTER_KEY;
-    const orModel = (typeof aiConfig === 'object' && aiConfig?.openrouterModel) || 'typesafe/jev-1.13';
-    const jevRes = await callTypeSafeJevDecisions(orKey, correctAnswer, studentAnswer, orModel);
-    
-    const probPercent = Math.round((jevRes.noul ?? (jevRes.isEquivalent ? 1 : 0)) * 100);
-    const costUsd = (jevRes.cost || 0.000015).toFixed(6);
+  // FAST-PATH 1: Try TypeSafe Jev 1.13 Decisions API only if OpenRouter key is explicitly configured
+  const orKey = ((typeof aiConfig === 'object' && aiConfig?.openrouterApiKey) || '').trim();
+  if (orKey) {
+    try {
+      const orModel = (typeof aiConfig === 'object' && aiConfig?.openrouterModel) || 'typesafe/jev-1.13';
+      const jevRes = await callTypeSafeJevDecisions(orKey, correctAnswer, studentAnswer, orModel);
+      
+      const probPercent = Math.round((jevRes.noul ?? (jevRes.isEquivalent ? 1 : 0)) * 100);
+      const costUsd = (jevRes.cost || 0.000015).toFixed(6);
 
-    if (jevRes.isEquivalent) {
-      return `[채점 결과]
+      if (jevRes.isEquivalent) {
+        return `[채점 결과]
 ⭕ 정답
 
 [⚡ TypeSafe Jev 1.13 검정 판정]
@@ -694,8 +687,8 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
 - 동치 판정: 완벽한 수학적 동치 (EQUIVALENT)
 - 획득 점수: ${jevRes.score}점 / 10점 (일치 확률: ${probPercent}%)
 - 검정 속도: ${jevRes.durationMs}ms (추론 비용: $${costUsd})`;
-    } else {
-      return `[채점 결과]
+      } else {
+        return `[채점 결과]
 ❌ 오답
 
 [⚡ TypeSafe Jev 1.13 검정 판정]
@@ -704,9 +697,10 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
 - 동치 판정: 불일치 (DIFFERENT)
 - 획득 점수: ${jevRes.score}점 / 10점 (일치 확률: ${probPercent}%)
 - 검정 속도: ${jevRes.durationMs}ms (추론 비용: $${costUsd})`;
+      }
+    } catch (jevErr) {
+      console.warn("Jev 1.13 Decisions API 호출 실패, 표준 AI로 폴백:", jevErr);
     }
-  } catch (jevErr) {
-    console.warn("Jev 1.13 Decisions API 호출 실패, 표준 AI로 폴백:", jevErr);
   }
 
   // FALLBACK 2: Standard LLM call

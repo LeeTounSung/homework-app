@@ -15,11 +15,11 @@ export default function SettingsModal({ isOpen, onClose }) {
     saveAiSettings
   } = useHomework();
 
-  const BUILTIN_OPENROUTER_KEY = typeof atob === 'function' ? atob('c2stb3ItdjEtYzgwOWZhMzkxZWRlMTU3YzgzODZhNjAxNjM2OWE4NWQ3NTg4MGEyZDE3YjI5NDdiMDQ5ZTVlYWY2OTEwNTM1Mg==') : '';
-  const BUILTIN_DEEPSEEK_KEY = typeof atob === 'function' ? atob('c2stYzU3MjhmZGFlZmFkNGZhNWI4ZWE4ZjAzZjA2MTNmNmM=') : '';
-  const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || BUILTIN_DEEPSEEK_KEY;
+  const BUILTIN_OPENROUTER_KEY = '';
+  const BUILTIN_DEEPSEEK_KEY = '';
+  const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
   const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || '';
-  const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || BUILTIN_OPENROUTER_KEY;
+  const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 
   const [tempProvider, setTempProvider] = useState('jev');
   const [tempMusesparkKey, setTempMusesparkKey] = useState('');
@@ -39,10 +39,10 @@ export default function SettingsModal({ isOpen, onClose }) {
       setTempProvider(aiProvider || 'jev');
       setTempMusesparkKey(musesparkApiKey || '');
       setTempMusesparkModel(musesparkModel || 'muse-spark-1.3-contributor');
-      setTempDeepseekKey(deepseekApiKey || DEFAULT_DEEPSEEK_KEY);
+      setTempDeepseekKey(deepseekApiKey || '');
       setTempDeepseekModel(deepseekModel || 'deepseek-v4-flash-vision-exp');
       setTempGeminiKey(geminiApiKey || '');
-      setTempOpenrouterKey(openrouterApiKey || DEFAULT_OPENROUTER_KEY);
+      setTempOpenrouterKey(openrouterApiKey || '');
       setTempOpenrouterModel(openrouterModel || 'typesafe/jev-1.13');
       setShowMetaKey(false);
       setShowOpenrouterKey(false);
@@ -56,7 +56,14 @@ export default function SettingsModal({ isOpen, onClose }) {
     setIsTestingJev(true);
     setJevTestResult(null);
     try {
-      const activeKey = tempOpenrouterKey.trim() || DEFAULT_OPENROUTER_KEY;
+      const activeKey = tempOpenrouterKey.trim();
+      if (!activeKey) {
+        setJevTestResult({
+          success: false,
+          message: '❌ OpenRouter API 키를 먼저 입력해주세요.'
+        });
+        return;
+      }
       const res = await testJevConnection(activeKey, tempOpenrouterModel.trim());
       setJevTestResult({
         success: true,
@@ -76,8 +83,8 @@ export default function SettingsModal({ isOpen, onClose }) {
     const cleanedDeepseekModel = tempDeepseekModel.trim() || 'deepseek-v4-flash-vision-exp';
     const cleanedMusesparkModel = tempMusesparkModel.trim() || 'muse-spark-1.3-contributor';
     const cleanedOpenrouterModel = tempOpenrouterModel.trim() || 'typesafe/jev-1.13';
-    const finalOpenrouterKey = tempOpenrouterKey.trim() || DEFAULT_OPENROUTER_KEY;
-    const finalDeepseekKey = tempDeepseekKey.trim() || DEFAULT_DEEPSEEK_KEY;
+    const finalOpenrouterKey = tempOpenrouterKey.trim();
+    const finalDeepseekKey = tempDeepseekKey.trim();
     const finalMusesparkKey = tempMusesparkKey.trim();
 
     saveAiSettings({
@@ -352,7 +359,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                   value={tempOpenrouterKey} 
                   onChange={(e) => setTempOpenrouterKey(e.target.value)}
                   className="modal-input"
-                  placeholder="OpenRouter API 키를 입력하세요 (기본 .env 설정값 자동적용)"
+                  placeholder="sk-or-... 형식의 OpenRouter API 키"
                   style={{ flex: 1, fontFamily: 'monospace', fontSize: '12px' }}
                 />
                 <button
@@ -393,7 +400,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={handleTestJev}
-                  disabled={isTestingJev || (!tempOpenrouterKey && !DEFAULT_OPENROUTER_KEY)}
+                  disabled={isTestingJev || !tempOpenrouterKey.trim()}
                   style={{
                     padding: '9px 14px',
                     borderRadius: '8px',
@@ -402,7 +409,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                     color: '#FFD700',
                     fontWeight: 'bold',
                     fontSize: '12px',
-                    cursor: (isTestingJev || (!tempOpenrouterKey && !DEFAULT_OPENROUTER_KEY)) ? 'not-allowed' : 'pointer',
+                    cursor: (isTestingJev || !tempOpenrouterKey.trim()) ? 'not-allowed' : 'pointer',
                     whiteSpace: 'nowrap'
                   }}
                 >
