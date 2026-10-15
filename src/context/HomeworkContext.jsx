@@ -950,9 +950,19 @@ export const HomeworkProvider = ({ children }) => {
       ...section,
       homeworks: section.homeworks.map(hw => {
         if (hw.id === parseInt(id)) {
+          let baseAnswers = {};
+          if (Array.isArray(hw.answers)) {
+            hw.answers.forEach(item => {
+              if (item && item.problemNumber !== undefined) {
+                baseAnswers[item.problemNumber] = item.answer !== undefined ? item.answer : item;
+              }
+            });
+          } else if (typeof hw.answers === 'object' && hw.answers !== null) {
+            baseAnswers = { ...hw.answers };
+          }
           return {
             ...hw,
-            answers: { ...(hw.answers || {}), ...answers }
+            answers: { ...baseAnswers, ...answers }
           };
         }
         return hw;

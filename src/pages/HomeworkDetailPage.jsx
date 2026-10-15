@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import { autoGradeProblemSubmission, solveProblemWithAI, checkMathEquivalenceWithAI } from '../utils/gemini';
@@ -191,8 +191,35 @@ export default function HomeworkDetailPage() {
 
   const [isAiSolving, setIsAiSolving] = useState(false);
 
+  const registeredCount = useMemo(() => {
+    const ans = hw?.answers || hw?.answerKey;
+    if (!ans) return 0;
+    if (Array.isArray(ans)) {
+      return ans.filter(item => item && (item.answer !== undefined ? String(item.answer).trim() : String(item).trim())).length;
+    }
+    if (typeof ans === 'object') {
+      return Object.values(ans).filter(val => {
+        if (!val) return false;
+        if (typeof val === 'object' && val.answer !== undefined) return String(val.answer).trim() !== '';
+        return String(val).trim() !== '';
+      }).length;
+    }
+    return 0;
+  }, [hw?.answers, hw?.answerKey]);
+
   const handleOpenAnswerKeyModal = () => {
-    setEditedAnswers({ ...(hw.answers || {}) });
+    let initial = {};
+    const ans = hw?.answers || hw?.answerKey;
+    if (Array.isArray(ans)) {
+      ans.forEach(item => {
+        if (item && item.problemNumber !== undefined) {
+          initial[item.problemNumber] = item.answer !== undefined ? item.answer : item;
+        }
+      });
+    } else if (typeof ans === 'object' && ans !== null) {
+      initial = { ...ans };
+    }
+    setEditedAnswers(initial);
     setIsAnswerKeyModalOpen(true);
   };
 
@@ -697,7 +724,20 @@ export default function HomeworkDetailPage() {
                       }}
                       title="mathkorea 운영자 전용: 각 문항의 정답을 미리 등록하거나 AI로 자동 생성합니다"
                     >
-                      <span>📝 정답표 관리</span>
+                      <span>📝 정답표</span>
+                      {registeredCount > 0 && (
+                        <span style={{
+                          backgroundColor: '#4CAF50',
+                          color: '#0e1e12',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          borderRadius: '10px',
+                          padding: '1px 7px',
+                          marginLeft: '2px'
+                        }}>
+                          {registeredCount}문항
+                        </span>
+                      )}
                     </button>
                   )}
 

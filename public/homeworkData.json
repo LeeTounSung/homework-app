@@ -36,78 +36,22 @@
             "problemImagesBaseUrl": "/problem_images/kpy_daesu_p48_49_12_25"
           }
         ],
-        "answers": [
-          {
-            "problemNumber": 12,
-            "answer": "4",
-            "label": "유형 04 삼각함수의 미정계수 구하기 - 그래프"
-          },
-          {
-            "problemNumber": 13,
-            "answer": "10\\pi/3",
-            "label": "유형 04 삼각함수의 미정계수 구하기 - 그래프"
-          },
-          {
-            "problemNumber": 14,
-            "answer": "-\\pi/2",
-            "label": "유형 04 삼각함수의 미정계수 구하기 - 그래프"
-          },
-          {
-            "problemNumber": 15,
-            "answer": "2",
-            "label": "유형 05 절댓값 기호를 포함한 삼각함수의 그래프"
-          },
-          {
-            "problemNumber": 16,
-            "answer": "4",
-            "label": "유형 05 절댓값 기호를 포함한 삼각함수의 그래프"
-          },
-          {
-            "problemNumber": 17,
-            "answer": "25",
-            "label": "유형 05 절댓값 기호를 포함한 삼각함수의 그래프"
-          },
-          {
-            "problemNumber": 18,
-            "answer": "1",
-            "label": "유형 06 여러 가지 각의 삼각함수의 값 ⑴"
-          },
-          {
-            "problemNumber": 19,
-            "answer": "-1/3",
-            "label": "유형 06 여러 가지 각의 삼각함수의 값 ⑴"
-          },
-          {
-            "problemNumber": 20,
-            "answer": "3",
-            "label": "유형 06 여러 가지 각의 삼각함수의 값 ⑴"
-          },
-          {
-            "problemNumber": 21,
-            "answer": "ㄱ",
-            "label": "유형 06 여러 가지 각의 삼각함수의 값 ⑴"
-          },
-          {
-            "problemNumber": 22,
-            "answer": "1",
-            "label": "유형 07 여러 가지 각의 삼각함수의 값 ⑵"
-          },
-          {
-            "problemNumber": 23,
-            "answer": "3",
-            "label": "유형 07 여러 가지 각의 삼각함수의 값 ⑵"
-          },
-          {
-            "problemNumber": 24,
-            "answer": "-1",
-            "label": "유형 07 여러 가지 각의 삼각함수의 값 ⑵"
-          },
-          {
-            "problemNumber": 25,
-            "answer": "4",
-            "label": "유형 07 여러 가지 각의 삼각함수의 값 ⑵"
-          }
-        ],
+        "answers": {
+          "12": "4",
+          "13": "10\\pi/3",
+          "14": "-\\pi/2",
+          "15": "2",
+          "16": "4",
+          "17": "25",
+          "18": "1",
+          "19": "-1/3",
+          "20": "3",
+          "21": "ㄱ",
+          "22": "1",
+          "23": "3",
+          "24": "-1",
+          "25": "4"
+        },
         "problemDetails": [
           {
             "problemNumber": 12,
@@ -219,63 +163,19 @@
             "problemImagesBaseUrl": "/problem_images/kpy_daesu_p46_47_01_11"
           }
         ],
-        "answers": [
-          {
-            "problemNumber": 1,
-            "answer": "3",
-            "label": "유형 01 삼각함수의 그래프의 평행이동과 대칭이동"
-          },
-          {
-            "problemNumber": 2,
-            "answer": "-3/2",
-            "label": "유형 01 삼각함수의 그래프의 평행이동과 대칭이동"
-          },
-          {
-            "problemNumber": 3,
-            "answer": "\\sqrt{3}-2",
-            "label": "유형 01 삼각함수의 그래프의 평행이동과 대칭이동"
-          },
-          {
-            "problemNumber": 4,
-            "answer": "3",
-            "label": "유형 02 삼각함수의 최댓값, 최솟값, 주기"
-          },
-          {
-            "problemNumber": 5,
-            "answer": "3",
-            "label": "유형 02 삼각함수의 최댓값, 최솟값, 주기"
-          },
-          {
-            "problemNumber": 6,
-            "answer": "4",
-            "label": "유형 02 삼각함수의 최댓값, 최솟값, 주기"
-          },
-          {
-            "problemNumber": 7,
-            "answer": "5",
-            "label": "유형 02 삼각함수의 최댓값, 최솟값, 주기"
-          },
-          {
-            "problemNumber": 8,
-            "answer": "4",
-            "label": "유형 02 삼각함수의 최댓값, 최솟값, 주기"
-          },
-          {
-            "problemNumber": 9,
-            "answer": "5",
-            "label": "유형 03 삼각함수의 미정계수 구하기 - 식"
-          },
-          {
-            "problemNumber": 10,
-            "answer": "1/6",
-            "label": "유형 03 삼각함수의 미정계수 구하기 - 식"
-          },
-          {
-            "problemNumber": 11,
-            "answer": "-8",
-            "label": "유형 03 삼각함수의 미정계수 구하기 - 조건"
-          }
-        ],
+        "answers": {
+          "1": "3",
+          "2": "-3/2",
+          "3": "\\sqrt{3}-2",
+          "4": "3",
+          "5": "3",
+          "6": "4",
+          "7": "5",
+          "8": "4",
+          "9": "5",
+          "10": "1/6",
+          "11": "-8"
+        },
         "problemDetails": [
           {
             "problemNumber": 1,
