@@ -28,7 +28,7 @@ export default function SettingsModal({ isOpen, onClose }) {
   const [tempDeepseekModel, setTempDeepseekModel] = useState('deepseek-v4-flash-vision-exp');
   const [tempGeminiKey, setTempGeminiKey] = useState('');
   const [tempOpenrouterKey, setTempOpenrouterKey] = useState('');
-  const [tempOpenrouterModel, setTempOpenrouterModel] = useState('typesafe/jev-1.13');
+  const [tempOpenrouterModel, setTempOpenrouterModel] = useState('typesafe/jev-1.14');
   const [showMetaKey, setShowMetaKey] = useState(false);
   const [showOpenrouterKey, setShowOpenrouterKey] = useState(false);
   const [isTestingJev, setIsTestingJev] = useState(false);
@@ -43,7 +43,7 @@ export default function SettingsModal({ isOpen, onClose }) {
       setTempDeepseekModel(deepseekModel || 'deepseek-v4-flash-vision-exp');
       setTempGeminiKey(geminiApiKey || '');
       setTempOpenrouterKey(openrouterApiKey || '');
-      setTempOpenrouterModel(openrouterModel || 'typesafe/jev-1.13');
+      setTempOpenrouterModel(openrouterModel || 'typesafe/jev-1.14');
       setShowMetaKey(false);
       setShowOpenrouterKey(false);
       setJevTestResult(null);
@@ -67,12 +67,12 @@ export default function SettingsModal({ isOpen, onClose }) {
       const res = await testJevConnection(activeKey, tempOpenrouterModel.trim());
       setJevTestResult({
         success: true,
-        message: `✅ TypeSafe Jev 1.13 연결 성공! (응답시간: ${res.durationMs}ms, 모델: ${res.model})`
+        message: `✅ TypeSafe Jev 1.14 연결 성공! (응답시간: ${res.durationMs}ms, 모델: ${res.model})`
       });
     } catch (err) {
       setJevTestResult({
         success: false,
-        message: `❌ Jev 1.13 연결 실패: ${err.message}`
+        message: `❌ Jev 1.14 연결 실패: ${err.message}`
       });
     } finally {
       setIsTestingJev(false);
@@ -82,7 +82,7 @@ export default function SettingsModal({ isOpen, onClose }) {
   const handleSave = () => {
     const cleanedDeepseekModel = tempDeepseekModel.trim() || 'deepseek-v4-flash-vision-exp';
     const cleanedMusesparkModel = tempMusesparkModel.trim() || 'muse-spark-1.3-contributor';
-    const cleanedOpenrouterModel = tempOpenrouterModel.trim() || 'typesafe/jev-1.13';
+    const cleanedOpenrouterModel = tempOpenrouterModel.trim() || 'typesafe/jev-1.14';
     const finalOpenrouterKey = tempOpenrouterKey.trim();
     const finalDeepseekKey = tempDeepseekKey.trim();
     const finalMusesparkKey = tempMusesparkKey.trim();
@@ -100,7 +100,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
     onClose();
 
-    let providerName = 'TypeSafe Jev 1.13 (OpenRouter)';
+    let providerName = 'TypeSafe Jev 1.14 (OpenRouter)';
     if (tempProvider === 'musespark') providerName = 'Meta Muse Spark 1.3 (Contributor)';
     else if (tempProvider === 'deepseek') providerName = 'DeepSeek Vision';
     else if (tempProvider === 'gemini') providerName = 'Google Gemini';
@@ -139,7 +139,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                   gap: '4px'
                 }}
               >
-                ⚡ TypeSafe Jev 1.13
+                ⚡ TypeSafe Jev 1.14
               </button>
               <button 
                 type="button"
@@ -329,7 +329,7 @@ export default function SettingsModal({ isOpen, onClose }) {
             />
           </div>
 
-          {/* TypeSafe Jev 1.13 Decisions API Card (OpenRouter) */}
+          {/* TypeSafe Jev 1.14 Decisions API Card (OpenRouter) */}
           <div style={{ 
             padding: '14px', 
             borderRadius: '10px', 
@@ -341,7 +341,7 @@ export default function SettingsModal({ isOpen, onClose }) {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label style={{ fontSize: '13px', color: '#FFD700', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ⚡ TypeSafe Jev 1.13 Decisions API (OpenRouter)
+                ⚡ TypeSafe Jev 1.14 Decisions API (OpenRouter)
                 {tempProvider === 'jev' && <span style={{ fontSize: '11px', color: '#000', backgroundColor: '#FFD700', padding: '1px 6px', borderRadius: '4px', fontWeight: 'bold' }}>활성 엔진</span>}
               </label>
               <span style={{ fontSize: '11px', color: '#FFD700', backgroundColor: 'rgba(255, 215, 0, 0.2)', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold', border: '1px solid #FFD700' }}>
@@ -351,7 +351,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
             <div>
               <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#FFD700', fontWeight: 'bold' }}>
-                OpenRouter API Key (Jev 1.13 추론용)
+                OpenRouter API Key (Jev 1.14 추론용)
               </label>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <input 
@@ -391,7 +391,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                   value={tempOpenrouterModel} 
                   onChange={(e) => setTempOpenrouterModel(e.target.value)}
                   className="modal-input"
-                  placeholder="typesafe/jev-1.13"
+                  placeholder="typesafe/jev-1.14"
                   style={{ width: '100%', boxSizing: 'border-box', fontSize: '12px' }}
                 />
               </div>
@@ -413,7 +413,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  {isTestingJev ? '⏳ 검정 중...' : '🧪 Jev 1.13 연결 테스트'}
+                  {isTestingJev ? '⏳ 검정 중...' : '🧪 Jev 1.14 연결 테스트'}
                 </button>
               </div>
             </div>
@@ -433,7 +433,7 @@ export default function SettingsModal({ isOpen, onClose }) {
             )}
 
             <div style={{ fontSize: '11px', color: '#d4af37', lineHeight: '1.4' }}>
-              * TypeSafe Jev 1.13(<code>https://openrouter.ai/api/alpha/decisions</code>)을 호출하여 학생의 LaTeX 수식과 정답표 간의 수학적 동치(Algebraic Equivalence) 판정 및 10점 만점 루브릭 채점을 0.05초 만에 $0.000015 극초저비용으로 즉각 완료합니다.
+              * TypeSafe Jev 1.14(<code>https://openrouter.ai/api/alpha/decisions</code>)을 호출하여 학생의 LaTeX 수식과 정답표 간의 수학적 동치(Algebraic Equivalence) 판정 및 10점 만점 루브릭 채점을 0.05초 만에 $0.000015 극초저비용으로 즉각 완료합니다.
             </div>
           </div>
 

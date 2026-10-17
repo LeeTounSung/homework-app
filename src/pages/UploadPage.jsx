@@ -544,7 +544,7 @@ export default function UploadPage() {
           />
         )}
 
-        {/* Student Math Answer (LaTeX) & Real-time Jev 1.13 Grading Card */}
+        {/* Student Math Answer (LaTeX) & Real-time Jev 1.14 Grading Card */}
         <div style={{
           backgroundColor: '#1E2028',
           border: '1.5px solid #3B82F6',

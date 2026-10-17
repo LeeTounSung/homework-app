@@ -72,15 +72,16 @@ export const HomeworkProvider = ({ children }) => {
 
   const [openrouterApiKey, setOpenrouterApiKey] = useState(() => {
     const saved = localStorage.getItem('openrouterApiKey');
-    if (saved && saved.startsWith('sk-or-v1-c809fa')) {
-      localStorage.removeItem('openrouterApiKey');
-      return '';
-    }
-    return (saved && saved.trim()) ? saved.trim() : '';
+    return (saved && saved.trim()) ? saved.trim() : (DEFAULT_OPENROUTER_KEY || '');
   });
 
   const [openrouterModel, setOpenrouterModel] = useState(() => {
-    return localStorage.getItem('openrouterModel') || 'typesafe/jev-1.13';
+    const saved = localStorage.getItem('openrouterModel');
+    if (!saved || saved === 'typesafe/jev-1.13') {
+      localStorage.setItem('openrouterModel', 'typesafe/jev-1.14');
+      return 'typesafe/jev-1.14';
+    }
+    return saved;
   });
 
   const [deepseekApiKey, setDeepseekApiKey] = useState(() => {
@@ -302,7 +303,7 @@ export const HomeworkProvider = ({ children }) => {
       else localStorage.removeItem('openrouterApiKey');
     }
     if (oModel !== undefined) {
-      const finalModel = (oModel && oModel.trim()) ? oModel.trim() : 'typesafe/jev-1.13';
+      const finalModel = (oModel && oModel.trim()) ? oModel.trim() : 'typesafe/jev-1.14';
       setOpenrouterModel(finalModel);
       localStorage.setItem('openrouterModel', finalModel);
     }
@@ -350,7 +351,7 @@ export const HomeworkProvider = ({ children }) => {
   };
 
   const saveOpenrouterModel = (model) => {
-    const finalModel = (model && model.trim()) ? model.trim() : 'typesafe/jev-1.13';
+    const finalModel = (model && model.trim()) ? model.trim() : 'typesafe/jev-1.14';
     setOpenrouterModel(finalModel);
     localStorage.setItem('openrouterModel', finalModel);
   };
@@ -376,7 +377,7 @@ export const HomeworkProvider = ({ children }) => {
     provider: aiProvider || 'jev',
     geminiApiKey: (geminiApiKey || '').trim(),
     openrouterApiKey: (openrouterApiKey || '').trim(),
-    openrouterModel: (openrouterModel && openrouterModel.trim()) || 'typesafe/jev-1.13',
+    openrouterModel: (openrouterModel && openrouterModel.trim()) || 'typesafe/jev-1.14',
     deepseekApiKey: (deepseekApiKey || '').trim(),
     deepseekModel: (deepseekModel && deepseekModel !== 'deepseek-chat') ? deepseekModel : 'deepseek-v4-flash-vision-exp',
     musesparkApiKey: (musesparkApiKey || '').trim(),

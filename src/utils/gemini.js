@@ -334,7 +334,7 @@ export const callAIAPI = async (aiConfig, prompt, base64Image = null, mimeType =
       if (correctAns && studentAns) {
         return await checkMathEquivalenceWithAI(aiConfig, correctAns, studentAns);
       }
-      // If image is present and correctAns is present, try vision OCR to extract LaTeX then run Jev 1.13
+      // If image is present and correctAns is present, try vision OCR to extract LaTeX then run Jev 1.14
       if (base64Image && correctAns) {
         let extracted = '';
         if (geminiApiKey) {
@@ -502,17 +502,30 @@ export const extractStudentMathToLatex = async (geminiKey, imageInput, openroute
   return await callGeminiVisionToLatex(imageInput, geminiKey, openrouterKey);
 };
 
-export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, studentAnswer, model = 'typesafe/jev-1.13') => {
-  const activeKey = (openrouterKey && openrouterKey.trim()) || '';
+export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, studentAnswer, model = 'typesafe/jev-1.14', imageInput = null) => {
+  const activeKey = (openrouterKey && openrouterKey.trim()) || DEFAULT_OPENROUTER_KEY || '';
   if (!activeKey) {
     throw new Error('TypeSafe Jev API 키(OpenRouter)가 설정되지 않았거나 삭제되었습니다. 호출을 차단합니다.');
   }
 
-  const selectedModel = model || 'typesafe/jev-1.13';
+  const selectedModel = model || 'typesafe/jev-1.14';
   const url = 'https://openrouter.ai/api/alpha/decisions';
+
+  let statePayload = `[Math Equivalence Verification Task]\nStudent Answer: ${studentAnswer}\nOfficial Answer Key: ${correctAnswer}\nEvaluate if student answer is mathematically equivalent to the official key, or matches the correct multiple-choice option number (1~5 or ①~⑤).`;
+  if (imageInput) {
+    let imgUrl = imageInput;
+    if (!imgUrl.startsWith('data:') && !imgUrl.startsWith('http')) {
+      imgUrl = `data:image/jpeg;base64,${imgUrl}`;
+    }
+    statePayload = [
+      statePayload,
+      { type: "image_url", image_url: { url: imgUrl } }
+    ];
+  }
+
   const payload = {
     model: selectedModel,
-    state: `[Math Equivalence Verification Task]\nStudent Answer: ${studentAnswer}\nOfficial Answer Key: ${correctAnswer}\nEvaluate if student answer is mathematically equivalent to the official key, or matches the correct multiple-choice option number (1~5 or ①~⑤).`,
+    state: statePayload,
     questions: {
       is_equivalent: {
         type: 'choice',
@@ -552,13 +565,13 @@ export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, stu
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Jev 1.13 Decisions API 실패 (HTTP ${response.status}): ${errText}`);
+    throw new Error(`Jev 1.14 Decisions API 실패 (HTTP ${response.status}): ${errText}`);
   }
 
   const data = await response.json();
   const durationMs = Date.now() - startTime;
   
-  const answers = data.answers || {};
+  const answers = data.answers || data.decisions || {};
   const choice = answers.is_equivalent?.choice;
   const confidence = answers.is_equivalent?.confidence ?? 1;
   const noul = answers.confidence_noul?.noul ?? (choice === 'EQUIVALENT' ? 1.0 : 0.0);
@@ -587,8 +600,8 @@ export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, stu
   };
 };
 
-export const testJevConnection = async (apiKey, model = 'typesafe/jev-1.13') => {
-  const activeKey = (apiKey && apiKey.trim()) || '';
+export const testJevConnection = async (apiKey, model = 'typesafe/jev-1.14') => {
+  const activeKey = (apiKey && apiKey.trim()) || DEFAULT_OPENROUTER_KEY || '';
   if (!activeKey) {
     throw new Error('OpenRouter API 키가 설정되지 않았습니다.');
   }
@@ -667,11 +680,11 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
     }
   }
 
-  // FAST-PATH 1: Try TypeSafe Jev 1.13 Decisions API only if OpenRouter key is explicitly configured
-  const orKey = ((typeof aiConfig === 'object' && aiConfig?.openrouterApiKey) || '').trim();
+  // FAST-PATH 1: Try TypeSafe Jev 1.14 Decisions API only if OpenRouter key is configured
+  const orKey = ((typeof aiConfig === 'object' && aiConfig?.openrouterApiKey) || DEFAULT_OPENROUTER_KEY || '').trim();
   if (orKey) {
     try {
-      const orModel = (typeof aiConfig === 'object' && aiConfig?.openrouterModel) || 'typesafe/jev-1.13';
+      const orModel = (typeof aiConfig === 'object' && aiConfig?.openrouterModel) || 'typesafe/jev-1.14';
       const jevRes = await callTypeSafeJevDecisions(orKey, correctAnswer, studentAnswer, orModel);
       
       const probPercent = Math.round((jevRes.noul ?? (jevRes.isEquivalent ? 1 : 0)) * 100);
@@ -681,7 +694,7 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
         return `[채점 결과]
 ⭕ 정답
 
-[⚡ TypeSafe Jev 1.13 검정 판정]
+[⚡ TypeSafe Jev 1.14 검정 판정]
 - 공식 정답: ${correctAnswer}
 - 학생 답안: ${studentAnswer}
 - 동치 판정: 완벽한 수학적 동치 (EQUIVALENT)
@@ -691,7 +704,7 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
         return `[채점 결과]
 ❌ 오답
 
-[⚡ TypeSafe Jev 1.13 검정 판정]
+[⚡ TypeSafe Jev 1.14 검정 판정]
 - 공식 정답: ${correctAnswer}
 - 학생 답안: ${studentAnswer}
 - 동치 판정: 불일치 (DIFFERENT)
@@ -699,7 +712,7 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
 - 검정 속도: ${jevRes.durationMs}ms (추론 비용: $${costUsd})`;
       }
     } catch (jevErr) {
-      console.warn("Jev 1.13 Decisions API 호출 실패, 표준 AI로 폴백:", jevErr);
+      console.warn("Jev 1.14 Decisions API 호출 실패, 표준 AI로 폴백:", jevErr);
     }
   }
 
