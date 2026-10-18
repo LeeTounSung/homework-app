@@ -215,15 +215,15 @@ export default function MathInkComponent({ onInsert, onCancel, geminiApiKey, aiC
     const base64Img = tempCanvas.toDataURL('image/jpeg', 0.9);
 
     setIsRecognizing(true);
-    showMsg('✨ 제미나이(Gemini)가 손글씨 수식을 LaTeX으로 변환 중입니다...');
+    showMsg('⚡ TypeSafe Jev-1.14가 손글씨 수식을 인식 중입니다...');
 
     try {
-      const { callGeminiVisionToLatex } = await import('../utils/gemini');
+      const { extractStudentMathToLatex } = await import('../utils/gemini');
       const activeGeminiKey = (aiConfig && aiConfig.geminiApiKey) || geminiApiKey || '';
       const activeOrKey = (aiConfig && aiConfig.openrouterApiKey) || '';
 
-      let result = await callGeminiVisionToLatex(base64Img, activeGeminiKey, activeOrKey);
-      result = result.replace(/```latex/gi, '').replace(/```/g, '').replace(/^\$+|\$+$/g, '').trim();
+      let result = await extractStudentMathToLatex(activeGeminiKey, base64Img, activeOrKey);
+      result = String(result || '').replace(/```latex/gi, '').replace(/```/g, '').replace(/^\$+|\$+$/g, '').trim();
 
       const png = await latexToPng(result);
       if (png) {

@@ -498,8 +498,106 @@ export const callGeminiVisionToLatex = async (imageInput, geminiKey = '', openro
   throw new Error('사용 가능한 Gemini API(직접 연결 또는 OpenRouter)를 찾을 수 없습니다.');
 };
 
-export const extractStudentMathToLatex = async (geminiKey, imageInput, openrouterKey = '') => {
-  return await callGeminiVisionToLatex(imageInput, geminiKey, openrouterKey);
+export const callJevVisionToMath = async (imageInput, openrouterKey = '', correctAns = null) => {
+  const activeKey = (openrouterKey && openrouterKey.trim()) || DEFAULT_OPENROUTER_KEY || '';
+  if (!activeKey) {
+    throw new Error('TypeSafe Jev API 키(OpenRouter)가 설정되지 않았습니다.');
+  }
+
+  const fullDataUrl = await normalizeImageToBase64(imageInput);
+  const url = 'https://openrouter.ai/api/alpha/decisions';
+
+  let stateInstructions = 'Analyze the handwritten student math solution in the attached image. Identify what answer, number, or option the student chose or wrote.';
+  if (correctAns) {
+    stateInstructions += ` The official answer key for this question is: ${correctAns}.`;
+  }
+
+  const questions = {
+    choice_number: {
+      type: 'choice',
+      instructions: 'If the student wrote or circled an objective option number (1, 2, 3, 4, 5, or ①~⑤), select that number. If the student wrote a multi-digit number, sign, or fraction/formula, select "formula".',
+      criteria: {
+        '1': 'Choice 1 or ①',
+        '2': 'Choice 2 or ②',
+        '3': 'Choice 3 or ③',
+        '4': 'Choice 4 or ④',
+        '5': 'Choice 5 or ⑤',
+        'formula': 'Mathematical formula, fraction, expression, negative number, or multi-digit integer'
+      }
+    }
+  };
+
+  if (correctAns) {
+    questions.matches_key = {
+      type: 'noul',
+      instructions: `Probability that the handwritten answer in the image is mathematically equal or equivalent to the official key [${correctAns}].`,
+      criteria: {
+        true: `Handwritten answer matches ${correctAns}`,
+        false: `Handwritten answer differs from ${correctAns}`
+      }
+    };
+  }
+
+  const payload = {
+    model: 'typesafe/jev-1.14',
+    state: [
+      stateInstructions,
+      { type: 'image_url', image_url: { url: fullDataUrl } }
+    ],
+    questions
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${activeKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://leetounsung.github.io/homework-app/',
+      'X-Title': 'TypeSafe Jev 1.14 Handwriting Math Recognition'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Jev 1.14 Vision API 실패 (HTTP ${response.status}): ${errText}`);
+  }
+
+  const data = await response.json();
+  const answers = data.answers || data.decisions || {};
+  const choice = answers.choice_number?.choice;
+  const matchesKeyNoul = answers.matches_key?.noul;
+
+  if (choice && ['1', '2', '3', '4', '5'].includes(choice)) {
+    return choice;
+  }
+
+  if (correctAns && matchesKeyNoul !== undefined && matchesKeyNoul >= 0.85) {
+    return correctAns;
+  }
+
+  return null;
+};
+
+export const extractStudentMathToLatex = async (geminiKey, imageInput, openrouterKey = '', options = {}) => {
+  const activeOrKey = (openrouterKey && openrouterKey.trim()) || DEFAULT_OPENROUTER_KEY || '';
+  const activeGeminiKey = (geminiKey && geminiKey.trim()) || '';
+  const correctAns = options?.correctAns || null;
+
+  // 1. PRIMARY: TypeSafe Jev-1.14 Vision via OpenRouter Decisions API
+  if (activeOrKey) {
+    try {
+      const jevResult = await callJevVisionToMath(imageInput, activeOrKey, correctAns);
+      if (jevResult) {
+        return jevResult;
+      }
+    } catch (jevErr) {
+      console.warn("TypeSafe Jev-1.14 필기 수식 인식 실패, 백업 엔진으로 진행:", jevErr);
+    }
+  }
+
+  // 2. Fallback to Gemini Vision for freeform LaTeX parsing
+  return await callGeminiVisionToLatex(imageInput, activeGeminiKey, activeOrKey);
 };
 
 export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, studentAnswer, model = 'typesafe/jev-1.14', imageInput = null) => {

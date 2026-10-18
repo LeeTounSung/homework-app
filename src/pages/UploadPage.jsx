@@ -164,7 +164,7 @@ export default function UploadPage() {
     }
   }, [hw, groupId, problemId, getProblemImageFromDrive]);
 
-  // Extract student handwriting/math from image to LaTeX using Gemini 2.5 Flash-Lite
+  // Extract student handwriting/math from image using TypeSafe Jev 1.14 Vision
   const handleExtractLatex = async (imageInput) => {
     const targetImg = imageInput || imagePreview;
     if (!targetImg) return;
@@ -173,9 +173,22 @@ export default function UploadPage() {
     try {
       const activeGeminiKey = geminiApiKey || (aiConfig && aiConfig.geminiApiKey) || '';
       const activeOrKey = (aiConfig && aiConfig.openrouterApiKey) || '';
-      const extracted = await extractStudentMathToLatex(activeGeminiKey, targetImg, activeOrKey);
-      if (extracted && extracted.trim()) {
-        setStudentAnswer(extracted.trim());
+
+      // Determine correct answer if registered for this problem
+      let correctAns = null;
+      if (hw?.answers) {
+        if (Array.isArray(hw.answers)) {
+          const item = hw.answers.find(a => a && (a.problemNumber === Number(problemId) || a.problemNumber === problemId));
+          correctAns = item ? (typeof item === 'object' && item.answer !== undefined ? item.answer : item) : null;
+        } else if (typeof hw.answers === 'object') {
+          const raw = hw.answers[problemId] || hw.answers[String(problemId)];
+          correctAns = (raw && typeof raw === 'object' && raw.answer !== undefined) ? raw.answer : raw;
+        }
+      }
+
+      const extracted = await extractStudentMathToLatex(activeGeminiKey, targetImg, activeOrKey, { correctAns });
+      if (extracted && String(extracted).trim()) {
+        setStudentAnswer(String(extracted).trim());
       }
     } catch (err) {
       console.warn("손글씨 수식(LaTeX) 자동 변환 실패:", err);
@@ -562,7 +575,7 @@ export default function UploadPage() {
             {isExtractingLatex && (
               <span style={{ fontSize: '12px', color: '#FFD700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span className="spinner" style={{ width: '12px', height: '12px', border: '2px solid #555', borderTop: '2px solid #FFD700', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
-                Gemini 2.5 Flash-Lite 수식 추출 중...
+                ⚡ TypeSafe Jev-1.14 필기 수식 인식 중...
               </span>
             )}
           </div>

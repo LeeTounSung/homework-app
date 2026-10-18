@@ -318,7 +318,7 @@ export default function SettingsModal({ isOpen, onClose }) {
             border: tempProvider === 'gemini' ? '1.5px solid #2196F3' : '1px solid #444' 
           }}>
             <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', color: '#64B5F6', fontWeight: 'bold' }}>
-              Google Gemini API Key (손글씨 수식 인식: 2.5 Flash-Lite)
+              Google Gemini API Key (손글씨 수식 인식 보조/백업)
             </label>
             <input 
               type="password" 
@@ -433,7 +433,7 @@ export default function SettingsModal({ isOpen, onClose }) {
             )}
 
             <div style={{ fontSize: '11px', color: '#d4af37', lineHeight: '1.4' }}>
-              * TypeSafe Jev 1.14(<code>https://openrouter.ai/api/alpha/decisions</code>)을 호출하여 학생의 LaTeX 수식과 정답표 간의 수학적 동치(Algebraic Equivalence) 판정 및 10점 만점 루브릭 채점을 0.05초 만에 $0.000015 극초저비용으로 즉각 완료합니다.
+              * TypeSafe Jev 1.14(<code>https://openrouter.ai/api/alpha/decisions</code>)을 호출하여 학생의 손글씨 사진 비전 인식, 수식/객관식 답안 판별, 정답표 간의 수학적 동치(Algebraic Equivalence) 판정 및 10점 만점 채점을 0.05초 만에 $0.000015 극초저비용으로 즉각 완료합니다.
             </div>
           </div>
 
