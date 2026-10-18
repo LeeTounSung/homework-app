@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
-import { autoGradeProblemSubmission, solveProblemWithAI, checkMathEquivalenceWithAI } from '../utils/gemini';
+import { autoGradeProblemSubmission, solveProblemWithAI, checkMathEquivalenceWithAI, normalizeKoreanMath } from '../utils/gemini';
 
 const formatGroupLabel = (label) => {
   if (!label || typeof label !== 'string') return label;
@@ -177,16 +177,7 @@ export default function HomeworkDetailPage() {
   const progressPercent = totalQuestions > 0 ? (actualSubmittedCount / totalQuestions) * 100 : 0;
 
   const normalizeAnswer = (str) => {
-    if (str === null || str === undefined) return '';
-    return String(str)
-      .trim()
-      .replace(/[①⑴(1)]/g, '1')
-      .replace(/[②⑵(2)]/g, '2')
-      .replace(/[③⑶(3)]/g, '3')
-      .replace(/[④⑷(4)]/g, '4')
-      .replace(/[⑤⑸(5)]/g, '5')
-      .replace(/\s+/g, '')
-      .toLowerCase();
+    return normalizeKoreanMath(str);
   };
 
   const [isAiSolving, setIsAiSolving] = useState(false);

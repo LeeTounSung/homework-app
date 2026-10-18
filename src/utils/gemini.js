@@ -509,7 +509,7 @@ export const callJevVisionToMath = async (imageInput, openrouterKey = '', correc
 
   let stateInstructions = 'Analyze the handwritten student math solution in the attached image. Identify what answer, number, or option the student chose or wrote.';
   if (correctAns) {
-    stateInstructions += ` The official answer key for this question is: ${correctAns}.`;
+    stateInstructions += ` The official answer key for this question is: ${correctAns}. Note: Korean words for mathematical terms (e.g., '파이'/'원주율' = π, '루트' = √, '세타' = θ, '3분의 10파이' = 10π/3, '마이너스' = -) are completely equivalent to their standard math symbols.`;
   }
 
   const questions = {
@@ -530,7 +530,7 @@ export const callJevVisionToMath = async (imageInput, openrouterKey = '', correc
   if (correctAns) {
     questions.matches_key = {
       type: 'noul',
-      instructions: `Probability that the handwritten answer in the image is mathematically equal or equivalent to the official key [${correctAns}].`,
+      instructions: `Probability that the handwritten answer in the image is mathematically equal or equivalent to the official key [${correctAns}] (including Korean math terminology like '파이'=π, '루트'=√, '3분의 10파이'=10π/3).`,
       criteria: {
         true: `Handwritten answer matches ${correctAns}`,
         false: `Handwritten answer differs from ${correctAns}`
@@ -609,7 +609,7 @@ export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, stu
   const selectedModel = model || 'typesafe/jev-1.14';
   const url = 'https://openrouter.ai/api/alpha/decisions';
 
-  let statePayload = `[Math Equivalence Verification Task]\nStudent Answer: ${studentAnswer}\nOfficial Answer Key: ${correctAnswer}\nEvaluate if student answer is mathematically equivalent to the official key, or matches the correct multiple-choice option number (1~5 or ①~⑤).`;
+  let statePayload = `[Math Equivalence Verification Task]\nStudent Answer: ${studentAnswer}\nOfficial Answer Key: ${correctAnswer}\nEvaluate if student answer is mathematically equivalent to the official key, accounting for Korean mathematical terms (e.g., '파이'/'원주율'=π, '루트'=√, '세타'=θ, '3분의 10파이'=10π/3, '마이너스'='-'), or matches the correct multiple-choice option number (1~5 or ①~⑤).`;
   if (imageInput) {
     let imgUrl = imageInput;
     if (!imgUrl.startsWith('data:') && !imgUrl.startsWith('http')) {
@@ -627,9 +627,9 @@ export const callTypeSafeJevDecisions = async (openrouterKey, correctAnswer, stu
     questions: {
       is_equivalent: {
         type: 'choice',
-        instructions: 'Determine whether the student answer is mathematically equivalent to the official key or is the correct choice number.',
+        instructions: 'Determine whether the student answer is mathematically equivalent to the official key (including Korean math expressions like 파이, 루트, 세타, ~분의 ~) or is the correct choice number.',
         criteria: {
-          EQUIVALENT: 'The student answer is mathematically identical, numerically equal, algebraically equivalent, or is the matching multiple choice option number (1~5 or ①~⑤).',
+          EQUIVALENT: 'The student answer is mathematically identical, numerically equal, algebraically equivalent (including Korean math words like 파이=π, 루트=√, 3분의 10파이=10π/3), or is the matching multiple choice option number (1~5 or ①~⑤).',
           DIFFERENT: 'The student answer is mathematically different in value, sign, or wrong option number.'
         }
       },
@@ -714,6 +714,109 @@ export const testJevConnection = async (apiKey, model = 'typesafe/jev-1.14') => 
   };
 };
 
+export const normalizeKoreanMath = (str) => {
+  if (str === null || str === undefined) return '';
+  let s = String(str).trim();
+
+  // 1. 원문자 및 번호 기호: ①~⑤, ❶~❺, ⑴~⑸
+  const circledMap = {
+    '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5',
+    '❶': '1', '❷': '2', '❸': '3', '❹': '4', '❺': '5',
+    '⑴': '1', '⑵': '2', '⑶': '3', '⑷': '4', '⑸': '5'
+  };
+  s = s.replace(/[①②③④⑤❶❷❸❹❺⑴⑵⑶⑷⑸]/g, ch => circledMap[ch] || ch);
+
+  // 2. 한글 분수 표현: '3분의 10파이' -> '10파이/3', '2분의 루트3' -> '루트3/2'
+  s = s.replace(/([0-9a-zA-Z가-힣\\_^{}]+)\s*분의\s*([0-9a-zA-Z가-힣\\_^{}]+)/g, '$2/$1');
+
+  // 2.5 LaTeX 부가 기호 정리 (\left, \right, \cdot, \times)
+  s = s.replace(/\\(?:left|right)/g, '');
+  s = s.replace(/\\(?:cdot|times)/g, '*');
+
+  // 3. 한글 기호 및 영문 기호 변환
+  // 원주율: 파이, 원주율, 파 -> \pi, pi -> \pi
+  s = s.replace(/(?:원주율|파이)/g, '\\pi');
+  s = s.replace(/(?<=[0-9\/\*\+\-\(\)])\s*파(?![a-zA-Z0-9가-힣])/g, '\\pi');
+  s = s.replace(/(?<![a-zA-Z\\])pi(?![a-zA-Z])/gi, '\\pi');
+
+  // 제곱근: 루트, 근호 -> \sqrt
+  s = s.replace(/루트\s*\{?([0-9a-zA-Z]+)\}?/g, '\\sqrt{$1}');
+  s = s.replace(/(?:루트|근호)/g, '\\sqrt');
+
+  // 그리스 문자 및 삼각함수, 로그, 부호
+  s = s.replace(/(?:세타|씨타)/g, '\\theta');
+  s = s.replace(/(?:플러스마이너스|플마|풀마)/g, '\\pm');
+  s = s.replace(/마이너스\s*/g, '-');
+  s = s.replace(/플러스\s*/g, '+');
+  s = s.replace(/사인/g, '\\sin ');
+  s = s.replace(/코사인/g, '\\cos ');
+  s = s.replace(/탄젠트/g, '\\tan ');
+  s = s.replace(/로그/g, '\\log ');
+  s = s.replace(/오메가/g, '\\omega');
+
+  // 4. LaTeX 표기 정규화: 중첩 중괄호를 지원하는 \frac 및 \dfrac 풀기 (\frac{a}{b} -> a/b)
+  function unpackFrac(input) {
+    let res = '';
+    let i = 0;
+    while (i < input.length) {
+      const match = input.slice(i).match(/^\\+(?:frac|dfrac)/);
+      if (match) {
+        let p = i + match[0].length;
+        while (p < input.length && /\s/.test(input[p])) p++;
+        if (input[p] === '{') {
+          let depth1 = 0, start1 = p + 1, end1 = -1;
+          for (let j = p; j < input.length; j++) {
+            if (input[j] === '{') depth1++;
+            else if (input[j] === '}') {
+              depth1--;
+              if (depth1 === 0) { end1 = j; break; }
+            }
+          }
+          if (end1 !== -1) {
+            let p2 = end1 + 1;
+            while (p2 < input.length && /\s/.test(input[p2])) p2++;
+            if (input[p2] === '{') {
+              let depth2 = 0, start2 = p2 + 1, end2 = -1;
+              for (let j = p2; j < input.length; j++) {
+                if (input[j] === '{') depth2++;
+                else if (input[j] === '}') {
+                  depth2--;
+                  if (depth2 === 0) { end2 = j; break; }
+                }
+              }
+              if (end2 !== -1) {
+                const num = unpackFrac(input.slice(start1, end1));
+                const den = unpackFrac(input.slice(start2, end2));
+                res += `${num}/${den}`;
+                i = end2 + 1;
+                continue;
+              }
+            }
+          }
+        }
+      }
+      res += input[i];
+      i++;
+    }
+    return res;
+  }
+
+  s = unpackFrac(s);
+
+  // 5. 곱셈 및 계수/상수 위치 정규화: 10/3\pi -> 10\pi/3, 1/2\pi -> \pi/2
+  s = s.replace(/(\d)\s*\*\s*([a-zA-Z\\])/g, '$1$2');
+  s = s.replace(/([a-zA-Z\\])\s*\*\s*(\d)/g, '$1$2');
+  s = s.replace(/(\d+)\/(\d+)\s*\\pi/g, '$1\\pi/$2');
+  s = s.replace(/(\d+)\/(\d+)\s*\*\s*\\pi/g, '$1\\pi/$2');
+  s = s.replace(/1\\pi\/(\d+)/g, '\\pi/$1');
+  s = s.replace(/\\pi\s*\/\s*(\d+)/g, '\\pi/$1');
+
+  // 6. 공백 및 번호 표기 제거, 소문자화
+  s = s.replace(/\s+/g, '').replace(/번$/, '').toLowerCase();
+
+  return s;
+};
+
 export const normalizeChoiceNumber = (str) => {
   if (str === null || str === undefined) return '';
   let s = String(str).trim();
@@ -736,12 +839,14 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
   const cleanKey = rawKey.replace(/\\\\+/g, '\\').replace(/\s+/g, ' ').trim();
   const cleanStudent = rawStudent.replace(/\\\\+/g, '\\').replace(/\s+/g, ' ').trim();
 
-  // FAST-PATH 0A: Exact string match (ignoring spaces & backslash differences)
-  if (cleanKey && cleanStudent && cleanKey.toLowerCase().replace(/\s+/g, '') === cleanStudent.toLowerCase().replace(/\s+/g, '')) {
+  // FAST-PATH 0A: Exact string match or Korean Math normalization match (0 tokens, 0ms)
+  const normMathKey = normalizeKoreanMath(cleanKey);
+  const normMathStudent = normalizeKoreanMath(cleanStudent);
+  if (normMathKey && normMathStudent && normMathKey === normMathStudent) {
     return `[채점 결과]
 ⭕ 정답
 
-[⚡ 즉시 일치 판정]
+[⚡ 즉시 일치 판정 (한글 수식/기호 정규화)]
 - 공식 정답: ${correctAnswer}
 - 학생 답안: ${studentAnswer}
 - 동치 판정: 완전 일치 (EXACT_MATCH)
@@ -823,7 +928,8 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
 
 판정 기준:
 1. 분수와 소수 (예: 9/4와 2.25), 약분 전후, 인수분해형과 전개형 (예: 2(x+1)과 2x+2), 항의 순서 교환 (예: 3+x와 x+3), LaTeX 표기법 차이(예: \\frac{9}{4}와 9/4, \\pm 등) 등 표현 형태가 달라도 수학적으로 완전히 같은 식이나 값이면 반드시 "⭕ 정답"으로 판정하십시오.
-2. 수치나 부호가 다르거나 수학적으로 동치가 아니면 "❌ 오답"으로 판정하십시오.
+2. 한글 수식 표기(예: '파이' 또는 '원주율' = \\pi, '루트3' = \\sqrt{3}, '세타' = \\theta, '3분의 10파이' = \\frac{10}{3}\\pi, '마이너스' = '-', '플마' = \\pm 등)도 수학 기호와 완전히 동일하게 인정하여 반드시 "⭕ 정답"으로 판정하십시오.
+3. 수치나 부호가 다르거나 수학적으로 동치가 아니면 "❌ 오답"으로 판정하십시오.
 
 응답 형식 (반드시 첫 줄에 판정만 출력):
 [채점 결과]
@@ -848,7 +954,7 @@ export const autoGradeProblemSubmission = async (aiConfig, problemDesc, studentS
 첨부된 학생의 손글씨 풀이 사진을 보고 다음만 판정하세요:
 1. 학생이 도출하여 적은 최종 답안을 찾으세요.
 2. 학생의 최종 답안이 공식 정답 [${correctAns}]와 수학적으로 일치하면 [채점 결과]를 "⭕ 정답", 다르면 "❌ 오답", 글씨를 전혀 알아볼 수 없거나 다른 문제 풀이면 "🔺 채점 불가 (이미지 확인 필요)"로 판정하세요.
-- 공식 정답이 서술형 수식(LaTeX)인 경우, 학생의 풀이 마지막에 적힌 수식이 수식적으로 동치인지 판정하세요.
+- 공식 정답이 서술형 수식(LaTeX)인 경우, 학생의 풀이 마지막에 적힌 수식이 수식적으로 동치인지 판정하세요. 한글 수식 표기(예: '파이'/'원주율'=π, '루트'=√, '세타'=θ, '3분의 10파이'=10π/3 등)도 수학 기호와 완전히 동일한 정답으로 인정하세요.
 3. 문제를 처음부터 직접 새로 풀 필요가 전혀 없으며, 학생의 손글씨 답안과 공식 정답 [${correctAns}]의 일치 여부만 신속하고 간결하게 판정하세요.
 
 응답 형식 (반드시 준수):
