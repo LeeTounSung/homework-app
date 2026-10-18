@@ -1,5 +1,134 @@
 [
   {
+    "date": "11월 05일(목)까지",
+    "homeworks": [
+      {
+        "id": 1792308461337,
+        "studentName": "강백",
+        "title": "[개념플러스유형] 대수 삼각함수의 그래프와 활용 (26~32번 & 1~6번)",
+        "description": "📖 [개념플러스유형]-[대수 삼각함수]-[02 삼각함수의 그래프 26~32번 (p.50)] & [03 그래프의 활용 1~6번 (p.51)] 필수 진도 과제",
+        "createdAt": "2026-10-18",
+        "teacherName": "원장샘",
+        "tag": "진도과제",
+        "statusType": "none",
+        "statusValue": null,
+        "problemImagesBaseUrl": "/problem_images/kpy_daesu_p50_p51_26_6",
+        "problemGroups": [
+          {
+            "groupId": "g_kpy_daesu_graph_26_32",
+            "label": "[개념플러스유형]-[대수 삼각함수]-[02 삼각함수의 그래프]-[p.50]-[번호:26~32]",
+            "problems": [
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32
+            ],
+            "problemImagesBaseUrl": "/problem_images/kpy_daesu_p50_p51_26_6"
+          },
+          {
+            "groupId": "g_kpy_daesu_app_1_6",
+            "label": "[개념플러스유형]-[대수 삼각함수]-[03 삼각함수의 그래프의 활용]-[p.51]-[번호:1~6]",
+            "problems": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "problemImagesBaseUrl": "/problem_images/kpy_daesu_p50_p51_26_6"
+          }
+        ],
+        "answers": {
+          "26": "6",
+          "27": "3",
+          "28": "3",
+          "29": "2/3",
+          "30": "10",
+          "31": "9",
+          "32": "3",
+          "1": "4\\pi/3, 5\\pi/3",
+          "2": "2",
+          "3": "4",
+          "4": "3",
+          "5": "\\pi/4",
+          "6": "3\\pi"
+        },
+        "problemDetails": [
+          {
+            "problemNumber": 26,
+            "title": "26번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 27,
+            "title": "27번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 28,
+            "title": "28번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 29,
+            "title": "29번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 30,
+            "title": "30번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 31,
+            "title": "31번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 32,
+            "title": "32번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 1,
+            "title": "1번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 2,
+            "title": "2번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 3,
+            "title": "3번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 4,
+            "title": "4번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 5,
+            "title": "5번 문제",
+            "point": 10
+          },
+          {
+            "problemNumber": 6,
+            "title": "6번 문제",
+            "point": 10
+          }
+        ],
+        "submittedProblems": []
+      }
+    ]
+  },
+  {
     "date": "10월 29일(목)까지",
     "homeworks": [
       {
