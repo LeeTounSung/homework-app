@@ -6,6 +6,10 @@ export const useHomework = () => useContext(HomeworkContext);
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxaYVDgDHHkKz1wJazeMDlsYl3VGS8m05YQGpgdnyGxG4-12bWHsVP7I3pcKOMLBnU/exec';
 
+const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
+const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
+const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || '';
+
 const fallbackInitialData = [];
 
 export const HomeworkProvider = ({ children }) => {
@@ -397,7 +401,9 @@ export const HomeworkProvider = ({ children }) => {
 
       // 1. Fetch latest public/homeworkData.json (GitHub Pages / Local build)
       try {
-        const publicRes = await fetch('./homeworkData.json?t=' + Date.now());
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const cleanBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+        const publicRes = await fetch(`${cleanBase}homeworkData.json?t=${Date.now()}`);
         if (publicRes.ok) {
           const publicData = await publicRes.json();
           if (Array.isArray(publicData) && publicData.length > 0) {
