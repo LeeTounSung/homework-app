@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import MathInkComponent from '../components/MathInkComponent';
 import ProblemStatementView from '../components/ProblemStatementView';
-import { autoGradeProblemSubmission, extractStudentMathToLatex, checkMathEquivalenceWithAI, normalizeChoiceNumber } from '../utils/gemini';
+import { autoGradeProblemSubmission, extractStudentMathToLatex, checkMathEquivalenceWithAI, normalizeChoiceNumber, normalizeKoreanMath } from '../utils/gemini';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -44,10 +44,12 @@ const formatGroupLabel = (label) => {
 export default function UploadPage() {
   const navigate = useNavigate();
   const { id, groupId, problemId } = useParams();
-  const { getHomeworkById, submitHomeworkProblem, exemptProblem, toggleBookmarkProblem, isSaving, getProblemImageFromDrive, geminiApiKey, aiConfig, isAiConfigured, isAdmin } = useHomework();
+  const { getHomeworkById, submitHomeworkProblem, evaluateSingleProblem, exemptProblem, toggleBookmarkProblem, isSaving, getProblemImageFromDrive, geminiApiKey, aiConfig, isAiConfigured, isAdmin } = useHomework();
   const [imagePreview, setImagePreview] = useState(null);
   const [studentAnswer, setStudentAnswer] = useState('');
   const [isExtractingLatex, setIsExtractingLatex] = useState(false);
+  const [isGrading, setIsGrading] = useState(false);
+  const [gradingModalOpen, setGradingModalOpen] = useState(false);
   const [aiFeedback, setAiFeedback] = useState('');
   const [aiGrade, setAiGrade] = useState('');
   const [imageError, setImageError] = useState(false);
@@ -104,6 +106,19 @@ export default function UploadPage() {
   const subUnit = currentGroup ? extractSubUnit(currentGroup.label) : '';
   const cleanTitle = hw?.title ? hw.title.replace(/^\[[^\]]+\]\s*/, '') : '';
   const subtitleText = [subUnit, cleanTitle, hw?.studentName].filter(Boolean).join(' · ');
+
+  // 다음 문제 번호 찾기 (동일 그룹 내 다음 번호)
+  const nextProblemId = useMemo(() => {
+    if (!hw || !hw.problemGroups) return null;
+    const group = hw.problemGroups.find(g => g.groupId === groupId);
+    if (!group || !Array.isArray(group.problems)) return null;
+    const currentNum = parseInt(problemId);
+    const currentIndex = group.problems.indexOf(currentNum);
+    if (currentIndex >= 0 && currentIndex < group.problems.length - 1) {
+      return group.problems[currentIndex + 1];
+    }
+    return null;
+  }, [hw, groupId, problemId]);
 
   useEffect(() => {
     if (hw) {
@@ -236,6 +251,163 @@ export default function UploadPage() {
     });
   };
 
+  const handleGradeNow = async () => {
+    let finalData = imagePreview;
+    
+    if (!finalData && !studentAnswer) {
+      alert("제출할 풀이 사진, 객관식 번호(①~⑤), 또는 직접 입력한 수식을 입력해주세요.");
+      return;
+    }
+
+    setIsGrading(true);
+
+    try {
+      // 1. 먼저 제출 데이터 기본 저장
+      await submitHomeworkProblem(id, groupId, problemId, finalData, null, null, studentAnswer);
+
+      // 2. 이 문제의 공식 정답 확인
+      const registeredAnswers = hw?.answers || hw?.answerKey || {};
+      let correctAns = null;
+      if (Array.isArray(registeredAnswers)) {
+        const item = registeredAnswers.find(a => a && (a.problemNumber === Number(problemId) || a.problemNumber === problemId));
+        correctAns = item ? (typeof item === 'object' && item.answer !== undefined ? item.answer : item) : null;
+      } else if (typeof registeredAnswers === 'object' && registeredAnswers !== null) {
+        const raw = registeredAnswers[problemId] || registeredAnswers[String(problemId)];
+        correctAns = (raw && typeof raw === 'object' && raw.answer !== undefined) ? raw.answer : raw;
+      }
+
+      const hasTextAnswer = Boolean(studentAnswer && String(studentAnswer).trim());
+      const hasImage = Boolean(finalData && String(finalData).trim());
+
+      let gradeStatus = 'incorrect';
+      let feedback = '';
+
+      // 3. 텍스트 / 번호 1차 검정
+      let textMatchStatus = null;
+      let textFeedback = '';
+
+      if (correctAns && hasTextAnswer) {
+        const normStudent = normalizeKoreanMath(studentAnswer);
+        const normCorrect = normalizeKoreanMath(correctAns);
+        const choiceStudent = normalizeChoiceNumber(studentAnswer);
+        const choiceCorrect = normalizeChoiceNumber(correctAns);
+        const isChoiceStudent = ['1', '2', '3', '4', '5'].includes(choiceStudent);
+        const isChoiceCorrect = ['1', '2', '3', '4', '5'].includes(choiceCorrect);
+
+        // 3-A. 객관식 번호 일치 검정
+        if (isChoiceStudent && isChoiceCorrect) {
+          if (choiceStudent === choiceCorrect) {
+            textMatchStatus = 'correct';
+            textFeedback = `⭕ [객관식 정답 판정]\n- 학생 선택: ${['①','②','③','④','⑤'][parseInt(choiceStudent)-1]} (${choiceStudent}번)\n- 공식 정답: ${['①','②','③','④','⑤'][parseInt(choiceCorrect)-1]} (${choiceCorrect}번)\n- 결과: 완벽히 일치합니다!`;
+          } else {
+            textMatchStatus = 'incorrect';
+            textFeedback = `❌ [객관식 오답 판정]\n- 학생 선택: ${['①','②','③','④','⑤'][parseInt(choiceStudent)-1]} (${choiceStudent}번)\n- 공식 정답: ${['①','②','③','④','⑤'][parseInt(choiceCorrect)-1]} (${choiceCorrect}번)\n- 결과: 선택지가 다릅니다.`;
+          }
+        }
+        // 3-B. 수학 기호 완전 일치 (0ms)
+        else if (normStudent === normCorrect) {
+          textMatchStatus = 'correct';
+          textFeedback = `⭕ [정답표 고속 일치 판정]\n- 학생 답안: ${studentAnswer}\n- 공식 정답: ${correctAns}\n- 결과: 수학적 표기 완전 일치!`;
+        }
+        // 3-C. AI 수식 동치 판정 (TypeSafe Jev 1.14 / Gemini / DeepSeek)
+        else if (isAiConfigured || geminiApiKey) {
+          try {
+            const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, studentAnswer);
+            const isWrong = equivRes.includes('❌') || equivRes.includes('오답') || equivRes.includes('DIFFERENT') || /\[채점 결과\]\s*❌/.test(equivRes);
+            const isEquiv = (equivRes.includes('⭕') || equivRes.includes('EQUIVALENT') || /\[채점 결과\]\s*⭕/.test(equivRes)) && !isWrong;
+            if (isEquiv) {
+              textMatchStatus = 'correct';
+              textFeedback = `⭕ [수학적 동치 판정 (AI)]\n- 학생 답안: ${studentAnswer}\n- 공식 정답: ${correctAns}\n\n${equivRes}`;
+            } else {
+              textMatchStatus = 'incorrect';
+              textFeedback = `❌ [수학적 동치 판정 (AI)]\n- 학생 답안: ${studentAnswer}\n- 공식 정답: ${correctAns}\n\n${equivRes}`;
+            }
+          } catch (e) {
+            textMatchStatus = 'incorrect';
+            textFeedback = `❌ [정답표 불일치]\n- 학생 답안: ${studentAnswer}\n- 공식 정답: ${correctAns}`;
+          }
+        } else {
+          textMatchStatus = 'incorrect';
+          textFeedback = `❌ [정답표 불일치]\n- 학생 답안: ${studentAnswer}\n- 공식 정답: ${correctAns}`;
+        }
+      }
+
+      // 4. 의사 결정 및 비전 교차 검증
+      if (textMatchStatus === 'correct') {
+        gradeStatus = 'correct';
+        feedback = textFeedback;
+        if (hasImage) {
+          feedback += `\n\n📌 [제출 형태: 🔘 선택 답안 + 📸 풀이 사진 동시 제출 완료]`;
+        }
+      } else if (hasImage) {
+        // 비전 AI 검증 (사진만 있거나 텍스트가 틀렸을 때 교차 검증)
+        if (isAiConfigured || geminiApiKey) {
+          const currentGroup = hw.problemGroups?.find(g => g.groupId === groupId);
+          const label = currentGroup ? currentGroup.label : '';
+          let desc = `${hw.studentName} 학생의 ${hw.title} ${label ? `[${label}] ` : ''}${problemId}번 문제 풀이입니다.`;
+          if (correctAns) {
+            desc += `\n[공식 정답]: ${correctAns}`;
+            if (hasTextAnswer) {
+              desc += `\n(참고: 학생이 앱에서 입력한 답안은 [${studentAnswer}]이지만, 사진 속 풀이의 최종 답안과 비교하여 확인해주세요)`;
+            }
+          }
+
+          try {
+            const visionFeedback = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, finalData, '', correctAns);
+            const isIndeterminate = visionFeedback.includes('채점 불가') || visionFeedback.includes('채점불가') || visionFeedback.includes('🔺') || visionFeedback.includes('확인 필요');
+            const isWrong = visionFeedback.includes('❌') || visionFeedback.includes('오답') || visionFeedback.includes('틀렸습니다');
+            const isRight = (visionFeedback.includes('⭕') || visionFeedback.includes('맞았습니다') || /\[채점 결과\]\s*⭕/.test(visionFeedback)) && !isWrong;
+
+            if (isRight) {
+              gradeStatus = 'correct';
+              feedback = textMatchStatus === 'incorrect'
+                ? `⭕ [비전 교차 검증 정답!]\n⚠️ 학생이 입력한 답안 [${studentAnswer}]은 불일치했으나, 첨부된 [풀이 사진]을 비전 AI가 정밀 분석한 결과 최종 답안이 공식 정답과 일치함을 확인하여 '정답'으로 인정되었습니다.\n\n${visionFeedback}`
+                : `⭕ [손글씨 비전 판독 정답]\n${visionFeedback}`;
+            } else if (isIndeterminate) {
+              gradeStatus = 'indeterminate';
+              feedback = `🔺 [채점 확인 필요]\n${visionFeedback}`;
+            } else {
+              gradeStatus = 'incorrect';
+              feedback = hasTextAnswer 
+                ? `${textFeedback}\n\n[📸 첨부 사진 풀이 검토 결과]\n${visionFeedback}`
+                : `❌ [손글씨 비전 채점 오답]\n${visionFeedback}`;
+            }
+          } catch (visionErr) {
+            if (textMatchStatus) {
+              gradeStatus = textMatchStatus;
+              feedback = textFeedback;
+            } else {
+              gradeStatus = 'indeterminate';
+              feedback = `🔺 채점 중 오류: ${visionErr.message}`;
+            }
+          }
+        } else {
+          gradeStatus = textMatchStatus || 'incorrect';
+          feedback = textFeedback || `❌ [채점 결과: 오답]`;
+        }
+      } else if (textMatchStatus) {
+        gradeStatus = textMatchStatus;
+        feedback = textFeedback;
+      } else {
+        gradeStatus = 'incorrect';
+        feedback = '❌ 공식 정답표가 없거나 제출된 답안이 없습니다.';
+      }
+
+      // 5. Context에 채점 결과 영구 저장
+      evaluateSingleProblem(id, groupId, problemId, gradeStatus, feedback);
+
+      // 6. 로컬 화면 상태 갱신 및 팝업 모달 열기
+      setAiGrade(gradeStatus === 'correct' ? '⭕ 정답' : (gradeStatus === 'indeterminate' ? '🔺 확인 필요' : '❌ 오답'));
+      setAiFeedback(feedback);
+      setGradingModalOpen(true);
+    } catch (err) {
+      console.error("채점 오류:", err);
+      alert(`채점 중 오류가 발생했습니다: ${err.message}`);
+    } finally {
+      setIsGrading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     let finalData = imagePreview;
     
@@ -354,6 +526,42 @@ export default function UploadPage() {
         {imageError && errorMessage && (
           <div style={{ marginBottom: '16px', textAlign: 'center', backgroundColor: '#332222', color: '#ffaaaa', borderRadius: '12px', padding: '16px' }}>
             <p>이미지 불러오기 실패: {errorMessage}</p>
+          </div>
+        )}
+
+        {/* 채점 결과 표시 카드 (채점 완료 시 즉시 표시) */}
+        {aiGrade && (
+          <div style={{
+            backgroundColor: aiGrade.includes('정답') ? '#1E2D24' : '#2D1E1E',
+            border: `2px solid ${aiGrade.includes('정답') ? '#10B981' : '#EF4444'}`,
+            borderRadius: '12px',
+            padding: '14px 16px',
+            marginBottom: '16px',
+            boxShadow: `0 4px 12px ${aiGrade.includes('정답') ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: aiGrade.includes('정답') ? '#34D399' : '#F87171'
+              }}>
+                {aiGrade}
+              </span>
+              <span style={{ fontSize: '11px', color: '#9CA3AF' }}>실시간 채점 완료</span>
+            </div>
+            {aiFeedback && (
+              <div style={{
+                fontSize: '13px',
+                color: '#E2E8F0',
+                lineHeight: 1.5,
+                whiteSpace: 'pre-wrap',
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                padding: '10px 12px',
+                borderRadius: '8px'
+              }}>
+                {aiFeedback}
+              </div>
+            )}
           </div>
         )}
 
@@ -722,32 +930,225 @@ export default function UploadPage() {
           )}
         </div>
 
-        <div className="submit-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+        <div className="submit-container" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '16px' }}>
+          {/* 즉시 채점 메인 버튼 */}
           <button 
-            className={`submit-btn ${(imagePreview || studentAnswer) ? 'active' : ''}`}
-            onClick={handleSubmit}
-            disabled={!imagePreview && !studentAnswer}
-          >
-            저장하기
-          </button>
-          
-          <button 
-            onClick={handleExempt}
+            className="submit-btn active"
+            onClick={handleGradeNow}
+            disabled={isGrading || (!imagePreview && !studentAnswer)}
             style={{
               padding: '16px',
-              backgroundColor: 'transparent',
-              border: '1px solid #555',
               borderRadius: '12px',
-              color: '#888',
-              fontSize: '16px',
+              border: 'none',
+              background: (imagePreview || studentAnswer) && !isGrading 
+                ? 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)' 
+                : '#374151',
+              color: '#ffffff',
+              fontSize: '17px',
               fontWeight: 'bold',
-              cursor: 'pointer'
+              cursor: (imagePreview || studentAnswer) && !isGrading ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: (imagePreview || studentAnswer) && !isGrading 
+                ? '0 4px 16px rgba(124, 58, 237, 0.4)' 
+                : 'none',
+              transition: 'all 0.2s'
             }}
           >
-            풀지 않아도 되는 문제 (제외하기)
+            {isGrading ? (
+              <>
+                <div className="spinner" style={{ width: '18px', height: '18px', border: '3px solid #fff', borderTop: '3px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <span>✍️ 채점 진행 중...</span>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: '18px' }}>✍️</span>
+                <span>채점하기</span>
+              </>
+            )}
           </button>
+
+          {/* 보조 버튼들 */}
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={handleSubmit}
+              disabled={isGrading || (!imagePreview && !studentAnswer)}
+              style={{
+                flex: 1,
+                padding: '12px',
+                backgroundColor: '#202129',
+                border: '1px solid #444',
+                borderRadius: '8px',
+                color: '#bbb',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                cursor: (imagePreview || studentAnswer) && !isGrading ? 'pointer' : 'not-allowed'
+              }}
+            >
+              💾 저장만 하고 나가기
+            </button>
+            
+            <button 
+              onClick={handleExempt}
+              style={{
+                flex: 1,
+                padding: '12px',
+                backgroundColor: 'transparent',
+                border: '1px solid #444',
+                borderRadius: '8px',
+                color: '#777',
+                fontSize: '13px',
+                cursor: 'pointer'
+              }}
+            >
+              🚫 문제 제외
+            </button>
+          </div>
         </div>
       </main>
+
+      {/* 채점 완료 즉시 알림 및 다음 문제 이동 모달 */}
+      {gradingModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          zIndex: 99999,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '20px',
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            backgroundColor: '#1E2028',
+            border: `2px solid ${aiGrade.includes('정답') ? '#10B981' : '#EF4444'}`,
+            borderRadius: '16px',
+            maxWidth: '440px',
+            width: '100%',
+            padding: '24px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <div style={{ fontSize: '48px' }}>
+              {aiGrade.includes('정답') ? '🎉' : '💪'}
+            </div>
+            
+            <h2 style={{
+              margin: 0,
+              fontSize: '22px',
+              fontWeight: 'bold',
+              color: aiGrade.includes('정답') ? '#34D399' : '#F87171'
+            }}>
+              {aiGrade.includes('정답') ? '정답입니다! ⭕' : '아쉽습니다, 오답입니다 ❌'}
+            </h2>
+
+            <div style={{
+              backgroundColor: '#16171E',
+              padding: '14px',
+              borderRadius: '10px',
+              textAlign: 'left',
+              fontSize: '13px',
+              color: '#CBD5E1',
+              lineHeight: 1.6,
+              maxHeight: '220px',
+              overflowY: 'auto',
+              whiteSpace: 'pre-wrap',
+              border: '1px solid #2D303E'
+            }}>
+              {aiFeedback || '채점이 완료되었습니다.'}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+              {nextProblemId ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setGradingModalOpen(false);
+                      navigate(`/homework/${id}/group/${groupId}/problem/${nextProblemId}`);
+                    }}
+                    style={{
+                      flex: 1.2,
+                      padding: '14px',
+                      backgroundColor: '#3B82F6',
+                      border: 'none',
+                      borderRadius: '10px',
+                      color: '#ffffff',
+                      fontWeight: 'bold',
+                      fontSize: '15px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)'
+                    }}
+                  >
+                    다음 문제 풀기 ({nextProblemId}번) ➔
+                  </button>
+                  <button
+                    onClick={() => {
+                      setGradingModalOpen(false);
+                      navigate(-1);
+                    }}
+                    style={{
+                      flex: 0.8,
+                      padding: '14px',
+                      backgroundColor: '#2D303E',
+                      border: '1px solid #4B5563',
+                      borderRadius: '10px',
+                      color: '#E2E8F0',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    목록으로
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => {
+                    setGradingModalOpen(false);
+                    navigate(-1);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    backgroundColor: '#10B981',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  확인 (목록으로 이동)
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={() => setGradingModalOpen(false)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#9CA3AF',
+                fontSize: '12px',
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              현재 화면에 머무르며 다시 풀기
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Full-Screen Zoom Lightbox Modal */}
       {zoomModalImage && (

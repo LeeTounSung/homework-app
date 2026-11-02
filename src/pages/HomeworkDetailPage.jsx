@@ -275,26 +275,28 @@ export default function HomeworkDetailPage() {
   };
 
   const handleBulkAiGrade = async () => {
-    // 💡 이미 맞은 문제(status === 'correct')는 그대로 두고, 미채점(submitted) 또는 오답(incorrect, indeterminate) 문제만 선별하여 채점
-    const toGrade = (hw.submittedProblems || []).filter(
+    // 💡 미채점(submitted) 또는 오답(incorrect, indeterminate) 문제 우선 선별
+    let toGrade = (hw.submittedProblems || []).filter(
       p => p.status !== 'correct' && p.status !== 'exempt' && (p.imageUrl || p.studentAnswer)
     );
 
     if (toGrade.length === 0) {
-      const alreadyCorrectCount = (hw.submittedProblems || []).filter(p => p.status === 'correct').length;
-      if (alreadyCorrectCount > 0) {
-        alert(`채점할 대상이 없습니다. 제출된 ${alreadyCorrectCount}개 문제가 이미 모두 '⭕ 맞음'으로 완료되었습니다! 🎉`);
+      const alreadySubmitted = (hw.submittedProblems || []).filter(
+        p => p.status !== 'exempt' && (p.imageUrl || p.studentAnswer)
+      );
+      if (alreadySubmitted.length > 0) {
+        if (window.confirm(`제출된 ${alreadySubmitted.length}개 문제가 이미 모두 '⭕ 맞음'으로 완료되었습니다.\n\n전체 문제를 처음부터 다시 채점(재채점)하시겠습니까?`)) {
+          toGrade = alreadySubmitted;
+        } else {
+          return;
+        }
       } else {
-        alert("채점할 제출물이 없습니다. 먼저 문제를 제출해주세요.");
+        alert("채점할 제출물이 없습니다. 먼저 문제를 풀고 답안(사진 또는 번호)을 제출해주세요.");
+        return;
       }
-      return;
     }
 
     const registeredAnswers = hw.answers || hw.answerKey || {};
-
-    if (!window.confirm(`총 ${toGrade.length}개의 미채점/오답 문제를 채점하시겠습니까?\n(이미 맞은 문제는 그대로 유지됩니다)`)) {
-      return;
-    }
 
     setIsBulkAiGrading(true);
     setBulkGradingProgress({ current: 0, total: toGrade.length });
