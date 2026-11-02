@@ -122,63 +122,103 @@ export const HomeworkProvider = ({ children }) => {
     return localStorage.getItem('agentApiUrl') || 'http://127.0.0.1:8000';
   });
 
-  // Student-specific Progress Plan by Subject (과목별 주차별 예상 진도 단원)
+  // Student-specific Progress Plan by Subject (과목별 주차별 예상 진도 단원 - coach-plan 수립)
   const initialSchedules = [
     {
       id: 1,
       studentName: '강백',
       week: '1주차',
-      period: '8/12(월) ~ 8/17(토)',
-      subject: '공통수학1',
-      chapter: '1단원. 다항식의 연산과 나머지정리',
-      topic: '',
+      period: '10/06(월) ~ 10/12(일)',
+      subject: '대수 (수1)',
+      chapter: '1단원. 지수와 로그의 연산 및 대소 비교',
+      topic: '개념플러스유형 기본 완성',
       status: 'completed'
     },
     {
       id: 2,
       studentName: '강백',
       week: '2주차',
-      period: '8/19(월) ~ 8/24(토)',
-      subject: '공통수학1',
-      chapter: '2단원. 복소수와 이차방정식',
-      topic: '',
-      status: 'current'
+      period: '10/13(월) ~ 10/19(일)',
+      subject: '대수 (수1)',
+      chapter: '1단원. 지수함수와 로그함수의 그래프와 활용',
+      topic: '역함수 관계 및 격자점 개수 세기',
+      status: 'completed'
     },
     {
       id: 3,
       studentName: '강백',
       week: '3주차',
-      period: '8/26(월) ~ 8/31(토)',
-      subject: '공통수학1',
-      chapter: '3단원. 이차방정식과 이차함수',
-      topic: '',
-      status: 'upcoming'
+      period: '10/20(월) ~ 10/26(일)',
+      subject: '대수 (수1)',
+      chapter: '2단원. 일반각과 호도법 및 삼각비 정의',
+      topic: '부채꼴 호의 길이와 넓이 마스터',
+      status: 'completed'
     },
     {
       id: 4,
       studentName: '강백',
       week: '4주차',
-      period: '9/02(월) ~ 9/07(토)',
-      subject: '공통수학1',
-      chapter: '4단원. 여러 가지 방정식과 부등식',
-      topic: '',
-      status: 'upcoming'
+      period: '10/27(월) ~ 11/02(일)',
+      subject: '대수 (수1)',
+      chapter: '2단원. 삼각함수의 그래프와 대칭성 분석',
+      topic: 'y=asin(bx-c)+d 주기/진폭/대칭축 (진행률 100%)',
+      status: 'completed'
     },
     {
       id: 5,
+      studentName: '강백',
+      week: '5주차',
+      period: '11/03(월) ~ 11/09(일)',
+      subject: '대수 (수1)',
+      chapter: '2단원. 삼각함수의 활용 (사인법칙과 코사인법칙)',
+      topic: '개념플러스유형 p.48~55 핵심 30문항',
+      status: 'current'
+    },
+    {
+      id: 6,
+      studentName: '강백',
+      week: '6주차',
+      period: '11/10(월) ~ 11/16(일)',
+      subject: '대수 (수1)',
+      chapter: '2단원. 서문여고 빈출 삼각함수 도형 킬러 심화',
+      topic: '블랙라벨 Step3 킬러 변형 25문항',
+      status: 'upcoming'
+    },
+    {
+      id: 7,
+      studentName: '강백',
+      week: '7주차',
+      period: '11/17(월) ~ 11/23(일)',
+      subject: '대수 (수1)',
+      chapter: '3단원. 등차수열과 등비수열의 일반항과 합',
+      topic: '등차수열 합의 이차식 특성 및 군수열',
+      status: 'upcoming'
+    },
+    {
+      id: 8,
+      studentName: '강백',
+      week: '8주차',
+      period: '11/24(월) ~ 11/30(일)',
+      subject: '대수 (수1)',
+      chapter: '3단원. 수열의 합(∑)과 수학적 귀납법',
+      topic: '실전 타임어택 모의고사 3세트 파이널',
+      status: 'upcoming'
+    },
+    {
+      id: 9,
       studentName: '이소은',
       week: '1주차',
-      period: '8/19(월) ~ 8/24(토)',
+      period: '11/03(월) ~ 11/09(일)',
       subject: '기하',
-      chapter: '1단원. 이차곡선',
-      topic: '',
+      chapter: '1단원. 이차곡선 (포물선과 타원)',
+      topic: '정의 기반 초점-준선 거리 공식 완결',
       status: 'current'
     }
   ];
 
   const [schedules, setSchedules] = useState(() => {
     try {
-      const saved = localStorage.getItem('homework_app_syllabus_v5');
+      const saved = localStorage.getItem('homework_app_syllabus_v6');
       return saved ? JSON.parse(saved) : initialSchedules;
     } catch {
       return initialSchedules;
@@ -188,7 +228,7 @@ export const HomeworkProvider = ({ children }) => {
   const saveSchedules = (newSchedules) => {
     setSchedules(newSchedules);
     try {
-      localStorage.setItem('homework_app_syllabus_v5', JSON.stringify(newSchedules));
+      localStorage.setItem('homework_app_syllabus_v6', JSON.stringify(newSchedules));
     } catch (err) {
       console.error('Failed to save syllabus', err);
     }
