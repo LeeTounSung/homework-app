@@ -143,6 +143,134 @@ export default function HomePage() {
   const [editMemoText, setEditMemoText] = useState('');
   const [isEditingMemo, setIsEditingMemo] = useState(false);
 
+  // ==========================
+  // School Materials State & Modals (학교 제공 자료실)
+  // ==========================
+  const [schoolMaterials, setSchoolMaterials] = useState(() => {
+    try {
+      const saved = localStorage.getItem('homework_app_school_materials_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [
+      {
+        id: 1,
+        studentName: '강백',
+        title: '1학기 중간고사 대비 수학 프린트 (다항식 & 나머지정리 심화)',
+        subject: '공통수학1',
+        category: '📄 프린트/유인물',
+        imageUrl: '',
+        memo: '선생님께서 5번과 9번 문항은 시험에 숫자만 바꿔 100% 출제된다고 강조하셨습니다.',
+        createdAt: '2026. 11. 02 10:30'
+      }
+    ];
+  });
+
+  const [schoolCategoryFilter, setSchoolCategoryFilter] = useState('전체'); // '전체' | '📄 프린트/유인물' | '📚 부교재' | '✏️ 수행평가' | '📝 기출/예상'
+  const [isSchoolModalOpen, setIsSchoolModalOpen] = useState(false);
+  const [schoolTitle, setSchoolTitle] = useState('');
+  const [schoolSubject, setSchoolSubject] = useState('공통수학1');
+  const [schoolCategory, setSchoolCategory] = useState('📄 프린트/유인물');
+  const [schoolImage, setSchoolImage] = useState(null);
+  const [schoolMemo, setSchoolMemo] = useState('');
+  const [isSavingSchool, setIsSavingSchool] = useState(false);
+  const [selectedSchoolMaterial, setSelectedSchoolMaterial] = useState(null); // 확대/상세 뷰어 모달
+
+  const saveSchoolMaterialsList = (list) => {
+    setSchoolMaterials(list);
+    try {
+      localStorage.setItem('homework_app_school_materials_v1', JSON.stringify(list));
+    } catch (e) {
+      console.error('Failed to save school materials', e);
+    }
+  };
+
+  const compressSchoolImage = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAddSchoolMaterial = async (e) => {
+    e.preventDefault();
+    if (!schoolTitle.trim()) {
+      alert('자료 제목을 입력해주세요.');
+      return;
+    }
+    setIsSavingSchool(true);
+    try {
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}. ${(now.getMonth() + 1).toString().padStart(2, '0')}. ${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      
+      const newMaterial = {
+        id: Date.now(),
+        studentName: currentUser && currentUser !== 'mathkorea' ? currentUser : '학생',
+        title: schoolTitle.trim(),
+        subject: schoolSubject,
+        category: schoolCategory,
+        imageUrl: schoolImage || '',
+        memo: schoolMemo.trim(),
+        createdAt: dateStr
+      };
+
+      const updated = [newMaterial, ...schoolMaterials];
+      saveSchoolMaterialsList(updated);
+      setIsSchoolModalOpen(false);
+      setSchoolTitle('');
+      setSchoolImage(null);
+      setSchoolMemo('');
+      alert('학교 자료가 성공적으로 등록되었습니다!');
+    } catch (err) {
+      alert('학교 자료 등록 중 오류가 발생했습니다: ' + err.message);
+    } finally {
+      setIsSavingSchool(false);
+    }
+  };
+
+  const handleDeleteSchoolMaterial = (id) => {
+    if (window.confirm('이 학교 자료를 삭제하시겠습니까?')) {
+      const updated = schoolMaterials.filter(m => m.id !== id);
+      saveSchoolMaterialsList(updated);
+      if (selectedSchoolMaterial?.id === id) {
+        setSelectedSchoolMaterial(null);
+      }
+    }
+  };
+
+  const filteredSchoolMaterials = schoolMaterials.filter(item => {
+    if (schoolCategoryFilter === '전체') return true;
+    return item.category === schoolCategoryFilter;
+  });
+
   const compressSelfStudyImage = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -686,13 +814,14 @@ export default function HomePage() {
           {currentUser ? `${currentUser} 님` : '로그인'}
         </button>
 
-        <div className="header-tabs" style={{ display: 'flex', flex: 1, justifyContent: 'space-around', alignItems: 'center', maxWidth: '360px', margin: '0 auto' }}>
+        <div className="header-tabs" style={{ display: 'flex', flex: 1, justifyContent: 'space-around', alignItems: 'center', maxWidth: '440px', margin: '0 auto', gap: '2px' }}>
           {[
             { id: 'homework', label: '숙제' },
             { id: 'incorrect', label: '학습' },
             { id: 'test', label: '시험' },
             { id: 'schedule', label: '일정' },
-            { id: 'statistics', label: '성적' }
+            { id: 'statistics', label: '성적' },
+            { id: 'school', label: '학교' }
           ].map(tab => {
             const isActive = activeTab === tab.id;
             return (
@@ -1848,6 +1977,224 @@ export default function HomePage() {
               </div>
             )}
           </div>
+        ) : activeTab === 'school' ? (
+          // --- 🏫 학교 제공 자료실 탭 ---
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h2 style={{ color: '#FFD700', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🏫 학교 제공 자료실
+                </h2>
+                <p style={{ color: '#94A3B8', fontSize: '13px', margin: 0 }}>
+                  학교 수학 선생님이 나눠주신 프린트, 부교재, 수행평가 유인물을 사진으로 등록하세요. 선생님이 분석하여 맞춤 시험 대비에 즉시 반영합니다.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSchoolTitle('');
+                  setSchoolSubject('공통수학1');
+                  setSchoolCategory('📄 프린트/유인물');
+                  setSchoolImage(null);
+                  setSchoolMemo('');
+                  setIsSchoolModalOpen(true);
+                }}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '10px',
+                  border: '1px solid #F59E0B',
+                  backgroundColor: '#D97706',
+                  color: '#FFFFFF',
+                  fontWeight: 'bold',
+                  fontSize: '13.5px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 10px rgba(217, 119, 6, 0.4)',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <span>➕ 학교 자료 등록</span>
+              </button>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              {['전체', '📄 프린트/유인물', '📚 부교재', '✏️ 수행평가', '📝 기출/예상'].map(cat => {
+                const isSelected = schoolCategoryFilter === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSchoolCategoryFilter(cat)}
+                    style={{
+                      padding: '7px 14px',
+                      borderRadius: '20px',
+                      border: isSelected ? '1.5px solid #FFD700' : '1px solid #334155',
+                      backgroundColor: isSelected ? '#2E2814' : '#1E293B',
+                      color: isSelected ? '#FFD700' : '#94A3B8',
+                      fontWeight: 'bold',
+                      fontSize: '12.5px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* School Materials List */}
+            {filteredSchoolMaterials.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '50px 20px',
+                backgroundColor: '#1E2028',
+                borderRadius: '16px',
+                border: '1.5px dashed #374151',
+                marginTop: '10px'
+              }}>
+                <div style={{ fontSize: '38px', marginBottom: '12px' }}>🏫</div>
+                <h3 style={{ color: '#E5E7EB', fontSize: '16px', margin: '0 0 6px 0' }}>
+                  {schoolCategoryFilter === '전체' ? '등록된 학교 자료가 없습니다' : `'${schoolCategoryFilter}' 분류에 등록된 자료가 없습니다`}
+                </h3>
+                <p style={{ color: '#9CA3AF', fontSize: '13px', margin: '0 0 20px 0' }}>
+                  학교 수학 선생님이 나눠주신 프린트나 수행평가 유인물을 사진 찍어 올려보세요!
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsSchoolModalOpen(true)}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '10px',
+                    backgroundColor: '#D97706',
+                    color: '#fff',
+                    border: 'none',
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ➕ 지금 첫 학교 자료 올리기
+                </button>
+              </div>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                gap: '16px',
+                marginBottom: '40px'
+              }}>
+                {filteredSchoolMaterials.map(item => (
+                  <div
+                    key={item.id}
+                    onClick={() => setSelectedSchoolMaterial(item)}
+                    style={{
+                      backgroundColor: '#1E222D',
+                      border: '1.5px solid #2D3345',
+                      borderRadius: '14px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'transform 0.15s, border-color 0.15s',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                    }}
+                  >
+                    {/* Image Preview Thumbnail */}
+                    {item.imageUrl ? (
+                      <div style={{
+                        width: '100%',
+                        height: '140px',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        backgroundColor: '#111319',
+                        marginBottom: '12px',
+                        position: 'relative'
+                      }}>
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          style={{ width: '100%', height: '140px', objectFit: 'cover' }}
+                        />
+                        <span style={{
+                          position: 'absolute', bottom: '6px', right: '6px',
+                          backgroundColor: 'rgba(0,0,0,0.75)', color: '#FFD700',
+                          padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px'
+                        }}>
+                          🔍 터치하여 확대
+                        </span>
+                      </div>
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '100px',
+                        borderRadius: '10px',
+                        backgroundColor: '#171923',
+                        border: '1px dashed #3A3F55',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#6B7280',
+                        fontSize: '12px',
+                        marginBottom: '12px'
+                      }}>
+                        📄 메모 중심 자료
+                      </div>
+                    )}
+
+                    {/* Badges */}
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                      <span style={{
+                        fontSize: '11px', fontWeight: 'bold', padding: '2px 7px', borderRadius: '4px',
+                        backgroundColor: '#1E3A5F', color: '#60A5FA'
+                      }}>
+                        {item.subject}
+                      </span>
+                      <span style={{
+                        fontSize: '11px', fontWeight: 'bold', padding: '2px 7px', borderRadius: '4px',
+                        backgroundColor: '#372813', color: '#FBBF24'
+                      }}>
+                        {item.category}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 style={{
+                      color: '#F3F4F6', fontSize: '14.5px', fontWeight: 'bold',
+                      margin: '0 0 8px 0', lineHeight: 1.35
+                    }}>
+                      {item.title}
+                    </h3>
+
+                    {/* Memo preview */}
+                    {item.memo && (
+                      <p style={{
+                        color: '#9CA3AF', fontSize: '12px', margin: '0 0 10px 0',
+                        overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box',
+                        WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.4
+                      }}>
+                        💡 {item.memo}
+                      </p>
+                    )}
+
+                    {/* Footer */}
+                    <div style={{
+                      marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #2D3345',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#6B7280'
+                    }}>
+                      <span>👤 {item.studentName}</span>
+                      <span>{item.createdAt}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ) : (
           // --- 숙제 관리 탭 ---
           filteredData.length === 0 ? (
@@ -2596,6 +2943,285 @@ export default function HomePage() {
                 style={{
                   padding: '9px 20px', borderRadius: '8px', border: 'none',
                   backgroundColor: '#333', color: '#fff', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* School Material Upload Modal (학교 자료 등록 모달) */}
+      {isSchoolModalOpen && (
+        <div className="modal-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, padding: '16px'
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: '#1E222D', border: '1.5px solid #F59E0B', borderRadius: '16px',
+            maxWidth: '460px', width: '100%', padding: '24px', maxHeight: '90vh', overflowY: 'auto',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, color: '#FFD700', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🏫 학교 제공 자료 등록
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsSchoolModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#9CA3AF', fontSize: '20px', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ color: '#94A3B8', fontSize: '13px', margin: '0 0 18px 0', lineHeight: 1.4 }}>
+              학교 수학 선생님이 나눠주신 프린트, 부교재, 수행평가 유인물을 등록하세요.
+            </p>
+
+            <form onSubmit={handleAddSchoolMaterial}>
+              {/* Title */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', color: '#E5E7EB', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
+                  자료 제목 *
+                </label>
+                <input
+                  type="text"
+                  value={schoolTitle}
+                  onChange={(e) => setSchoolTitle(e.target.value)}
+                  placeholder="예: 1학기 중간고사 대비 프린트 (다항식 심화)"
+                  required
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #374151',
+                    backgroundColor: '#111319', color: '#FFFFFF', fontSize: '13.5px', boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Subject & Category Row */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', color: '#E5E7EB', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
+                    과목
+                  </label>
+                  <select
+                    value={schoolSubject}
+                    onChange={(e) => setSchoolSubject(e.target.value)}
+                    style={{
+                      width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #374151',
+                      backgroundColor: '#111319', color: '#FFFFFF', fontSize: '13px', boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="공통수학1">공통수학1</option>
+                    <option value="공통수학2">공통수학2</option>
+                    <option value="대수">대수</option>
+                    <option value="미적분1">미적분1</option>
+                    <option value="확률과통계">확률과통계</option>
+                    <option value="미적분">미적분</option>
+                    <option value="기하">기하</option>
+                  </select>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', color: '#E5E7EB', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
+                    자료 분류
+                  </label>
+                  <select
+                    value={schoolCategory}
+                    onChange={(e) => setSchoolCategory(e.target.value)}
+                    style={{
+                      width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #374151',
+                      backgroundColor: '#111319', color: '#FFFFFF', fontSize: '13px', boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="📄 프린트/유인물">📄 프린트/유인물</option>
+                    <option value="📚 부교재">📚 부교재</option>
+                    <option value="✏️ 수행평가">✏️ 수행평가</option>
+                    <option value="📝 기출/예상">📝 기출/예상</option>
+                    <option value="📌 기타">📌 기타</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Image Upload */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', color: '#E5E7EB', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
+                  유인물 사진 / 이미지 첨부
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      try {
+                        const compressed = await compressSchoolImage(file);
+                        setSchoolImage(compressed);
+                      } catch (err) {
+                        alert('이미지 처리 중 오류가 발생했습니다.');
+                      }
+                    }
+                  }}
+                  style={{
+                    width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #374151',
+                    backgroundColor: '#111319', color: '#9CA3AF', fontSize: '12px', boxSizing: 'border-box'
+                  }}
+                />
+                {schoolImage && (
+                  <div style={{ marginTop: '10px', position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #4B5563' }}>
+                    <img src={schoolImage} alt="미리보기" style={{ width: '100%', maxHeight: '180px', objectFit: 'contain', display: 'block' }} />
+                    <button
+                      type="button"
+                      onClick={() => setSchoolImage(null)}
+                      style={{
+                        position: 'absolute', top: '6px', right: '6px',
+                        backgroundColor: 'rgba(0,0,0,0.7)', color: '#EF4444', border: 'none',
+                        borderRadius: '4px', padding: '3px 8px', fontSize: '12px', cursor: 'pointer'
+                      }}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Memo */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', color: '#E5E7EB', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
+                  메모 / 선생님 강조 사항
+                </label>
+                <textarea
+                  value={schoolMemo}
+                  onChange={(e) => setSchoolMemo(e.target.value)}
+                  placeholder="예: 학교 선생님이 7번, 12번 시험에 숫자만 바꿔 낸다고 꼭 복습하라고 하셨어요!"
+                  rows="3"
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #374151',
+                    backgroundColor: '#111319', color: '#FFFFFF', fontSize: '13px', boxSizing: 'border-box',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsSchoolModalOpen(false)}
+                  style={{
+                    padding: '9px 16px', borderRadius: '8px', border: '1px solid #4B5563',
+                    backgroundColor: '#1F2937', color: '#D1D5DB', fontSize: '13px', cursor: 'pointer'
+                  }}
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingSchool}
+                  style={{
+                    padding: '9px 20px', borderRadius: '8px', border: 'none',
+                    backgroundColor: '#D97706', color: '#FFFFFF', fontSize: '13.5px',
+                    fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 8px rgba(217,119,6,0.4)'
+                  }}
+                >
+                  {isSavingSchool ? '등록 중...' : '등록 완료'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* School Material Detail & Zoom Viewer Modal (학교 자료 상세 확대 뷰어 모달) */}
+      {selectedSchoolMaterial && (
+        <div className="modal-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, padding: '16px'
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: '#1E222D', border: '1.5px solid #F59E0B', borderRadius: '16px',
+            maxWidth: '560px', width: '100%', padding: '24px', maxHeight: '92vh', overflowY: 'auto',
+            boxShadow: '0 12px 35px rgba(0,0,0,0.7)'
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+              <div>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#1E3A5F', color: '#60A5FA' }}>
+                    {selectedSchoolMaterial.subject}
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#372813', color: '#FBBF24' }}>
+                    {selectedSchoolMaterial.category}
+                  </span>
+                </div>
+                <h3 style={{ margin: 0, color: '#FFFFFF', fontSize: '17px', lineHeight: 1.35 }}>
+                  {selectedSchoolMaterial.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedSchoolMaterial(null)}
+                style={{ background: 'none', border: 'none', color: '#9CA3AF', fontSize: '22px', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Meta info */}
+            <div style={{ fontSize: '12px', color: '#9CA3AF', marginBottom: '16px', display: 'flex', gap: '12px' }}>
+              <span>👤 작성: {selectedSchoolMaterial.studentName}</span>
+              <span>📅 {selectedSchoolMaterial.createdAt}</span>
+            </div>
+
+            {/* Image viewer */}
+            {selectedSchoolMaterial.imageUrl && (
+              <div style={{ marginBottom: '18px', backgroundColor: '#111319', borderRadius: '10px', overflow: 'hidden', border: '1px solid #374151' }}>
+                <img
+                  src={selectedSchoolMaterial.imageUrl}
+                  alt={selectedSchoolMaterial.title}
+                  style={{ width: '100%', maxHeight: '420px', objectFit: 'contain', display: 'block' }}
+                />
+              </div>
+            )}
+
+            {/* Memo Box */}
+            {selectedSchoolMaterial.memo && (
+              <div style={{
+                backgroundColor: '#171923', border: '1px solid #2D3345', borderRadius: '10px',
+                padding: '14px', marginBottom: '20px'
+              }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#FBBF24', marginBottom: '6px' }}>
+                  💡 학생/선생님 강조 메모
+                </div>
+                <p style={{ color: '#E5E7EB', fontSize: '13.5px', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                  {selectedSchoolMaterial.memo}
+                </p>
+              </div>
+            )}
+
+            {/* Footer Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => handleDeleteSchoolMaterial(selectedSchoolMaterial.id)}
+                style={{
+                  padding: '9px 14px', borderRadius: '8px', border: '1px solid #E53935',
+                  backgroundColor: 'transparent', color: '#EF9A9A', fontSize: '12.5px', cursor: 'pointer'
+                }}
+              >
+                🗑️ 자료 삭제
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedSchoolMaterial(null)}
+                style={{
+                  padding: '9px 22px', borderRadius: '8px', border: 'none',
+                  backgroundColor: '#374151', color: '#FFFFFF', fontSize: '13px',
+                  fontWeight: 'bold', cursor: 'pointer'
                 }}
               >
                 닫기
