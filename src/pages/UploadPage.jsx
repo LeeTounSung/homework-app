@@ -240,7 +240,7 @@ export default function UploadPage() {
     let finalData = imagePreview;
     
     if (!finalData && !studentAnswer) {
-      alert("제출할 풀이 사진 또는 직접 입력한 수식이 없습니다.");
+      alert("제출할 풀이 사진, 객관식 번호(①~⑤), 또는 직접 입력한 수식이 없습니다.");
       return;
     }
 
@@ -504,6 +504,31 @@ export default function UploadPage() {
 
 
 
+
+        {/* Hybrid Submission Guide Banner */}
+        <div style={{
+          backgroundColor: '#1E293B',
+          border: '1px solid #3B82F6',
+          borderRadius: '10px',
+          padding: '10px 14px',
+          marginBottom: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}>
+          <span style={{ fontSize: '20px' }}>💡</span>
+          <div style={{ fontSize: '12px', color: '#E2E8F0', lineHeight: 1.4 }}>
+            <span style={{ fontWeight: 'bold', color: '#60A5FA' }}>하이브리드 병행 제출 안내:</span> 학생이 편한 방식으로 제출하세요!
+            <br />
+            <span style={{ color: '#94A3B8' }}>
+              • <b>풀이 사진만 첨부</b>해도 AI가 손글씨를 자동 판독하여 채점합니다.
+              <br />
+              • <b>객관식 번호(①~⑤)만 선택</b>하거나 <b>수식을 직접 입력</b>해도 즉시 채점됩니다.
+              <br />
+              • 사진과 번호를 <b>둘 다 함께 제출</b>하면 가장 정확한 2중 교차 검증을 받습니다.
+            </span>
+          </div>
+        </div>
 
         {/* Toggle MathType / Image Upload */}
         <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>

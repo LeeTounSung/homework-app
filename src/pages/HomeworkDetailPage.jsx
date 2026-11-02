@@ -325,90 +325,158 @@ export default function HomeworkDetailPage() {
           correctAns = (raw && typeof raw === 'object' && raw.answer !== undefined) ? raw.answer : raw;
         }
 
-        // FAST-PATH 1: Student typed answer & answer key exists
-        if (correctAns && p.studentAnswer && p.studentAnswer.trim()) {
+        const hasTextAnswer = Boolean(p.studentAnswer && String(p.studentAnswer).trim());
+        const hasImage = Boolean(p.imageUrl && String(p.imageUrl).trim());
+
+        // ══════════════════════════════════════════════════════════════════
+        // [하이브리드 병행 채점 엔진 (Hybrid Parallel Grading Engine)]
+        // 학생이 객관식 번호(①~⑤), 수식 텍스트, 손글씨 풀이 사진 중 어떤 형태로 제출했든
+        // 누락 없이 지능적으로 감지하여 상호 보완적으로 정밀 채점합니다.
+        // ══════════════════════════════════════════════════════════════════
+
+        // ── 1. 객관식 번호 / 수식 텍스트 1차 검정 (정답표 존재 시 초고속 검정) ──
+        let textMatchStatus = null; // 'correct' | 'incorrect' | null
+        let textFeedback = '';
+
+        if (correctAns && hasTextAnswer) {
           const normStudent = normalizeAnswer(p.studentAnswer);
           const normCorrect = normalizeAnswer(correctAns);
-          const isExactMatch = normStudent === normCorrect;
+          const choiceStudent = normalizeChoiceNumber(p.studentAnswer);
+          const choiceCorrect = normalizeChoiceNumber(correctAns);
+          const isChoiceStudent = ['1', '2', '3', '4', '5'].includes(choiceStudent);
+          const isChoiceCorrect = ['1', '2', '3', '4', '5'].includes(choiceCorrect);
 
-          if (isExactMatch) {
-            // 100% exact match (0 tokens!)
-            const feedback = `⭕ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 정답입니다!`;
-            evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, 'correct', feedback);
-            correctCount++;
-            autoMatchedCount++;
-            continue;
+          // 1-A. 객관식 번호 일치 검정 (1~5번 vs ①~⑤)
+          if (isChoiceStudent && isChoiceCorrect) {
+            if (choiceStudent === choiceCorrect) {
+              textMatchStatus = 'correct';
+              textFeedback = `⭕ [객관식 정답 판정]\n- 학생 선택: ${['①','②','③','④','⑤'][parseInt(choiceStudent)-1]} (${choiceStudent}번)\n- 공식 정답: ${['①','②','③','④','⑤'][parseInt(choiceCorrect)-1]} (${choiceCorrect}번)\n- 결과: 완벽히 일치합니다!`;
+            } else {
+              textMatchStatus = 'incorrect';
+              textFeedback = `❌ [객관식 오답 판정]\n- 학생 선택: ${['①','②','③','④','⑤'][parseInt(choiceStudent)-1]} (${choiceStudent}번)\n- 공식 정답: ${['①','②','③','④','⑤'][parseInt(choiceCorrect)-1]} (${choiceCorrect}번)\n- 결과: 선택지가 다릅니다.`;
+            }
           }
-
-          // If simple single digit choices (1~5) and not matching, definitely incorrect (0 tokens)
-          if (/^[1-5]$/.test(normStudent) && /^[1-5]$/.test(normCorrect)) {
-            const feedback = `❌ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 오답입니다.`;
-            evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, 'incorrect', feedback);
-            incorrectCount++;
-            autoMatchedCount++;
-            continue;
+          // 1-B. 완전 일치 또는 한글 수학 표현 정규화 일치 (예: 3분의 10파이 vs 10\pi/3)
+          else if (normStudent === normCorrect) {
+            textMatchStatus = 'correct';
+            textFeedback = `⭕ [정답표 고속 일치 판정]\n- 학생 답안: ${p.studentAnswer}\n- 공식 정답: ${correctAns}\n- 결과: 수학적 표기 완전 일치 (0ms)`;
           }
-
-          // PATH 1.5: LaTeX / Math expression / Short-answer -> AI Mathematical Equivalence Check!
-          if (isAiConfigured || geminiApiKey) {
+          // 1-C. AI 수식 동치 판정 (TypeSafe Jev 1.14 / Gemini / DeepSeek)
+          else if (isAiConfigured || geminiApiKey) {
             try {
               const equivRes = await checkMathEquivalenceWithAI(aiConfig || geminiApiKey, correctAns, p.studentAnswer);
               const isWrong = equivRes.includes('❌') || equivRes.includes('오답') || equivRes.includes('DIFFERENT') || /\[채점 결과\]\s*❌/.test(equivRes);
               const isEquiv = (equivRes.includes('⭕') || equivRes.includes('EQUIVALENT') || /\[채점 결과\]\s*⭕/.test(equivRes)) && !isWrong;
-              const gradeStatus = isEquiv ? 'correct' : 'incorrect';
-              const feedback = `${isEquiv ? '⭕' : '❌'} [수학적 동치 판정]\n입력 답안: ${p.studentAnswer}\n공식 정답: ${correctAns}\n\n${equivRes}`;
-              evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, gradeStatus, feedback);
-              if (isEquiv) correctCount++;
-              else incorrectCount++;
-              autoMatchedCount++;
-              continue;
+              if (isEquiv) {
+                textMatchStatus = 'correct';
+                textFeedback = `⭕ [수학적 동치 판정 (AI)]\n- 학생 답안: ${p.studentAnswer}\n- 공식 정답: ${correctAns}\n\n${equivRes}`;
+              } else {
+                textMatchStatus = 'incorrect';
+                textFeedback = `❌ [수학적 동치 판정 (AI)]\n- 학생 답안: ${p.studentAnswer}\n- 공식 정답: ${correctAns}\n\n${equivRes}`;
+              }
             } catch (err) {
-              console.warn('AI Equivalence check error, fallback to strict mismatch:', err);
+              console.warn('AI Equivalence check error, fallback:', err);
+              textMatchStatus = 'incorrect';
+              textFeedback = `❌ [정답표 불일치]\n- 학생 답안: ${p.studentAnswer}\n- 공식 정답: ${correctAns}`;
             }
+          } else {
+            textMatchStatus = 'incorrect';
+            textFeedback = `❌ [정답표 불일치]\n- 학생 답안: ${p.studentAnswer}\n- 공식 정답: ${correctAns}`;
           }
+        }
 
-          // Fallback if AI not configured and strings don't match
-          const feedback = `❌ [정답표 자동 채점]\n입력 답안: ${p.studentAnswer}\n정답: ${correctAns}\n결과: 오답입니다.`;
-          evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, 'incorrect', feedback);
-          incorrectCount++;
+        // ── 2. 병행 처리 결정 로직 ──
+        // (1) 텍스트 답안이 이미 정답으로 확인된 경우
+        if (textMatchStatus === 'correct') {
+          let finalFeedback = textFeedback;
+          if (hasImage) {
+            finalFeedback += `\n\n📌 [제출 형태: 🔘 선택 답안 + 📸 풀이 사진 동시 제출 완료]`;
+          }
+          evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, 'correct', finalFeedback);
+          correctCount++;
           autoMatchedCount++;
           continue;
         }
 
-        // SLOW-PATH 2: Needs AI Vision
-        if (!isAiConfigured && !geminiApiKey) {
-          errors.push(`${p.problemNumber}번: AI API 키 미설정 (정답표에 정답을 등록하고 단답형으로 제출하면 AI 키 없이 즉시 채점됩니다)`);
+        // (2) 텍스트 답안이 없거나, 텍스트 답안이 오답 판정되었으나 풀이 사진(hasImage)이 있는 경우:
+        // ➔ 학생이 번호를 실수로 잘못 눌렀거나, 사진만 제출한 경우를 대비하여 사진 비전(Vision) 교차 검증 실행!
+        if (hasImage) {
+          if (!isAiConfigured && !geminiApiKey) {
+            // AI 키가 없을 때는 텍스트 결과 그대로 반영
+            if (textMatchStatus) {
+              evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, textMatchStatus, textFeedback);
+              if (textMatchStatus === 'correct') correctCount++; else incorrectCount++;
+              autoMatchedCount++;
+            } else {
+              errors.push(`${p.problemNumber}번: AI API 키 미설정 (사진 채점에는 Gemini/OpenRouter API 키가 필요합니다)`);
+            }
+            continue;
+          }
+
+          let desc = `${hw.studentName} 학생의 ${hw.title} ${label ? `[${label}] ` : ''}${p.problemNumber}번 문제 풀이입니다.`;
+          if (correctAns) {
+            desc += `\n[공식 정답]: ${correctAns}`;
+            if (hasTextAnswer) {
+              desc += `\n(참고: 학생이 앱에서 입력한 답안은 [${p.studentAnswer}]이지만, 사진 속 풀이의 최종 답안과 비교하여 확인해주세요)`;
+            }
+          }
+
+          try {
+            const visionFeedback = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, p.imageUrl, '', correctAns);
+            
+            const isIndeterminate = visionFeedback.includes('채점 불가') || visionFeedback.includes('채점불가') || visionFeedback.includes('🔺') || visionFeedback.includes('확인 필요');
+            const isWrong = visionFeedback.includes('❌') || visionFeedback.includes('오답') || visionFeedback.includes('틀렸습니다');
+            const isRight = (visionFeedback.includes('⭕') || visionFeedback.includes('맞았습니다') || /\[채점 결과\]\s*⭕/.test(visionFeedback)) && !isWrong;
+
+            let finalGradeStatus = 'incorrect';
+            let combinedFeedback = '';
+
+            if (isRight) {
+              finalGradeStatus = 'correct';
+              correctCount++;
+              if (textMatchStatus === 'incorrect') {
+                // 학생이 번호는 잘못 눌렀으나 풀이 사진에서 정답이 확인된 경우!
+                combinedFeedback = `⭕ [비전 교차 검증 정답!]\n⚠️ 학생이 입력한 답안 [${p.studentAnswer}]은 불일치했으나, 첨부된 [풀이 사진]을 비전 AI가 정밀 분석한 결과 최종 답안이 공식 정답과 일치함을 확인하여 '정답'으로 인정되었습니다.\n\n${visionFeedback}`;
+              } else {
+                combinedFeedback = `⭕ [손글씨 비전 판독 정답]\n${visionFeedback}`;
+              }
+            } else if (isIndeterminate) {
+              finalGradeStatus = 'indeterminate';
+              indeterminateCount++;
+              combinedFeedback = `🔺 [채점 확인 필요]\n${visionFeedback}`;
+            } else {
+              finalGradeStatus = 'incorrect';
+              incorrectCount++;
+              combinedFeedback = hasTextAnswer 
+                ? `${textFeedback}\n\n[📸 첨부 사진 풀이 검토 결과]\n${visionFeedback}`
+                : `❌ [손글씨 비전 채점 오답]\n${visionFeedback}`;
+            }
+
+            evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, finalGradeStatus, combinedFeedback);
+            continue;
+          } catch (visionErr) {
+            console.error(`Error in vision grading problem ${p.problemNumber}:`, visionErr);
+            // 비전 에러 시 텍스트 결과로 폴백
+            if (textMatchStatus) {
+              evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, textMatchStatus, textFeedback);
+              if (textMatchStatus === 'correct') correctCount++; else incorrectCount++;
+            } else {
+              errors.push(`${p.problemNumber}번: ${visionErr.message}`);
+            }
+            continue;
+          }
+        }
+
+        // (3) 사진이 없고 텍스트 답안만 있는데 오답인 경우
+        if (textMatchStatus) {
+          evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, textMatchStatus, textFeedback);
+          if (textMatchStatus === 'correct') correctCount++; else incorrectCount++;
+          autoMatchedCount++;
           continue;
         }
 
-        let desc = `${hw.studentName} 학생의 ${hw.title} ${label ? `[${label}] ` : ''}${p.problemNumber}번 문제 풀이입니다.`;
-        if (correctAns) {
-          desc += `\n[참고] 이 문제의 공식 정답은 [${correctAns}]입니다. 문제를 직접 풀지 말고, 학생의 손글씨 답안과 공식 정답의 일치 여부만 판정해주세요.`;
-        }
-
-        try {
-          const feedback = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, p.imageUrl, '', correctAns);
-          
-          let gradeStatus = 'incorrect';
-          const isIndeterminate = feedback.includes('채점 불가') || feedback.includes('채점불가') || feedback.includes('🔺') || feedback.includes('확인 필요');
-          const isWrong = feedback.includes('❌') || feedback.includes('오답') || feedback.includes('틀렸습니다');
-          const isRight = (feedback.includes('⭕') || feedback.includes('맞았습니다') || /\[채점 결과\]\s*⭕/.test(feedback)) && !isWrong;
-
-          if (isIndeterminate) {
-            gradeStatus = 'indeterminate';
-            indeterminateCount++;
-          } else if (isRight) {
-            gradeStatus = 'correct';
-            correctCount++;
-          } else {
-            gradeStatus = 'incorrect';
-            incorrectCount++;
-          }
-          evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, gradeStatus, feedback);
-        } catch (err) {
-          console.error(`Error grading problem ${p.problemNumber}:`, err);
-          errors.push(`${p.problemNumber}번: ${err.message}`);
-        }
+        // (4) 사진도 없고 텍스트도 없는 경우
+        errors.push(`${p.problemNumber}번: 제출된 답안이나 풀이 사진이 없습니다.`);
       }
 
       if (errors.length > 0 && correctCount === 0 && incorrectCount === 0 && indeterminateCount === 0) {
