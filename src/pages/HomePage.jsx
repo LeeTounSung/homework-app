@@ -676,7 +676,7 @@ export default function HomePage() {
         <div className="header-tabs" style={{ display: 'flex', flex: 1, justifyContent: 'space-around', alignItems: 'center', maxWidth: '360px', margin: '0 auto' }}>
           {[
             { id: 'homework', label: '숙제' },
-            { id: 'incorrect', label: '문제' },
+            { id: 'incorrect', label: '학습' },
             { id: 'test', label: '시험' },
             { id: 'schedule', label: '일정' },
             { id: 'statistics', label: '성적' }
@@ -804,7 +804,7 @@ export default function HomePage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h2 style={{ color: '#FFFFFF', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  📚 단원별 문제 보관함
+                  📚 단원별 학습 보관함
                 </h2>
                 <p style={{ color: '#94A3B8', fontSize: '13px', margin: 0 }}>
                   숙제 오답은 물론, 혼자 공부하며 수집한 숙제 외 문제까지 단원별로 누적 보관되어 언제든 복습할 수 있습니다.
