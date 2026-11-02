@@ -280,20 +280,16 @@ export default function HomeworkDetailPage() {
       p => p.status !== 'correct' && p.status !== 'exempt' && (p.imageUrl || p.studentAnswer)
     );
 
+    // 미채점/오답이 없으면 제출된 전체 문제를 대상으로 즉시 채점 실행
     if (toGrade.length === 0) {
-      const alreadySubmitted = (hw.submittedProblems || []).filter(
+      toGrade = (hw.submittedProblems || []).filter(
         p => p.status !== 'exempt' && (p.imageUrl || p.studentAnswer)
       );
-      if (alreadySubmitted.length > 0) {
-        if (window.confirm(`제출된 ${alreadySubmitted.length}개 문제가 이미 모두 '⭕ 맞음'으로 완료되었습니다.\n\n전체 문제를 처음부터 다시 채점(재채점)하시겠습니까?`)) {
-          toGrade = alreadySubmitted;
-        } else {
-          return;
-        }
-      } else {
-        alert("채점할 제출물이 없습니다. 먼저 문제를 풀고 답안(사진 또는 번호)을 제출해주세요.");
-        return;
-      }
+    }
+
+    if (toGrade.length === 0) {
+      alert("채점할 제출물이 없습니다. 먼저 문제를 풀고 답안(사진 또는 번호)을 제출해주세요.");
+      return;
     }
 
     const registeredAnswers = hw.answers || hw.answerKey || {};
