@@ -111,7 +111,20 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { data, isLoading, createHomework, createTest, updateTestInfo, deleteHomework, currentUser, isAdmin, login, logout, geminiApiKey, aiConfig, isAiConfigured, schedules, addSchedule, updateSchedule, deleteSchedule, promoBanners, mainBannerImage, addSelfStudyProblem, deleteSelfStudyProblem, updateSelfStudyProblem } = useHomework();
 
-  const [activeTab, setActiveTab] = useState('homework'); // 'homework' | 'incorrect' | 'test' | 'schedule' | 'statistics'
+  const [activeTab, setActiveTabState] = useState(() => {
+    try {
+      return localStorage.getItem('homework_app_active_tab') || 'homework';
+    } catch {
+      return 'homework';
+    }
+  });
+
+  const setActiveTab = (tabId) => {
+    setActiveTabState(tabId);
+    try {
+      localStorage.setItem('homework_app_active_tab', tabId);
+    } catch (e) {}
+  };
   const [incorrectViewMode, setIncorrectViewMode] = useState('history'); // 'history' | 'current' | 'bookmark' | 'selfStudy'
   const [zoomPromoImage, setZoomPromoImage] = useState(null);
 

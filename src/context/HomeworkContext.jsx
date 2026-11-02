@@ -399,7 +399,7 @@ export const HomeworkProvider = ({ children }) => {
     const fetchData = async () => {
       let currentBaseData = data;
 
-      // 1. Fetch latest public/homeworkData.json (GitHub Pages / Local build)
+      // 1. Fetch latest public/homeworkData.json (GitHub Pages / Local build) with Smart Merge
       try {
         const baseUrl = import.meta.env.BASE_URL || '/';
         const cleanBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
@@ -407,10 +407,60 @@ export const HomeworkProvider = ({ children }) => {
         if (publicRes.ok) {
           const publicData = await publicRes.json();
           if (Array.isArray(publicData) && publicData.length > 0) {
-            currentBaseData = publicData;
-            setData(publicData);
+            // 로컬에 이미 저장된 캐시(학생 풀이/채점 데이터)가 있는지 확인
+            let localCache = null;
             try {
-              localStorage.setItem('cachedHomeworkData', JSON.stringify(publicData));
+              const raw = localStorage.getItem('cachedHomeworkData');
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length > 0) localCache = parsed;
+              }
+            } catch (e) {}
+
+            let mergedData = publicData;
+            if (localCache) {
+              // 로컬 캐시의 풀이 및 채점 상태를 최우선 보존(Smart Merge)하여 새로고침 시 초기화 원천 차단
+              const localHwIds = new Set();
+              localCache.forEach(sec => sec.homeworks?.forEach(h => localHwIds.add(String(h.id))));
+
+              mergedData = localCache.map(sec => {
+                const pubSec = publicData.find(ps => ps.date === sec.date);
+                if (!pubSec) return sec;
+                return {
+                  ...sec,
+                  homeworks: sec.homeworks.map(hw => {
+                    const pubHw = pubSec.homeworks?.find(ph => String(ph.id) === String(hw.id));
+                    if (!pubHw) return hw;
+                    const localSubmitted = hw.submittedProblems || [];
+                    return {
+                      ...pubHw,
+                      ...hw,
+                      submittedProblems: localSubmitted.length > 0 ? localSubmitted : (pubHw.submittedProblems || [])
+                    };
+                  })
+                };
+              });
+
+              // publicData에 신규 배포된 과제가 있다면 추가
+              publicData.forEach(pubSec => {
+                const existingSec = mergedData.find(ms => ms.date === pubSec.date);
+                if (!existingSec) {
+                  mergedData.push(pubSec);
+                } else {
+                  pubSec.homeworks?.forEach(pubHw => {
+                    if (!localHwIds.has(String(pubHw.id))) {
+                      existingSec.homeworks.push(pubHw);
+                      localHwIds.add(String(pubHw.id));
+                    }
+                  });
+                }
+              });
+            }
+
+            currentBaseData = mergedData;
+            setData(mergedData);
+            try {
+              localStorage.setItem('cachedHomeworkData', JSON.stringify(mergedData));
             } catch (e) {}
             setIsLoading(false);
           }
