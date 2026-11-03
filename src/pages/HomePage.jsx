@@ -109,7 +109,7 @@ const StatusIndicator = ({ hw }) => {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { data, isLoading, createHomework, createTest, updateTestInfo, deleteHomework, currentUser, isAdmin, login, logout, geminiApiKey, aiConfig, isAiConfigured, schedules, addSchedule, updateSchedule, deleteSchedule, promoBanners, mainBannerImage, addSelfStudyProblem, deleteSelfStudyProblem, updateSelfStudyProblem } = useHomework();
+  const { data, isLoading, createHomework, createTest, updateTestInfo, deleteHomework, currentUser, isAdmin, login, logout, geminiApiKey, aiConfig, isAiConfigured, schedules, addSchedule, updateSchedule, deleteSchedule, promoBanners, mainBannerImage, addSelfStudyProblem, deleteSelfStudyProblem, updateSelfStudyProblem, registeredStudents } = useHomework();
 
   const [activeTab, setActiveTabState] = useState(() => {
     try {
@@ -146,15 +146,42 @@ export default function HomePage() {
   // ==========================
   // School Materials State & Modals (학교 제공 자료실)
   // ==========================
+  const pdfBase = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
+  const DEFAULT_SEHWA_MATERIAL = {
+    id: 1793595000000,
+    studentName: '원장샘',
+    title: '[세화고] 고2 미적분 I 중간고사 대비 핵심 8제',
+    subject: '미적분1',
+    category: '📝 기출/예상',
+    pdfUrl: `${pdfBase}school_materials/sehwa_midterm_calc1_8problems.pdf`,
+    imageUrl: '',
+    memo: '세화고등학교 2학년 1학기 중간고사 대비 rotlayer5 조립형 핵심 8제 실전 모의과제 PDF입니다.\n\n📌 시험 범위: 함수의 극한과 연속, 미분계수와 도함수, 도함수의 활용(접선, 극대·극소, 사차함수 개형, 방정식 실근 킬러)\n\n※ PDF 시험지를 다운로드하거나 바로 인쇄하여 50분 실전 모의고사로 활용하세요.',
+    createdAt: '2026. 11. 03 13:35'
+  };
+
   const [schoolMaterials, setSchoolMaterials] = useState(() => {
     try {
-      const saved = localStorage.getItem('homework_app_school_materials_v1');
+      const saved = localStorage.getItem('homework_app_school_materials_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (!parsed.some(m => m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고')))) {
+            return [DEFAULT_SEHWA_MATERIAL, ...parsed];
+          }
+          return parsed.map(m => (m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고'))) ? { ...m, pdfUrl: DEFAULT_SEHWA_MATERIAL.pdfUrl, studentName: '원장샘' } : m);
+        }
+      }
+      const oldSaved = localStorage.getItem('homework_app_school_materials_v2') || localStorage.getItem('homework_app_school_materials_v1');
+      if (oldSaved) {
+        const oldParsed = JSON.parse(oldSaved);
+        if (Array.isArray(oldParsed)) {
+          const list = [DEFAULT_SEHWA_MATERIAL, ...oldParsed.filter(m => m.id !== DEFAULT_SEHWA_MATERIAL.id && !(m.title && m.title.includes('세화고')))];
+          return list;
+        }
       }
     } catch (e) {}
     return [
+      DEFAULT_SEHWA_MATERIAL,
       {
         id: 1,
         studentName: '강백',
@@ -167,6 +194,23 @@ export default function HomePage() {
       }
     ];
   });
+
+  useEffect(() => {
+    try {
+      const exists = schoolMaterials.some(m => m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고')));
+      if (!exists) {
+        const updated = [DEFAULT_SEHWA_MATERIAL, ...schoolMaterials];
+        saveSchoolMaterialsList(updated);
+      } else {
+        // Ensure pdfUrl is always fresh
+        const needsUpdate = schoolMaterials.some(m => (m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고'))) && m.pdfUrl !== DEFAULT_SEHWA_MATERIAL.pdfUrl);
+        if (needsUpdate) {
+          const updated = schoolMaterials.map(m => (m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고'))) ? { ...m, pdfUrl: DEFAULT_SEHWA_MATERIAL.pdfUrl } : m);
+          saveSchoolMaterialsList(updated);
+        }
+      }
+    } catch (e) {}
+  }, []);
 
   const [schoolCategoryFilter, setSchoolCategoryFilter] = useState('전체'); // '전체' | '📄 프린트/유인물' | '📚 부교재' | '✏️ 수행평가' | '📝 기출/예상'
   const [isSchoolModalOpen, setIsSchoolModalOpen] = useState(false);
@@ -181,6 +225,8 @@ export default function HomePage() {
   const saveSchoolMaterialsList = (list) => {
     setSchoolMaterials(list);
     try {
+      localStorage.setItem('homework_app_school_materials_v3', JSON.stringify(list));
+      localStorage.setItem('homework_app_school_materials_v2', JSON.stringify(list));
       localStorage.setItem('homework_app_school_materials_v1', JSON.stringify(list));
     } catch (e) {
       console.error('Failed to save school materials', e);
@@ -233,7 +279,7 @@ export default function HomePage() {
       
       const newMaterial = {
         id: Date.now(),
-        studentName: currentUser && currentUser !== 'mathkorea' ? currentUser : '학생',
+        studentName: currentUser && currentUser !== 'mathkorea' ? currentUser : '원장샘',
         title: schoolTitle.trim(),
         subject: schoolSubject,
         category: schoolCategory,
@@ -361,7 +407,7 @@ export default function HomePage() {
   const [scheduleViewMode, setScheduleViewMode] = useState('compact'); // 'compact' | 'detailed'
   
   const allStudentNames = React.useMemo(() => {
-    const names = new Set();
+    const names = new Set(registeredStudents || ['강백', '정가윤', '아리', '헤준', '지성']);
     data.forEach(section => {
       section.homeworks.forEach(hw => {
         if (hw.studentName) names.add(hw.studentName);
@@ -373,7 +419,7 @@ export default function HomePage() {
       });
     }
     return Array.from(names);
-  }, [data, schedules]);
+  }, [data, schedules, registeredStudents]);
 
   const activeScheduleStudent = isAdmin 
     ? (selectedScheduleStudent || allStudentNames[0] || '강백')
@@ -473,6 +519,7 @@ export default function HomePage() {
   // Login Modal State
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginName, setLoginName] = useState('');
+  const [loginError, setLoginError] = useState('');
 
   const openEditTestModal = (test) => {
     setEditTestId(test.id);
@@ -492,11 +539,20 @@ export default function HomePage() {
     setIsEditTestModalOpen(false);
   };
 
-  const handleLoginSubmit = () => {
-    if (!loginName.trim()) return;
-    login(loginName.trim());
+  const handleLoginSubmit = (targetName) => {
+    const rawTarget = typeof targetName === 'string' ? targetName : loginName;
+    if (!rawTarget || !rawTarget.trim()) {
+      setLoginError('이름 또는 아이디를 입력해주세요.');
+      return;
+    }
+    const result = login(rawTarget.trim());
+    if (result && !result.success) {
+      setLoginError(result.message || '등록되지 않은 사용자입니다.');
+      return;
+    }
     setIsLoginModalOpen(false);
     setLoginName('');
+    setLoginError('');
   };
 
   const handleAiAnalyzeStudentOpen = (studentName) => {
@@ -561,7 +617,7 @@ export default function HomePage() {
         if (!isAdmin && currentUser) {
           const normCurrent = String(currentUser).trim().replace(/이$/, '');
           const normHw = String(hw.studentName || '').trim();
-          return normHw === String(currentUser).trim() || normHw === normCurrent || (normHw && normCurrent && normHw.includes(normCurrent));
+          return normHw === '전체' || normHw === '공통' || normHw === '원장샘' || normHw === String(currentUser).trim() || normHw === normCurrent || (normHw && normCurrent && normHw.includes(normCurrent));
         }
         return true;
       })
@@ -789,6 +845,7 @@ export default function HomePage() {
                 logout();
               }
             } else {
+              setLoginError('');
               setIsLoginModalOpen(true);
             }
           }}
@@ -2105,7 +2162,7 @@ export default function HomePage() {
                       boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                     }}
                   >
-                    {/* Image Preview Thumbnail */}
+                    {/* Image / PDF Preview Thumbnail */}
                     {item.imageUrl ? (
                       <div style={{
                         width: '100%',
@@ -2127,6 +2184,37 @@ export default function HomePage() {
                           padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px'
                         }}>
                           🔍 터치하여 확대
+                        </span>
+                      </div>
+                    ) : item.pdfUrl ? (
+                      <div style={{
+                        width: '100%',
+                        height: '140px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
+                        border: '1.5px solid #EF4444',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: '12px',
+                        position: 'relative',
+                        padding: '12px',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{ fontSize: '34px', marginBottom: '4px' }}>📑</div>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#F87171' }}>
+                          PDF 실전 시험지
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '3px' }}>
+                          터치하여 시험지 열람 · 인쇄
+                        </div>
+                        <span style={{
+                          position: 'absolute', top: '8px', right: '8px',
+                          backgroundColor: '#EF4444', color: '#FFFFFF',
+                          padding: '2px 7px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold'
+                        }}>
+                          PDF 문서
                         </span>
                       </div>
                     ) : (
@@ -2255,38 +2343,94 @@ export default function HomePage() {
 
       {/* Login Modal */}
       {isLoginModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '400px', width: '90%' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '8px', color: '#FFFFFF', fontSize: '18px' }}>로그인</h3>
-            <p style={{ color: '#888', fontSize: '13px', margin: '0 0 18px 0' }}>
-              본인의 이름(학생) 또는 관리자 아이디를 직접 입력해주세요.
+        <div className="modal-overlay" onClick={() => { setIsLoginModalOpen(false); setLoginError(''); }}>
+          <div 
+            className="modal-content" 
+            style={{ maxWidth: '400px', width: '92%', borderRadius: '16px', border: '1px solid #333', background: '#161820', padding: '24px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <h3 style={{ margin: 0, color: '#FFD700', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#FFD700"/>
+                </svg>
+                학생 및 관리자 로그인
+              </h3>
+              <button 
+                type="button"
+                onClick={() => { setIsLoginModalOpen(false); setLoginError(''); }}
+                style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '18px' }}
+              >✕</button>
+            </div>
+
+            <p style={{ color: '#888', fontSize: '13px', margin: '0 0 18px 0', lineHeight: '1.4' }}>
+              개인 맞춤 학습 관리를 위해 본인의 이름(학생) 또는 관리자 아이디를 직접 입력해주세요.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+
+            {/* Manual Input Field Only (No other student names exposed) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#ccc', fontWeight: 'bold' }}>
                   이름 / 아이디
                 </label>
-                <input 
-                  type="text" 
-                  autoFocus
-                  value={loginName} 
-                  onChange={(e) => setLoginName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleLoginSubmit();
-                    }
-                  }}
-                  className="modal-input"
-                  placeholder="이름 또는 아이디를 입력하세요"
-                  style={{ width: '100%', boxSizing: 'border-box' }}
-                />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    autoFocus
+                    value={loginName} 
+                    onChange={(e) => {
+                      setLoginName(e.target.value);
+                      if (loginError) setLoginError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleLoginSubmit();
+                      }
+                    }}
+                    className="modal-input"
+                    placeholder="본인의 이름을 입력하세요"
+                    style={{ flex: 1, boxSizing: 'border-box' }}
+                  />
+                  <button 
+                    type="button"
+                    className="modal-btn confirm" 
+                    style={{ width: 'auto', padding: '0 18px', whiteSpace: 'nowrap' }}
+                    onClick={() => handleLoginSubmit()}
+                  >
+                    로그인
+                  </button>
+                </div>
               </div>
+
+              {loginError && (
+                <div style={{
+                  marginTop: '4px',
+                  padding: '10px 12px',
+                  background: 'rgba(255, 77, 79, 0.15)',
+                  border: '1px solid rgba(255, 77, 79, 0.4)',
+                  borderRadius: '8px',
+                  color: '#FF6B6B',
+                  fontSize: '12px',
+                  lineHeight: '1.4'
+                }}>
+                  ⚠️ {loginError}
+                </div>
+              )}
             </div>
-            
-            <div className="modal-buttons" style={{ marginTop: '22px' }}>
-              <button className="modal-btn cancel" onClick={() => setIsLoginModalOpen(false)}>닫기</button>
-              <button className="modal-btn confirm" onClick={handleLoginSubmit}>로그인</button>
+
+            <div style={{ marginTop: '22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '11px', color: '#666' }}>
+                * 개인수업 학생 본인 이름 또는 선생님 계정으로 로그인 가능
+              </div>
+              <button 
+                type="button"
+                className="modal-btn cancel" 
+                style={{ padding: '6px 14px', fontSize: '12px' }}
+                onClick={() => { setIsLoginModalOpen(false); setLoginError(''); }}
+              >
+                닫기
+              </button>
             </div>
           </div>
         </div>
@@ -3143,7 +3287,7 @@ export default function HomePage() {
         }}>
           <div className="modal-content" style={{
             backgroundColor: '#1E222D', border: '1.5px solid #F59E0B', borderRadius: '16px',
-            maxWidth: '560px', width: '100%', padding: '24px', maxHeight: '92vh', overflowY: 'auto',
+            maxWidth: selectedSchoolMaterial.pdfUrl ? '780px' : '560px', width: '100%', padding: '24px', maxHeight: '92vh', overflowY: 'auto',
             boxShadow: '0 12px 35px rgba(0,0,0,0.7)'
           }}>
             {/* Header */}
@@ -3184,6 +3328,74 @@ export default function HomePage() {
                   alt={selectedSchoolMaterial.title}
                   style={{ width: '100%', maxHeight: '420px', objectFit: 'contain', display: 'block' }}
                 />
+              </div>
+            )}
+
+            {/* PDF viewer & Action bar */}
+            {selectedSchoolMaterial.pdfUrl && (
+              <div style={{ marginBottom: '18px' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: '#1E293B',
+                  border: '1.5px solid #3B82F6',
+                  borderRadius: '10px',
+                  padding: '12px 16px',
+                  marginBottom: '12px',
+                  flexWrap: 'wrap',
+                  gap: '10px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '26px' }}>📑</span>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#60A5FA' }}>
+                        PDF 실전 모의과제 시험지 (총 5페이지)
+                      </div>
+                      <div style={{ fontSize: '11.5px', color: '#94A3B8' }}>
+                        세화고 고2 미적분 I 중간대비 핵심 8제
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href={selectedSchoolMaterial.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '9px 16px',
+                      borderRadius: '8px',
+                      backgroundColor: '#2563EB',
+                      color: '#FFFFFF',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      textDecoration: 'none',
+                      boxShadow: '0 2px 8px rgba(37,99,235,0.4)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span>📥 PDF 시험지 열기 / 다운로드</span>
+                    <span>↗</span>
+                  </a>
+                </div>
+
+                {/* Embedded PDF Viewer */}
+                <div style={{
+                  backgroundColor: '#111319',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  border: '1px solid #374151',
+                  height: '520px'
+                }}>
+                  <iframe
+                    src={selectedSchoolMaterial.pdfUrl}
+                    title={selectedSchoolMaterial.title}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                  />
+                </div>
               </div>
             )}
 

@@ -23,7 +23,8 @@ export default function AdminPage() {
     addPromoBanner,
     deletePromoBanner,
     mainBannerImage,
-    saveMainBannerImage
+    saveMainBannerImage,
+    registeredStudents
   } = useHomework();
 
   // If not admin, redirect or show error
@@ -37,9 +38,10 @@ export default function AdminPage() {
   }
 
   // Extract unique student names for quick selection
-  const existingStudents = Array.from(new Set(
-    (data || []).flatMap(sec => (sec.homeworks || []).map(hw => hw.studentName)).filter(Boolean)
-  ));
+  const existingStudents = Array.from(new Set([
+    ...(registeredStudents || ['강백', '정가윤', '아리', '헤준', '지성']),
+    ...(data || []).flatMap(sec => (sec.homeworks || []).map(hw => hw.studentName)).filter(Boolean)
+  ]));
 
   // Create Homework Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

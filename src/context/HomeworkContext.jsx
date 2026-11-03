@@ -10,6 +10,33 @@ const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
 const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || '';
 
+export const REGISTERED_STUDENTS = ['강백', '정가윤', '아리', '헤준', '지성'];
+export const ADMIN_ACCOUNTS = ['mathkorea', 'admin', '선생님', '원장샘'];
+
+export const normalizeStudentName = (name) => {
+  if (!name || typeof name !== 'string') return '';
+  const trimmed = name.trim();
+  const matchedAdmin = ADMIN_ACCOUNTS.find(a => a.toLowerCase() === trimmed.toLowerCase());
+  if (matchedAdmin) return matchedAdmin;
+
+  // Korean suffix '이' / common aliases
+  if (trimmed === '강백' || trimmed === '강백이') return '강백';
+  if (trimmed === '정가윤' || trimmed === '가윤' || trimmed === '가윤이' || trimmed === '정가윤이') return '정가윤';
+  if (trimmed === '아리' || trimmed === '아리이') return '아리';
+  if (trimmed === '헤준' || trimmed === '헤준이') return '헤준';
+  if (trimmed === '지성' || trimmed === '지성이') return '지성';
+
+  return trimmed;
+};
+
+export const isInitialValidUser = (name) => {
+  if (!name || typeof name !== 'string') return false;
+  const norm = normalizeStudentName(name);
+  if (ADMIN_ACCOUNTS.some(a => a.toLowerCase() === norm.toLowerCase())) return true;
+  if (REGISTERED_STUDENTS.includes(norm)) return true;
+  return false;
+};
+
 const fallbackInitialData = [];
 
 export const HomeworkProvider = ({ children }) => {
@@ -41,16 +68,44 @@ export const HomeworkProvider = ({ children }) => {
       const urlParams = new URLSearchParams(window.location.search);
       const userFromUrl = urlParams.get('user');
       if (userFromUrl) {
-        localStorage.setItem('homeworkAppUser', userFromUrl);
-        return userFromUrl;
+        const norm = normalizeStudentName(userFromUrl);
+        if (isInitialValidUser(norm)) {
+          localStorage.setItem('homeworkAppUser', norm);
+          return norm;
+        }
       }
     } catch (e) {}
-    return localStorage.getItem('homeworkAppUser') || null;
+    const saved = localStorage.getItem('homeworkAppUser');
+    if (saved) {
+      const norm = normalizeStudentName(saved);
+      if (isInitialValidUser(norm)) {
+        return norm;
+      } else {
+        localStorage.removeItem('homeworkAppUser');
+        return null;
+      }
+    }
+    return null;
   });
 
-  const login = (username) => {
-    setCurrentUser(username);
-    localStorage.setItem('homeworkAppUser', username);
+  const login = (rawUsername) => {
+    if (!rawUsername || typeof rawUsername !== 'string') {
+      return { success: false, message: '이름 또는 아이디를 입력해주세요.' };
+    }
+    const norm = normalizeStudentName(rawUsername);
+    const isDynamicStudent = (schedules && schedules.some(s => s.studentName === norm)) ||
+      (data && data.some(sec => sec.homeworks && sec.homeworks.some(hw => hw.studentName === norm)));
+
+    if (!isInitialValidUser(norm) && !isDynamicStudent) {
+      return {
+        success: false,
+        message: `등록되지 않은 학생 이름입니다: "${rawUsername.trim()}". 본인의 이름을 정확하게 입력해주세요.`
+      };
+    }
+
+    setCurrentUser(norm);
+    localStorage.setItem('homeworkAppUser', norm);
+    return { success: true, username: norm };
   };
 
   const logout = () => {
@@ -213,12 +268,52 @@ export const HomeworkProvider = ({ children }) => {
       chapter: '1단원. 이차곡선 (포물선과 타원)',
       topic: '정의 기반 초점-준선 거리 공식 완결',
       status: 'current'
+    },
+    {
+      id: 10,
+      studentName: '정가윤',
+      week: '1주차',
+      period: '11/03(월) ~ 11/09(일)',
+      subject: '공통수학1',
+      chapter: '1단원. 다항식의 연산과 나머지정리',
+      topic: '곱셈공식 변형 및 항등식 성질 마스터',
+      status: 'current'
+    },
+    {
+      id: 11,
+      studentName: '아리',
+      week: '1주차',
+      period: '11/03(월) ~ 11/09(일)',
+      subject: '공통수학1',
+      chapter: '1단원. 다항식과 나머지정리',
+      topic: '조립제법 및 인수분해 기본 20제',
+      status: 'current'
+    },
+    {
+      id: 12,
+      studentName: '헤준',
+      week: '1주차',
+      period: '11/03(월) ~ 11/09(일)',
+      subject: '대수 (수1)',
+      chapter: '1단원. 지수와 로그의 연산',
+      topic: '거듭제곱근의 성질 및 로그 기본 성질 15제',
+      status: 'current'
+    },
+    {
+      id: 13,
+      studentName: '지성',
+      week: '1주차',
+      period: '11/03(월) ~ 11/09(일)',
+      subject: '대수 (수1)',
+      chapter: '1단원. 지수함수와 로그함수',
+      topic: '지수·로그 그래프 및 성질 15제',
+      status: 'current'
     }
   ];
 
   const [schedules, setSchedules] = useState(() => {
     try {
-      const saved = localStorage.getItem('homework_app_syllabus_v6');
+      const saved = localStorage.getItem('homework_app_syllabus_v7');
       return saved ? JSON.parse(saved) : initialSchedules;
     } catch {
       return initialSchedules;
@@ -228,7 +323,7 @@ export const HomeworkProvider = ({ children }) => {
   const saveSchedules = (newSchedules) => {
     setSchedules(newSchedules);
     try {
-      localStorage.setItem('homework_app_syllabus_v6', JSON.stringify(newSchedules));
+      localStorage.setItem('homework_app_syllabus_v7', JSON.stringify(newSchedules));
     } catch (err) {
       console.error('Failed to save syllabus', err);
     }
@@ -1375,7 +1470,10 @@ export const HomeworkProvider = ({ children }) => {
       deletePromoBanner,
       savePromoBanners,
       mainBannerImage,
-      saveMainBannerImage
+      saveMainBannerImage,
+      registeredStudents: REGISTERED_STUDENTS,
+      adminAccounts: ADMIN_ACCOUNTS,
+      normalizeStudentName
     }}>
       {children}
     </HomeworkContext.Provider>

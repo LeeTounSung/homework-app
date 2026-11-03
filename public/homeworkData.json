@@ -1,5 +1,123 @@
 [
   {
+    "date": "11월 03일(월) 주간과제",
+    "homeworks": [
+      {
+        "id": 1793595500000,
+        "studentName": "원장샘",
+        "title": "[세화고] 고2 미적분 I 중간고사 대비 핵심 8제",
+        "description": "🏫 세화고등학교 2학년 미적분 I(수학 II) 중간고사 대비 rotlayer5 조립형 핵심 8제 주간 실전 모의과제입니다.\n\n📄 PDF 전용 시험지: [다운로드/바로보기](/school_materials/sehwa_midterm_calc1_8problems.pdf)\n\n📌 출제 범위: 함수의 극한과 연속, 미분계수와 도함수, 도함수의 활용(접선, 극대·극소, 사차함수 개형, 방정식 실근 킬러)",
+        "createdAt": "11/03 13:40",
+        "teacherName": "mathkorea",
+        "tag": "세화고 고2 미적1",
+        "statusType": "none",
+        "statusValue": null,
+        "problemImagesBaseUrl": "",
+        "pdfUrl": "/school_materials/sehwa_midterm_calc1_8problems.pdf",
+        "answers": {
+          "1": "3",
+          "2": "3",
+          "3": "16",
+          "4": "3",
+          "5": "41",
+          "6": "3",
+          "7": "3",
+          "8": "28"
+        },
+        "problemGroups": [
+          {
+            "groupId": "g_sehwa_calc1_8",
+            "label": "[세화고]-[고2 미적분I]-[중간고사대비]-[번호:1~8]",
+            "problems": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ]
+          }
+        ],
+        "problemDetails": {
+          "1": {
+            "problemNumber": 1,
+            "id": "sehwa_1",
+            "subject": "미적분1",
+            "chapter": "함수의 극한과 연속",
+            "concept": "함수의 극한과 차수 결정",
+            "level": 4,
+            "statement": "문항 1. 최고차항의 계수가 양수인 다항함수 f(x)에 대하여 lim_{x->inf} |2x^n - f(x)|/x^3 = 1 을 만족시키는 자연수 n의 개수가 3이고, lim_{x->0} (f(x)+4x)/x^2 = -2 일 때, f(4)의 값을 구하시오."
+          },
+          "2": {
+            "problemNumber": 2,
+            "id": "sehwa_2",
+            "subject": "미적분1",
+            "chapter": "함수의 극한과 연속",
+            "concept": "함수의 연속과 영점 제어",
+            "level": 4,
+            "statement": "문항 2. 실수 전체의 집합에서 연속인 함수 f(x)와 최고차항의 계수가 1인 이차함수 g(x)가 f(x) != 0 이고 f(x)g(x) = { x^2-9 (x<=1), 4(x-3) (x>1) } 일 때, f(5)의 값을 구하시오."
+          },
+          "3": {
+            "problemNumber": 3,
+            "id": "sehwa_3",
+            "subject": "미적분1",
+            "chapter": "미분계수와 도함수",
+            "concept": "대칭 미분계수와 불연속점",
+            "level": 4,
+            "statement": "문항 3. f(x) = (x-2)^2(x-k)에 대하여 g(x) = lim_{h->0+} |f(x+h)|-|f(x-h)| / 2h 가 불연속이 되는 점이 1개일 때, k의 값을 구하시오."
+          },
+          "4": {
+            "problemNumber": 4,
+            "id": "sehwa_4",
+            "subject": "미적분1",
+            "chapter": "도함수의 활용",
+            "concept": "곡선 밖 접선 개수와 연속",
+            "level": 4,
+            "statement": "문항 4. 점 (1, t)에서 곡선 y = x^3 - 3x에 그은 접선의 개수 g(t)와 이차함수 P(t)의 곱 g(t)P(t)가 실수 전체에서 연속이고 최고차항 계수가 1일 때, P(0)의 값을 구하시오."
+          },
+          "5": {
+            "problemNumber": 5,
+            "id": "sehwa_5",
+            "subject": "미적분1",
+            "chapter": "도함수의 활용",
+            "concept": "사차함수 개형과 꺾인 점 개수",
+            "level": 4,
+            "statement": "문항 5. 최고차항 계수가 1인 사차함수 f(x)가 f'(x)=0의 근이 0, 2, 4이고 f(0)=0일 때, |f(x)-t|의 미분불가점 개수 h(t)가 불연속이 되는 양수 k에 대하여 f(5)+k의 값을 구하시오."
+          },
+          "6": {
+            "problemNumber": 6,
+            "id": "sehwa_6",
+            "subject": "미적분1",
+            "chapter": "도함수의 활용",
+            "concept": "극값차 공식과 삼차함수",
+            "level": 4,
+            "statement": "문항 6. f(x)-x=t의 실근 개수 g(t)가 t=-4, 0에서만 불연속이고 f(1)=1, f'(1)=1인 삼차함수 f(x)에 대하여 f(4)의 값을 구하시오."
+          },
+          "7": {
+            "problemNumber": 7,
+            "id": "sehwa_7",
+            "subject": "미적분1",
+            "chapter": "도함수의 활용",
+            "concept": "원점 대칭 기함수 비율관계",
+            "level": 4,
+            "statement": "문항 7. 최고차항 계수가 1인 삼차함수 f(x)가 원점 대칭이고 |f(x)|=2의 서로 다른 실근 개수가 4일 때, f(3)의 값을 구하시오."
+          },
+          "8": {
+            "problemNumber": 8,
+            "id": "sehwa_8",
+            "subject": "미적분1",
+            "chapter": "도함수의 활용",
+            "concept": "접선 y절편 극값과 등차수열 실근 킬러",
+            "level": 5,
+            "statement": "문항 8. 곡선 y=f(x) 위의 점 (t, f(t))에서의 접선의 y절편 g(t)가 t=3에서 극댓값 27을 갖고 g(0)=0이며 f(x)=0의 세 실근이 등차수열을 이룰 때, f(7)의 값을 구하시오."
+          }
+        }
+      }
+    ]
+  },
+  {
     "date": "11월 02일(일)까지",
     "homeworks": [
       {
