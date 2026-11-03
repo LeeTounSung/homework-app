@@ -3332,72 +3332,80 @@ export default function HomePage() {
             )}
 
             {/* PDF viewer & Action bar */}
-            {selectedSchoolMaterial.pdfUrl && (
-              <div style={{ marginBottom: '18px' }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  backgroundColor: '#1E293B',
-                  border: '1.5px solid #3B82F6',
-                  borderRadius: '10px',
-                  padding: '12px 16px',
-                  marginBottom: '12px',
-                  flexWrap: 'wrap',
-                  gap: '10px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '26px' }}>📑</span>
-                    <div>
-                      <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#60A5FA' }}>
-                        PDF 실전 모의과제 시험지 (총 5페이지)
-                      </div>
-                      <div style={{ fontSize: '11.5px', color: '#94A3B8' }}>
-                        세화고 고2 미적분 I 중간대비 핵심 8제
+            {selectedSchoolMaterial.pdfUrl && (() => {
+              const rawPdf = (selectedSchoolMaterial.pdfUrl || '').trim();
+              let pdfSrc = rawPdf;
+              if (!pdfSrc.startsWith('http://') && !pdfSrc.startsWith('https://')) {
+                const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
+                pdfSrc = `${base}${pdfSrc.replace(/^\/+/, '')}`;
+              }
+              return (
+                <div style={{ marginBottom: '18px' }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: '#1E293B',
+                    border: '1.5px solid #3B82F6',
+                    borderRadius: '10px',
+                    padding: '12px 16px',
+                    marginBottom: '12px',
+                    flexWrap: 'wrap',
+                    gap: '10px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '26px' }}>📑</span>
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#60A5FA' }}>
+                          PDF 실전 모의과제 시험지 (총 5페이지)
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: '#94A3B8' }}>
+                          세화고 고2 미적분 I 중간대비 핵심 8제
+                        </div>
                       </div>
                     </div>
+                    <a
+                      href={pdfSrc}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '9px 16px',
+                        borderRadius: '8px',
+                        backgroundColor: '#2563EB',
+                        color: '#FFFFFF',
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        textDecoration: 'none',
+                        boxShadow: '0 2px 8px rgba(37,99,235,0.4)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <span>📥 PDF 시험지 열기 / 다운로드</span>
+                      <span>↗</span>
+                    </a>
                   </div>
-                  <a
-                    href={selectedSchoolMaterial.pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '9px 16px',
-                      borderRadius: '8px',
-                      backgroundColor: '#2563EB',
-                      color: '#FFFFFF',
-                      fontSize: '13px',
-                      fontWeight: 'bold',
-                      textDecoration: 'none',
-                      boxShadow: '0 2px 8px rgba(37,99,235,0.4)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <span>📥 PDF 시험지 열기 / 다운로드</span>
-                    <span>↗</span>
-                  </a>
-                </div>
 
-                {/* Embedded PDF Viewer */}
-                <div style={{
-                  backgroundColor: '#111319',
-                  borderRadius: '10px',
-                  overflow: 'hidden',
-                  border: '1px solid #374151',
-                  height: '520px'
-                }}>
-                  <iframe
-                    src={selectedSchoolMaterial.pdfUrl}
-                    title={selectedSchoolMaterial.title}
-                    style={{ width: '100%', height: '100%', border: 'none' }}
-                  />
+                  {/* Embedded PDF Viewer */}
+                  <div style={{
+                    backgroundColor: '#111319',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    border: '1px solid #374151',
+                    height: '520px'
+                  }}>
+                    <iframe
+                      src={pdfSrc}
+                      title={selectedSchoolMaterial.title}
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Memo Box */}
             {selectedSchoolMaterial.memo && (

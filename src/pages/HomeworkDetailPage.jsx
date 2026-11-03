@@ -648,15 +648,91 @@ export default function HomeworkDetailPage() {
           <p style={{ color: '#888', fontSize: '14px', marginBottom: '16px' }}>{hw.description}</p>
           
           {hw.pdfUrl && (
-            <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {hw.pdfUrl.split(/[\s,]+/).filter(url => url.trim().startsWith('http')).map((url, idx) => (
-                <a key={idx} href={url.trim()} target="_blank" rel="noopener noreferrer" style={{
-                  display: 'inline-block', padding: '8px 16px', backgroundColor: '#F44336', color: '#fff', 
-                  textDecoration: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold'
-                }}>
-                  📄 PDF {idx + 1} 보기
-                </a>
-              ))}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                {hw.pdfUrl.split(/[\s,]+/).filter(Boolean).map((rawUrl, idx) => {
+                  let finalUrl = rawUrl.trim();
+                  if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+                    const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
+                    finalUrl = `${base}${finalUrl.replace(/^\/+/, '')}`;
+                  }
+                  return (
+                    <a
+                      key={idx}
+                      href={finalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '11px 20px',
+                        backgroundColor: '#DC2626',
+                        color: '#FFFFFF',
+                        textDecoration: 'none',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        boxShadow: '0 3px 10px rgba(220, 38, 38, 0.45)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <span style={{ fontSize: '16px' }}>📄</span>
+                      <span>실전 PDF 시험지 열기 / 다운로드</span>
+                      <span style={{ fontSize: '12px', opacity: 0.85 }}>↗</span>
+                    </a>
+                  );
+                })}
+              </div>
+
+              {/* Embedded PDF Viewer on Homework Detail */}
+              {(() => {
+                const firstUrl = hw.pdfUrl.split(/[\s,]+/).filter(Boolean)[0]?.trim();
+                if (!firstUrl) return null;
+                let pdfSrc = firstUrl;
+                if (!pdfSrc.startsWith('http://') && !pdfSrc.startsWith('https://')) {
+                  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
+                  pdfSrc = `${base}${pdfSrc.replace(/^\/+/, '')}`;
+                }
+                return (
+                  <div style={{
+                    backgroundColor: '#1E222D',
+                    borderRadius: '12px',
+                    border: '1.5px solid #374151',
+                    overflow: 'hidden',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={{
+                      padding: '10px 14px',
+                      backgroundColor: '#111319',
+                      borderBottom: '1px solid #2D3345',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#93C5FD', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        📑 시험지 미리보기 (총 5페이지)
+                      </span>
+                      <a
+                        href={pdfSrc}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '12px', color: '#60A5FA', textDecoration: 'underline' }}
+                      >
+                        새 창에서 크게 보기
+                      </a>
+                    </div>
+                    <div style={{ height: '480px', width: '100%', position: 'relative' }}>
+                      <iframe
+                        src={pdfSrc}
+                        title="PDF 시험지"
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
