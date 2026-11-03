@@ -6,7 +6,7 @@
         "id": 1793595500000,
         "studentName": "원장샘",
         "title": "[세화고] 고2 미적분 I 중간고사 대비 핵심 8제",
-        "description": "🏫 세화고등학교 2학년 미적분 I(수학 II) 중간고사 대비 rotlayer5 조립형 핵심 8제 주간 실전 모의과제입니다.\n\n📄 PDF 시험지 다운로드: https://leetounsung.github.io/homework-app/school_materials/sehwa_midterm_calc1_8problems.pdf\n\n📌 출제 범위: 함수의 극한과 연속, 미분계수와 도함수, 도함수의 활용(접선, 극대·극소, 사차함수 개형, 방정식 실근 킬러)",
+        "description": "🏫 세화고등학교 2학년 미적분 I(수학 II) 중간고사 대비 핵심 8제 주간 실전 모의과제입니다. (자작 문항)\n\n📄 PDF 시험지 다운로드: https://leetounsung.github.io/homework-app/school_materials/sehwa_midterm_calc1_8problems.pdf\n\n📌 출제 범위: 함수의 극한과 연속, 미분계수와 도함수, 도함수의 활용(접선, 극대·극소, 사차함수 개형, 방정식 실근 킬러)",
         "createdAt": "11/03 13:40",
         "teacherName": "mathkorea",
         "tag": "세화고 고2 미적1",
@@ -66,7 +66,7 @@
             "chapter": "미분계수와 도함수",
             "concept": "대칭 미분계수와 불연속점",
             "level": 4,
-            "statement": "문항 3. f(x) = (x-2)^2(x-k)에 대하여 g(x) = lim_{h->0+} |f(x+h)|-|f(x-h)| / 2h 가 불연속이 되는 점이 1개일 때, k의 값을 구하시오."
+            "statement": "문항 3. 최고차항의 계수가 1인 삼차함수 f(x)에 대하여 g(x) = lim_{h->0+} (|f(x+h)| - |f(x-h)|) / 2h 라 하자. g(x)가 오직 x=1에서만 불연속이고 f(3)=0, f'(3)=0일 때, f(5)의 값을 구하시오."
           },
           "4": {
             "problemNumber": 4,
