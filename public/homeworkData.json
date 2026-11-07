@@ -130,7 +130,7 @@
         "tag": "to 강백",
         "statusType": "none",
         "statusValue": null,
-        "problemImagesBaseUrl": "",
+        "problemImagesBaseUrl": "/problem_images/kpy_daesu_p56_59_1_20",
         "answers": {
           "1": "4",
           "2": "2",
@@ -178,7 +178,8 @@
               18,
               19,
               20
-            ]
+            ],
+            "problemImagesBaseUrl": "/problem_images/kpy_daesu_p56_59_1_20"
           }
         ],
         "problemDetails": {
@@ -190,7 +191,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 1번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/1.png"
           },
           "2": {
             "problemNumber": 2,
@@ -200,7 +201,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 2번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/2.png"
           },
           "3": {
             "problemNumber": 3,
@@ -210,7 +211,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 3번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/3.png"
           },
           "4": {
             "problemNumber": 4,
@@ -220,7 +221,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 4번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/4.png"
           },
           "5": {
             "problemNumber": 5,
@@ -230,7 +231,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 5번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/5.png"
           },
           "6": {
             "problemNumber": 6,
@@ -240,7 +241,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 6번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/6.png"
           },
           "7": {
             "problemNumber": 7,
@@ -250,7 +251,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 7번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/7.png"
           },
           "8": {
             "problemNumber": 8,
@@ -260,7 +261,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 8번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/8.png"
           },
           "9": {
             "problemNumber": 9,
@@ -270,7 +271,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 9번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/9.png"
           },
           "10": {
             "problemNumber": 10,
@@ -280,7 +281,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 10번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/10.png"
           },
           "11": {
             "problemNumber": 11,
@@ -290,7 +291,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 11번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/11.png"
           },
           "12": {
             "problemNumber": 12,
@@ -300,7 +301,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 12번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/12.png"
           },
           "13": {
             "problemNumber": 13,
@@ -310,7 +311,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 13번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/13.png"
           },
           "14": {
             "problemNumber": 14,
@@ -320,7 +321,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 14번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/14.png"
           },
           "15": {
             "problemNumber": 15,
@@ -330,7 +331,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 15번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/15.png"
           },
           "16": {
             "problemNumber": 16,
@@ -340,7 +341,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 16번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/16.png"
           },
           "17": {
             "problemNumber": 17,
@@ -350,7 +351,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 17번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/17.png"
           },
           "18": {
             "problemNumber": 18,
@@ -360,7 +361,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 18번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/18.png"
           },
           "19": {
             "problemNumber": 19,
@@ -370,7 +371,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 19번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/19.png"
           },
           "20": {
             "problemNumber": 20,
@@ -380,7 +381,7 @@
             "concept": "삼각함수의 활용",
             "level": 3,
             "statement": "개념플러스유형 삼각함수의 활용 20번 문제\n문제를 확인하고 손풀이를 촬영하여 제출해주세요.",
-            "image": null
+            "image": "/problem_images/kpy_daesu_p56_59_1_20/20.png"
           }
         },
         "submittedProblems": [],
@@ -786,7 +787,7 @@
                 "wrongCount": 1,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 752ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 752ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 3,
@@ -795,7 +796,7 @@
                 "wrongCount": 2,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 33%)\n- 검정 속도: 675ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 33%)\n- 검정 속도: 675ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 4,
@@ -804,7 +805,7 @@
                 "wrongCount": 3,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 33%)\n- 검정 속도: 716ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 33%)\n- 검정 속도: 716ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 5,
@@ -813,7 +814,7 @@
                 "wrongCount": 4,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 35%)\n- 검정 속도: 386ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 35%)\n- 검정 속도: 386ms (추론 비용: $0.000024)"
               }
             ],
             "score": 10,
@@ -839,7 +840,7 @@
                 "wrongCount": 1,
                 "imageUrl": null,
                 "studentAnswer": "-2분의 3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: -2분의 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: -2분의 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 36%)\n- 검정 속도: 474ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: -2분의 3\n공식 정답: -3/2\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: -3/2\n- 학생 답안: -2분의 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 36%)\n- 검정 속도: 474ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 3,
@@ -848,7 +849,7 @@
                 "wrongCount": 2,
                 "imageUrl": null,
                 "studentAnswer": "-2분의 3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: -2분의 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: -2분의 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 35%)\n- 검정 속도: 492ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: -2분의 3\n공식 정답: -3/2\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: -3/2\n- 학생 답안: -2분의 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 35%)\n- 검정 속도: 492ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 4,
@@ -857,7 +858,7 @@
                 "wrongCount": 3,
                 "imageUrl": null,
                 "studentAnswer": "-2분의 3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: -2분의 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: -2분의 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 36%)\n- 검정 속도: 517ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: -2분의 3\n공식 정답: -3/2\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: -3/2\n- 학생 답안: -2분의 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 36%)\n- 검정 속도: 517ms (추론 비용: $0.000024)"
               }
             ],
             "score": 10,
@@ -897,7 +898,7 @@
                 "wrongCount": 1,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 388ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 388ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 3,
@@ -906,7 +907,7 @@
                 "wrongCount": 2,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 35%)\n- 검정 속도: 511ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 35%)\n- 검정 속도: 511ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 4,
@@ -915,7 +916,7 @@
                 "wrongCount": 3,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 388ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 388ms (추론 비용: $0.000024)"
               }
             ],
             "score": 10,
@@ -941,7 +942,7 @@
                 "wrongCount": 1,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 378ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 378ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 3,
@@ -950,7 +951,7 @@
                 "wrongCount": 2,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 492ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 492ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 4,
@@ -959,7 +960,7 @@
                 "wrongCount": 3,
                 "imageUrl": null,
                 "studentAnswer": "3",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 401ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 3\n공식 정답: 3\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 3\n- 학생 답안: 3\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 401ms (추론 비용: $0.000024)"
               }
             ],
             "score": 10,
@@ -985,7 +986,7 @@
                 "wrongCount": 1,
                 "imageUrl": null,
                 "studentAnswer": "4",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 375ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: 4\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 4\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 375ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 3,
@@ -994,7 +995,7 @@
                 "wrongCount": 2,
                 "imageUrl": null,
                 "studentAnswer": "4",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 33%)\n- 검정 속도: 386ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: 4\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 4\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 33%)\n- 검정 속도: 386ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 4,
@@ -1003,7 +1004,7 @@
                 "wrongCount": 3,
                 "imageUrl": null,
                 "studentAnswer": "4",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 364ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: 4\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 4\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 364ms (추론 비용: $0.000024)"
               }
             ],
             "score": 10,
@@ -1029,7 +1030,7 @@
                 "wrongCount": 1,
                 "imageUrl": null,
                 "studentAnswer": "5",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 35%)\n- 검정 속도: 406ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: 5\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 5\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 35%)\n- 검정 속도: 406ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 3,
@@ -1038,7 +1039,7 @@
                 "wrongCount": 2,
                 "imageUrl": null,
                 "studentAnswer": "5",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 36%)\n- 검정 속도: 377ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: 5\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 5\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 36%)\n- 검정 속도: 377ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 4,
@@ -1047,7 +1048,7 @@
                 "wrongCount": 3,
                 "imageUrl": null,
                 "studentAnswer": "5",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 362ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: 5\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 5\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 362ms (추론 비용: $0.000024)"
               }
             ],
             "score": 10,
@@ -1073,7 +1074,7 @@
                 "wrongCount": 1,
                 "imageUrl": null,
                 "studentAnswer": "4",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 404ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: 4\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 4\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 404ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 3,
@@ -1082,7 +1083,7 @@
                 "wrongCount": 2,
                 "imageUrl": null,
                 "studentAnswer": "4",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 36%)\n- 검정 속도: 399ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: 4\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 4\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 36%)\n- 검정 속도: 399ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 4,
@@ -1091,7 +1092,7 @@
                 "wrongCount": 3,
                 "imageUrl": null,
                 "studentAnswer": "4",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 32%)\n- 검정 속도: 464ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 4\n공식 정답: 4\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 4\n- 학생 답안: 4\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 32%)\n- 검정 속도: 464ms (추론 비용: $0.000024)"
               }
             ],
             "score": 10,
@@ -1117,7 +1118,7 @@
                 "wrongCount": 1,
                 "imageUrl": null,
                 "studentAnswer": "5",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 379ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: 5\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 5\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 379ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 3,
@@ -1126,7 +1127,7 @@
                 "wrongCount": 2,
                 "imageUrl": null,
                 "studentAnswer": "5",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 399ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: 5\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 5\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 34%)\n- 검정 속도: 399ms (추론 비용: $0.000024)"
               },
               {
                 "attempt": 4,
@@ -1135,7 +1136,7 @@
                 "wrongCount": 3,
                 "imageUrl": null,
                 "studentAnswer": "5",
-                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: [object Object]\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: [object Object]\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 33%)\n- 검정 속도: 377ms (추론 비용: $0.000024)"
+                "aiFeedback": "❌ [수학적 동치 판정]\n입력 답안: 5\n공식 정답: 5\n\n[채점 결과]\n❌ 오답\n\n[⚡ TypeSafe Jev 1.13 검정 판정]\n- 공식 정답: 5\n- 학생 답안: 5\n- 동치 판정: 불일치 (DIFFERENT)\n- 획득 점수: 1점 / 10점 (일치 확률: 33%)\n- 검정 속도: 377ms (추론 비용: $0.000024)"
               }
             ],
             "score": 10,

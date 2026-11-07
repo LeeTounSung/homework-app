@@ -74,8 +74,25 @@ export default function HomeworkDetailPage() {
   const [timerStatus, setTimerStatus] = useState('idle'); // 'idle', 'running', 'paused'
   const [timeLeft, setTimeLeft] = useState(0);
   const [targetMinutes, setTargetMinutes] = useState('60');
+  const [isAiSolving, setIsAiSolving] = useState(false);
 
   const hw = getHomeworkById(id);
+
+  const registeredCount = useMemo(() => {
+    const ans = hw?.answers || hw?.answerKey;
+    if (!ans) return 0;
+    if (Array.isArray(ans)) {
+      return ans.filter(item => item && (item.answer !== undefined ? String(item.answer).trim() : String(item).trim())).length;
+    }
+    if (typeof ans === 'object') {
+      return Object.values(ans).filter(val => {
+        if (!val) return false;
+        if (typeof val === 'object' && val.answer !== undefined) return String(val.answer).trim() !== '';
+        return String(val).trim() !== '';
+      }).length;
+    }
+    return 0;
+  }, [hw?.answers, hw?.answerKey]);
 
   useEffect(() => {
     if (hw && hw.isOnlineTest) {
@@ -179,24 +196,6 @@ export default function HomeworkDetailPage() {
   const normalizeAnswer = (str) => {
     return normalizeKoreanMath(str);
   };
-
-  const [isAiSolving, setIsAiSolving] = useState(false);
-
-  const registeredCount = useMemo(() => {
-    const ans = hw?.answers || hw?.answerKey;
-    if (!ans) return 0;
-    if (Array.isArray(ans)) {
-      return ans.filter(item => item && (item.answer !== undefined ? String(item.answer).trim() : String(item).trim())).length;
-    }
-    if (typeof ans === 'object') {
-      return Object.values(ans).filter(val => {
-        if (!val) return false;
-        if (typeof val === 'object' && val.answer !== undefined) return String(val.answer).trim() !== '';
-        return String(val).trim() !== '';
-      }).length;
-    }
-    return 0;
-  }, [hw?.answers, hw?.answerKey]);
 
   const handleOpenAnswerKeyModal = () => {
     let initial = {};

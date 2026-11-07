@@ -27,16 +27,6 @@ export default function AdminPage() {
     registeredStudents
   } = useHomework();
 
-  // If not admin, redirect or show error
-  if (!isAdmin) {
-    return (
-      <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <h2>접근 권한이 없습니다.</h2>
-        <button onClick={() => navigate('/')} className="modal-btn">홈으로 돌아가기</button>
-      </div>
-    );
-  }
-
   // Extract unique student names for quick selection
   const existingStudents = Array.from(new Set([
     ...(registeredStudents || ['강백', '정가윤', '아리', '헤준', '지성']),
@@ -80,6 +70,16 @@ export default function AdminPage() {
 
   // Settings Modal State
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // If not admin, redirect or show error
+  if (!isAdmin) {
+    return (
+      <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <h2>접근 권한이 없습니다.</h2>
+        <button onClick={() => navigate('/')} className="modal-btn">홈으로 돌아가기</button>
+      </div>
+    );
+  }
 
   const handleScanFolder = async () => {
     if (!newProblemImagesBaseUrl) {
