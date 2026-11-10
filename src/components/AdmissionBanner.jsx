@@ -9,8 +9,8 @@ const ADMISSION_GROUPS = [
     borderColor: 'rgba(244, 114, 182, 0.35)',
     univColor: '#FBCFE8',
     items: [
-      { univ: '연세대 의예과', name: '장O호' },
-      { univ: '가톨릭대 의예과', name: '이O휘' }
+      { univ: '연세대', dept: '의예과', name: '장O호' },
+      { univ: '가톨릭대', dept: '의예과', name: '이O휘' }
     ]
   },
   {
@@ -21,16 +21,16 @@ const ADMISSION_GROUPS = [
     borderColor: 'rgba(255, 215, 0, 0.32)',
     univColor: '#FFE57F',
     items: [
-      { univ: '서울대', name: '오O진' },
-      { univ: '서울대', name: '이O준' },
-      { univ: '서울대', name: '오O나' },
-      { univ: '서울대', name: '김O규' },
-      { univ: '서울대', name: '동O영' },
-      { univ: '연세대', name: '정O영' },
-      { univ: '연세대', name: '정O주' },
-      { univ: '고려대', name: '정O은' },
-      { univ: '고려대', name: '이O준' },
-      { univ: '고려대', name: '김O도' }
+      { univ: '서울대', dept: '사범대학', name: '오O진' },
+      { univ: '서울대', dept: '화학과', name: '이O준' },
+      { univ: '서울대', dept: '음악대학', name: '오O나' },
+      { univ: '서울대', dept: '생물교육학과', name: '김O규' },
+      { univ: '서울대', dept: '국어국문학과', name: '동O영' },
+      { univ: '연세대', dept: '화학공학과', name: '정O영' },
+      { univ: '연세대', dept: '심리학과', name: '정O주' },
+      { univ: '고려대', dept: '언어학과', name: '정O은' },
+      { univ: '고려대', dept: '화학과', name: '이O준' },
+      { univ: '고려대', dept: '디자인조형', name: '김O도' }
     ]
   },
   {
@@ -41,28 +41,28 @@ const ADMISSION_GROUPS = [
     borderColor: 'rgba(59, 130, 246, 0.28)',
     univColor: '#BFDBFE',
     items: [
-      { univ: '서강대', name: '송O은' },
-      { univ: '성균관대', name: '윤O민' },
-      { univ: '한양대', name: '정O영' },
-      { univ: '한양대', name: '김O연' },
-      { univ: '경희대', name: '이O찬' },
-      { univ: '경희대', name: '김O준' },
-      { univ: '경희대', name: '박O현' },
-      { univ: '한국외대', name: '이O호' },
-      { univ: '홍익대', name: '김O연' },
-      { univ: '숙명여대', name: '고O주' },
-      { univ: '숙명여대', name: '김O현' },
-      { univ: '국민대', name: '김O진' },
-      { univ: '숭실대', name: '국O헌' },
-      { univ: '세종대', name: '김O현' },
-      { univ: '광운대', name: '김O윤' },
-      { univ: '아주대', name: '김O현' },
-      { univ: '단국대', name: '황O연' },
-      { univ: '경기대', name: '김O현' },
-      { univ: '가천대', name: '김O연' },
-      { univ: '가천대', name: '김O화' },
-      { univ: '가천대', name: '이O진' },
-      { univ: '가천대', name: '김O은' }
+      { univ: '서강대', dept: '아동청소년학과', name: '송O은' },
+      { univ: '성균관대', dept: '역사학과', name: '윤O민' },
+      { univ: '한양대', dept: '화학과', name: '정O영' },
+      { univ: '한양대', dept: 'ICT융합', name: '김O연' },
+      { univ: '경희대', dept: '역사학과', name: '이O찬' },
+      { univ: '경희대', dept: '경영학과', name: '김O준' },
+      { univ: '경희대', dept: '전자공학과', name: '박O현' },
+      { univ: '한국외대', dept: '일본어학과', name: '이O호' },
+      { univ: '홍익대', dept: '동양화과', name: '김O연' },
+      { univ: '숙명여대', dept: '성악과', name: '고O주' },
+      { univ: '숙명여대', dept: '의류학과', name: '김O현' },
+      { univ: '국민대', dept: '인공지능학부', name: '김O진' },
+      { univ: '숭실대', dept: '산업정보학과', name: '국O헌' },
+      { univ: '세종대', dept: '국어국문학과', name: '김O현' },
+      { univ: '광운대', dept: '신소재공학과', name: '김O윤' },
+      { univ: '아주대', dept: '기계공학과', name: '김O현' },
+      { univ: '단국대', dept: '화학공학과', name: '황O연' },
+      { univ: '경기대', dept: '산업경영', name: '김O현' },
+      { univ: '가천대', dept: '경영학과', name: '김O연' },
+      { univ: '가천대', dept: '컴퓨터공학과', name: '김O화' },
+      { univ: '가천대', dept: '간호학과', name: '이O진' },
+      { univ: '가천대', dept: '경영학과', name: '김O은' }
     ]
   },
   {
@@ -74,8 +74,8 @@ const ADMISSION_GROUPS = [
     univColor: '#C8E6C9',
     singleCol: true,
     items: [
-      { univ: '일본 오사카 대학', name: '권형O' },
-      { univ: '델프트공대 우주항공', name: '서O원' }
+      { univ: '일본 오사카 대학', dept: '', name: '권형O' },
+      { univ: '델프트공대', dept: '우주항공', name: '서O원' }
     ]
   }
 ];
@@ -257,22 +257,46 @@ export default function AdmissionBanner() {
                           minWidth: 0
                         }}
                       >
-                        <span
+                        <div
                           style={{
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            color: group.univColor,
-                            whiteSpace: 'nowrap'
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '1px',
+                            minWidth: 0
                           }}
                         >
-                          {item.univ}
-                        </span>
+                          <span
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              color: group.univColor,
+                              lineHeight: 1.25,
+                              wordBreak: 'keep-all'
+                            }}
+                          >
+                            {item.univ}
+                          </span>
+                          {item.dept && (
+                            <span
+                              style={{
+                                fontSize: '10.5px',
+                                fontWeight: 500,
+                                color: '#94A3B8',
+                                lineHeight: 1.25,
+                                wordBreak: 'keep-all'
+                              }}
+                            >
+                              {item.dept}
+                            </span>
+                          )}
+                        </div>
                         <span
                           style={{
                             fontSize: '11.5px',
-                            fontWeight: 500,
-                            color: '#CBD5E1',
-                            whiteSpace: 'nowrap'
+                            fontWeight: 600,
+                            color: '#E2E8F0',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0
                           }}
                         >
                           {item.name}

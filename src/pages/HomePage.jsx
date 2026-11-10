@@ -42,7 +42,9 @@ const formatHomeworkCardDesc = (hw) => {
     if (parts && parts.length >= 2) {
       const cleanParts = parts.map(p => p.replace(/[\[\]]/g, ''));
       let subject = '공통수학1';
-      if (desc.includes('수학(상)')) subject = '수학(상)';
+      if (desc.includes('공통수학2')) subject = '공통수학2';
+      else if (desc.includes('대수') || (hw.title || '').includes('대수')) subject = '대수';
+      else if (desc.includes('수학(상)')) subject = '수학(상)';
       else if (desc.includes('수학(하)')) subject = '수학(하)';
       else if (desc.includes('수학1')) subject = '수학1';
       else if (desc.includes('수학2')) subject = '수학2';
