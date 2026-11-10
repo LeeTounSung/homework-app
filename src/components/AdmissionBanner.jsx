@@ -72,7 +72,11 @@ const ADMISSION_GROUPS = [
     headerBg: 'rgba(129, 199, 132, 0.11)',
     borderColor: 'rgba(129, 199, 132, 0.3)',
     univColor: '#C8E6C9',
-    items: [{ univ: '일본 오사카 대학', name: '권형O' }]
+    singleCol: true,
+    items: [
+      { univ: '일본 오사카 대학', name: '권형O' },
+      { univ: '델프트공대 우주항공', name: '서O원' }
+    ]
   }
 ];
 
@@ -198,7 +202,7 @@ export default function AdmissionBanner() {
           }}
         >
           {ADMISSION_GROUPS.map((group) => {
-            const isSingle = group.items.length === 1;
+            const isSingleCol = Boolean(group.singleCol) || group.items.length === 1;
             return (
               <div
                 key={group.id}
@@ -230,13 +234,13 @@ export default function AdmissionBanner() {
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: isSingle ? '1fr' : 'repeat(2, minmax(0, 1fr))'
+                    gridTemplateColumns: isSingleCol ? '1fr' : 'repeat(2, minmax(0, 1fr))'
                   }}
                 >
                   {group.items.map((item, idx) => {
-                    const isLeftCol = !isSingle && idx % 2 === 0;
-                    const rowCount = isSingle ? 1 : Math.ceil(group.items.length / 2);
-                    const currentRow = isSingle ? 0 : Math.floor(idx / 2);
+                    const isLeftCol = !isSingleCol && idx % 2 === 0;
+                    const rowCount = isSingleCol ? group.items.length : Math.ceil(group.items.length / 2);
+                    const currentRow = isSingleCol ? idx : Math.floor(idx / 2);
                     const hasBottomBorder = currentRow < rowCount - 1;
                     return (
                       <div
