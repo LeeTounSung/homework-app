@@ -14,6 +14,7 @@ export const REGISTERED_STUDENTS = [];
 export const ADMIN_ACCOUNTS = ['mathkorea', 'admin', '선생님', '원장샘'];
 const SYSTEM_ACCOUNT_NAMES = new Set(['전체', '공통', '원장샘', 'mathkorea', 'admin', '선생님']);
 const REGISTERED_STUDENTS_KEY = 'homework_app_registered_students_v1';
+const REMOVED_STUDENTS_KEY = 'homework_app_removed_students_v1';
 const CLEAN_RESET_FLAG = 'homework_app_clean_reset_20261110';
 
 const runCleanStudentResetOnce = () => {
@@ -26,6 +27,7 @@ const runCleanStudentResetOnce = () => {
     localStorage.removeItem('homework_app_school_materials_v2');
     localStorage.removeItem('homework_app_school_materials_v1');
     localStorage.removeItem(REGISTERED_STUDENTS_KEY);
+    localStorage.removeItem(REMOVED_STUDENTS_KEY);
     const prevUser = localStorage.getItem('homeworkAppUser');
     if (prevUser && !ADMIN_ACCOUNTS.some(a => a.toLowerCase() === prevUser.trim().toLowerCase())) {
       localStorage.removeItem('homeworkAppUser');
@@ -36,9 +38,9 @@ const runCleanStudentResetOnce = () => {
 
 runCleanStudentResetOnce();
 
-const loadRegisteredStudents = () => {
+const loadStringArray = (key) => {
   try {
-    const saved = localStorage.getItem(REGISTERED_STUDENTS_KEY);
+    const saved = localStorage.getItem(key);
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) return parsed.filter(s => typeof s === 'string' && s.trim());
@@ -46,6 +48,9 @@ const loadRegisteredStudents = () => {
   } catch (e) {}
   return [];
 };
+
+const loadRegisteredStudents = () => loadStringArray(REGISTERED_STUDENTS_KEY);
+const loadRemovedStudents = () => loadStringArray(REMOVED_STUDENTS_KEY);
 
 export const normalizeStudentName = (name) => {
   if (!name || typeof name !== 'string') return '';
@@ -102,6 +107,8 @@ export const HomeworkProvider = ({ children }) => {
     if (!cleanName || SYSTEM_ACCOUNT_NAMES.has(cleanName) || ADMIN_ACCOUNTS.some(a => a.toLowerCase() === cleanName.toLowerCase())) {
       return;
     }
+    const removed = loadRemovedStudents().filter(s => s !== cleanName);
+    try { localStorage.setItem(REMOVED_STUDENTS_KEY, JSON.stringify(removed)); } catch (e) {}
     setRegisteredStudents(prev => {
       if (prev.includes(cleanName)) return prev;
       const next = [...prev, cleanName];
@@ -123,6 +130,8 @@ export const HomeworkProvider = ({ children }) => {
     if (registeredStudents.includes(cleanName)) {
       return { success: false, message: `이미 등록된 학생입니다: "${cleanName}"` };
     }
+    const removed = loadRemovedStudents().filter(s => s !== cleanName);
+    try { localStorage.setItem(REMOVED_STUDENTS_KEY, JSON.stringify(removed)); } catch (e) {}
     saveRegisteredStudentsList([...registeredStudents, cleanName]);
     return { success: true, name: cleanName };
   };
@@ -296,6 +305,8 @@ export const HomeworkProvider = ({ children }) => {
   const removeRegisteredStudent = (targetName, removeDataToo = true) => {
     const cleanName = normalizeStudentName(targetName);
     if (!cleanName) return;
+    const removed = Array.from(new Set([...loadRemovedStudents(), cleanName]));
+    try { localStorage.setItem(REMOVED_STUDENTS_KEY, JSON.stringify(removed)); } catch (e) {}
     saveRegisteredStudentsList(registeredStudents.filter(s => s !== cleanName));
     saveSchedules(schedules.filter(s => s.studentName !== cleanName));
     if (removeDataToo) {
@@ -496,6 +507,31 @@ export const HomeworkProvider = ({ children }) => {
   useEffect(() => {
     const fetchData = async () => {
       let currentBaseData = data;
+
+      // 0. Fetch public/students.json (registered students managed via Arbalest / homework_agent)
+      try {
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const cleanBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+        const studentsRes = await fetch(`${cleanBase}students.json?t=${Date.now()}`);
+        if (studentsRes.ok) {
+          const publicStudents = await studentsRes.json();
+          if (Array.isArray(publicStudents)) {
+            const removedSet = new Set(loadRemovedStudents());
+            setRegisteredStudents(prev => {
+              const merged = Array.from(new Set([
+                ...publicStudents.filter(s => typeof s === 'string' && s.trim() && !removedSet.has(s.trim())),
+                ...prev
+              ]));
+              try {
+                localStorage.setItem(REGISTERED_STUDENTS_KEY, JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
+          }
+        }
+      } catch (e) {
+        console.warn("Local students.json fetch skipped:", e);
+      }
 
       // 1. Fetch latest public/homeworkData.json (GitHub Pages / Local build) with Smart Merge
       try {

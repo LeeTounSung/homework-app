@@ -686,7 +686,7 @@ export default function AdminPage() {
             </h3>
             <p style={{ color: '#94A3B8', fontSize: '12.5px', margin: '0 0 16px 0', lineHeight: 1.45 }}>
               새 학생을 등록하면 출제·진도표·현재 기기 로그인 목록에 즉시 반영됩니다.
-              (학생 본인 스마트폰에서는 숙제를 1건 이상 출제하면 클라우드 동기화로 바로 로그인할 수 있습니다.)
+              (알바레스트를 통한 학생 등록 또는 숙제 출제 시 학생 스마트폰에서도 바로 로그인할 수 있습니다.)
             </p>
 
             {/* Register New Student */}
