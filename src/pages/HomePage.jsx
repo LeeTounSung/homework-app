@@ -147,71 +147,16 @@ export default function HomePage() {
   // ==========================
   // School Materials State & Modals (학교 제공 자료실)
   // ==========================
-  const pdfBase = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
-  const DEFAULT_SEHWA_MATERIAL = {
-    id: 1793595000000,
-    studentName: '원장샘',
-    title: '[세화고] 고2 미적분 I 중간고사 대비 핵심 8제',
-    subject: '미적분1',
-    category: '📝 기출/예상',
-    pdfUrl: `${pdfBase}school_materials/sehwa_midterm_calc1_8problems.pdf`,
-    imageUrl: '',
-    memo: '세화고등학교 2학년 1학기 중간고사 대비 rotlayer5 조립형 핵심 8제 실전 모의과제 PDF입니다.\n\n📌 시험 범위: 함수의 극한과 연속, 미분계수와 도함수, 도함수의 활용(접선, 극대·극소, 사차함수 개형, 방정식 실근 킬러)\n\n※ PDF 시험지를 다운로드하거나 바로 인쇄하여 50분 실전 모의고사로 활용하세요.',
-    createdAt: '2026. 11. 03 13:35'
-  };
-
   const [schoolMaterials, setSchoolMaterials] = useState(() => {
     try {
       const saved = localStorage.getItem('homework_app_school_materials_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          if (!parsed.some(m => m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고')))) {
-            return [DEFAULT_SEHWA_MATERIAL, ...parsed];
-          }
-          return parsed.map(m => (m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고'))) ? { ...m, pdfUrl: DEFAULT_SEHWA_MATERIAL.pdfUrl, studentName: '원장샘' } : m);
-        }
-      }
-      const oldSaved = localStorage.getItem('homework_app_school_materials_v2') || localStorage.getItem('homework_app_school_materials_v1');
-      if (oldSaved) {
-        const oldParsed = JSON.parse(oldSaved);
-        if (Array.isArray(oldParsed)) {
-          const list = [DEFAULT_SEHWA_MATERIAL, ...oldParsed.filter(m => m.id !== DEFAULT_SEHWA_MATERIAL.id && !(m.title && m.title.includes('세화고')))];
-          return list;
-        }
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {}
-    return [
-      DEFAULT_SEHWA_MATERIAL,
-      {
-        id: 1,
-        studentName: '강백',
-        title: '1학기 중간고사 대비 수학 프린트 (다항식 & 나머지정리 심화)',
-        subject: '공통수학1',
-        category: '📄 프린트/유인물',
-        imageUrl: '',
-        memo: '선생님께서 5번과 9번 문항은 시험에 숫자만 바꿔 100% 출제된다고 강조하셨습니다.',
-        createdAt: '2026. 11. 02 10:30'
-      }
-    ];
+    return [];
   });
-
-  useEffect(() => {
-    try {
-      const exists = schoolMaterials.some(m => m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고')));
-      if (!exists) {
-        const updated = [DEFAULT_SEHWA_MATERIAL, ...schoolMaterials];
-        saveSchoolMaterialsList(updated);
-      } else {
-        // Ensure pdfUrl is always fresh
-        const needsUpdate = schoolMaterials.some(m => (m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고'))) && m.pdfUrl !== DEFAULT_SEHWA_MATERIAL.pdfUrl);
-        if (needsUpdate) {
-          const updated = schoolMaterials.map(m => (m.id === DEFAULT_SEHWA_MATERIAL.id || (m.title && m.title.includes('세화고'))) ? { ...m, pdfUrl: DEFAULT_SEHWA_MATERIAL.pdfUrl } : m);
-          saveSchoolMaterialsList(updated);
-        }
-      }
-    } catch (e) {}
-  }, []);
 
   const [schoolCategoryFilter, setSchoolCategoryFilter] = useState('전체'); // '전체' | '📄 프린트/유인물' | '📚 부교재' | '✏️ 수행평가' | '📝 기출/예상'
   const [isSchoolModalOpen, setIsSchoolModalOpen] = useState(false);
@@ -364,7 +309,11 @@ export default function HomePage() {
   };
 
   const handleSaveSelfStudyProblem = async () => {
-    const targetStudent = selfStudyStudent || (currentUser && currentUser !== 'mathkorea' ? currentUser : '강백');
+    const targetStudent = selfStudyStudent || (!isAdmin && currentUser ? currentUser : '');
+    if (!targetStudent) {
+      alert('먼저 관리자 대시보드에서 학생을 등록하거나 선택해주세요.');
+      return;
+    }
     const finalWorkbook = selfStudyWorkbook.trim() || '자율학습';
     const finalChapter = selfStudyChapter.trim() || '단원 미지정';
     const finalProbNum = selfStudyProblemNumber.trim() || '1';
@@ -408,42 +357,48 @@ export default function HomePage() {
   const [scheduleViewMode, setScheduleViewMode] = useState('compact'); // 'compact' | 'detailed'
   
   const allStudentNames = React.useMemo(() => {
-    const names = new Set(registeredStudents || ['강백', '정가윤', '아리', '헤준', '지성']);
+    const names = new Set(registeredStudents || []);
+    const excluded = new Set(['전체', '공통', '원장샘', 'mathkorea', 'admin', '선생님']);
     data.forEach(section => {
       section.homeworks.forEach(hw => {
-        if (hw.studentName) names.add(hw.studentName);
+        if (hw.studentName && !excluded.has(hw.studentName)) names.add(hw.studentName);
       });
     });
     if (schedules) {
       schedules.forEach(s => {
-        if (s.studentName && s.studentName !== '전체') names.add(s.studentName);
+        if (s.studentName && !excluded.has(s.studentName)) names.add(s.studentName);
       });
     }
     return Array.from(names);
   }, [data, schedules, registeredStudents]);
 
   const activeScheduleStudent = isAdmin 
-    ? (selectedScheduleStudent || allStudentNames[0] || '강백')
+    ? (selectedScheduleStudent && allStudentNames.includes(selectedScheduleStudent) ? selectedScheduleStudent : (allStudentNames[0] || ''))
     : currentUser;
 
   const [scheduleForm, setScheduleForm] = useState({
     week: '1주차',
     period: '',
     subject: '공통수학1',
-    studentName: '강백',
+    studentName: '',
     chapter: '',
     topic: '',
     status: 'current'
   });
 
   const openAddScheduleModal = (defaultSubj = '공통수학1') => {
+    if (!activeScheduleStudent) {
+      alert('먼저 관리자 대시보드 → [학생 등록/관리]에서 학생을 등록해주세요.');
+      return;
+    }
+    const cleanSubj = typeof defaultSubj === 'string' ? defaultSubj : '공통수학1';
     setEditScheduleId(null);
     const studentSchedules = schedules ? schedules.filter(s => s.studentName === activeScheduleStudent) : [];
     const nextWeekNum = studentSchedules.length + 1;
     setScheduleForm({
       week: `${nextWeekNum}주차`,
       period: '',
-      subject: defaultSubj || '공통수학1',
+      subject: cleanSubj || '공통수학1',
       studentName: activeScheduleStudent,
       chapter: '',
       topic: '',
@@ -1019,7 +974,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => {
-                  setSelfStudyStudent(currentUser && currentUser !== 'mathkorea' ? currentUser : (allStudentNames[0] || '강백'));
+                  setSelfStudyStudent(!isAdmin && currentUser ? currentUser : (allStudentNames[0] || ''));
                   setSelfStudyWorkbook('');
                   setSelfStudyChapter('');
                   setSelfStudyImage(null);
@@ -1736,10 +1691,10 @@ export default function HomePage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
                 <h2 style={{ color: '#FFD700', fontSize: '18px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  📋 {activeScheduleStudent} 학생의 주차별 진도표
+                  {activeScheduleStudent ? `📋 ${activeScheduleStudent} 학생의 주차별 진도표` : '📋 등록된 학생이 없습니다'}
                 </h2>
                 <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>
-                  현재 나가고 있는 주차별 진도 현황입니다.
+                  {activeScheduleStudent ? '현재 나가고 있는 주차별 진도 현황입니다.' : '관리자 대시보드에서 새 학생을 등록하면 주차별 진도를 관리할 수 있습니다.'}
                 </p>
               </div>
 
@@ -3363,10 +3318,10 @@ export default function HomePage() {
                       <span style={{ fontSize: '26px' }}>📑</span>
                       <div>
                         <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#60A5FA' }}>
-                          PDF 실전 모의과제 시험지 (총 5페이지)
+                          PDF 학습 자료
                         </div>
                         <div style={{ fontSize: '11.5px', color: '#94A3B8' }}>
-                          세화고 고2 미적분 I 중간대비 핵심 8제
+                          {selectedSchoolMaterial.title}
                         </div>
                       </div>
                     </div>

@@ -24,13 +24,18 @@ export default function AdminPage() {
     deletePromoBanner,
     mainBannerImage,
     saveMainBannerImage,
-    registeredStudents
+    schedules,
+    registeredStudents,
+    addRegisteredStudent,
+    removeRegisteredStudent
   } = useHomework();
 
   // Extract unique student names for quick selection
+  const excludedNames = new Set(['전체', '공통', '원장샘', 'mathkorea', 'admin', '선생님']);
   const existingStudents = Array.from(new Set([
-    ...(registeredStudents || ['강백', '정가윤', '아리', '헤준', '지성']),
-    ...(data || []).flatMap(sec => (sec.homeworks || []).map(hw => hw.studentName)).filter(Boolean)
+    ...(registeredStudents || []),
+    ...(schedules || []).map(s => s.studentName).filter(n => n && !excludedNames.has(n)),
+    ...(data || []).flatMap(sec => (sec.homeworks || []).map(hw => hw.studentName)).filter(n => n && !excludedNames.has(n))
   ]));
 
   // Create Homework Modal State
@@ -71,6 +76,11 @@ export default function AdminPage() {
   // Settings Modal State
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
+  // Student Management Modal State
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+  const [studentInputName, setStudentInputName] = useState('');
+  const [studentError, setStudentError] = useState('');
+
   // If not admin, redirect or show error
   if (!isAdmin) {
     return (
@@ -80,6 +90,43 @@ export default function AdminPage() {
       </div>
     );
   }
+
+  const renderStudentQuickChips = (selectedName, onSelect) => {
+    if (existingStudents.length === 0) return null;
+    return (
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
+        {existingStudents.map((st, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => onSelect(st)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: '12px',
+              border: selectedName === st ? '1px solid #FFD700' : '1px solid #444',
+              backgroundColor: selectedName === st ? '#FFD700' : '#2A2B36',
+              color: selectedName === st ? '#000' : '#ccc',
+              fontSize: '12px',
+              cursor: 'pointer',
+              fontWeight: selectedName === st ? 'bold' : 'normal'
+            }}
+          >
+            {st}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const handleRegisterStudentSubmit = () => {
+    const res = addRegisteredStudent(studentInputName);
+    if (!res.success) {
+      setStudentError(res.message);
+      return;
+    }
+    setStudentInputName('');
+    setStudentError('');
+  };
 
   const handleScanFolder = async () => {
     if (!newProblemImagesBaseUrl) {
@@ -356,6 +403,21 @@ export default function AdminPage() {
             <h3 style={{ color: 'white', margin: 0, fontSize: '18px' }}>홍보 배너/포스터 관리</h3>
             <p style={{ color: '#FCE4EC', fontSize: '12px', margin: '10px 0 0 0' }}>로그인 전 메인 화면에 띄울 학원/수업 홍보 카드와 포스터 이미지를 등록·관리합니다.</p>
           </div>
+
+          {/* Card 7: 학생 등록/관리 */}
+          <div 
+            onClick={() => { setStudentError(''); setIsStudentModalOpen(true); }}
+            style={{ 
+              backgroundColor: '#00897B', padding: '30px 20px', borderRadius: '12px', 
+              cursor: 'pointer', textAlign: 'center', transition: 'transform 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <div style={{ fontSize: '40px', marginBottom: '10px' }}>👥</div>
+            <h3 style={{ color: 'white', margin: 0, fontSize: '18px' }}>학생 등록 / 관리 ({existingStudents.length}명)</h3>
+            <p style={{ color: '#E0F2F1', fontSize: '12px', margin: '10px 0 0 0' }}>새 학생을 등록하거나 기존 등록 학생 및 진도·숙제 데이터를 정리합니다.</p>
+          </div>
         </div>
       </main>
 
@@ -381,35 +443,13 @@ export default function AdminPage() {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#aaa' }}>학생 이름</label>
-                {existingStudents.length > 0 && (
-                  <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                    {existingStudents.map((st, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setNewStudent(st)}
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: '12px',
-                          border: newStudent === st ? '1px solid #FFD700' : '1px solid #444',
-                          backgroundColor: newStudent === st ? '#FFD700' : '#2A2B36',
-                          color: newStudent === st ? '#000' : '#ccc',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          fontWeight: newStudent === st ? 'bold' : 'normal'
-                        }}
-                      >
-                        {st}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {renderStudentQuickChips(newStudent, setNewStudent)}
                 <input 
                   type="text" 
                   value={newStudent} 
                   onChange={(e) => setNewStudent(e.target.value)}
                   className="modal-input"
-                  placeholder="학생 이름을 입력하세요 (예: 홍길동, df)"
+                  placeholder="학생 이름을 입력하세요 (예: 김민준)"
                 />
               </div>
 
@@ -578,11 +618,13 @@ export default function AdminPage() {
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#aaa' }}>학생 이름</label>
+                {renderStudentQuickChips(newTestStudent, setNewTestStudent)}
                 <input 
                   type="text" 
                   value={newTestStudent} 
                   onChange={(e) => setNewTestStudent(e.target.value)}
                   className="modal-input"
+                  placeholder="학생 이름을 입력하세요"
                 />
               </div>
               <div>
@@ -630,6 +672,157 @@ export default function AdminPage() {
         isOpen={isSettingsModalOpen} 
         onClose={() => setIsSettingsModalOpen(false)} 
       />
+
+      {/* Student Management Modal */}
+      {isStudentModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsStudentModalOpen(false)}>
+          <div
+            className="modal-content"
+            style={{ maxWidth: '520px', width: '92%', maxHeight: '88vh', overflowY: 'auto' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ marginTop: 0, marginBottom: '10px', color: '#4DB6AC', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              👥 학생 등록 / 관리
+            </h3>
+            <p style={{ color: '#94A3B8', fontSize: '12.5px', margin: '0 0 16px 0', lineHeight: 1.45 }}>
+              새 학생을 등록하면 출제·진도표·현재 기기 로그인 목록에 즉시 반영됩니다.
+              (학생 본인 스마트폰에서는 숙제를 1건 이상 출제하면 클라우드 동기화로 바로 로그인할 수 있습니다.)
+            </p>
+
+            {/* Register New Student */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              <input
+                type="text"
+                value={studentInputName}
+                onChange={(e) => {
+                  setStudentInputName(e.target.value);
+                  if (studentError) setStudentError('');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleRegisterStudentSubmit();
+                  }
+                }}
+                className="modal-input"
+                style={{ flex: 1 }}
+                placeholder="새 학생 이름 입력 (예: 김민준)"
+              />
+              <button
+                type="button"
+                onClick={handleRegisterStudentSubmit}
+                style={{
+                  backgroundColor: '#00897B',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0 16px',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                ➕ 학생 등록
+              </button>
+            </div>
+
+            {studentError && (
+              <div style={{
+                marginBottom: '14px',
+                padding: '8px 12px',
+                backgroundColor: 'rgba(239, 68, 68, 0.14)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: '8px',
+                color: '#FCA5A5',
+                fontSize: '12px'
+              }}>
+                ⚠️ {studentError}
+              </div>
+            )}
+
+            {/* Existing Students List */}
+            <div style={{ marginTop: '14px' }}>
+              <h4 style={{ color: '#FFD700', fontSize: '13.5px', margin: '0 0 10px 0' }}>
+                📋 등록된 학생 목록 ({existingStudents.length}명)
+              </h4>
+
+              {existingStudents.length === 0 ? (
+                <div style={{
+                  padding: '26px 16px',
+                  textAlign: 'center',
+                  backgroundColor: '#181A22',
+                  border: '1px dashed #334155',
+                  borderRadius: '10px',
+                  color: '#94A3B8',
+                  fontSize: '13px'
+                }}>
+                  현재 등록된 학생이 없습니다. 위 입력란에서 새 학생을 등록해 주세요.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {existingStudents.map((stName) => {
+                    const hwCount = (data || []).reduce(
+                      (sum, sec) => sum + (sec.homeworks || []).filter(h => h.studentName === stName).length,
+                      0
+                    );
+                    const schedCount = (schedules || []).filter(s => s.studentName === stName).length;
+                    return (
+                      <div
+                        key={stName}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px',
+                          backgroundColor: '#222530',
+                          border: '1px solid #334155',
+                          borderRadius: '10px',
+                          padding: '10px 12px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 'bold', color: '#FFFFFF', fontSize: '14px' }}>👤 {stName}</span>
+                          <span style={{ fontSize: '11px', color: '#93C5FD', backgroundColor: 'rgba(59, 130, 246, 0.14)', padding: '2px 7px', borderRadius: '999px' }}>
+                            숙제 {hwCount}건
+                          </span>
+                          <span style={{ fontSize: '11px', color: '#FDE68A', backgroundColor: 'rgba(255, 215, 0, 0.12)', padding: '2px 7px', borderRadius: '999px' }}>
+                            진도 {schedCount}건
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`'${stName}' 학생과 해당 학생의 숙제·진도 데이터를 모두 삭제하시겠습니까?`)) {
+                              removeRegisteredStudent(stName, true);
+                            }
+                          }}
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: '#EF5350',
+                            border: '1px solid rgba(239, 83, 80, 0.6)',
+                            borderRadius: '6px',
+                            padding: '5px 10px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-buttons" style={{ marginTop: '20px' }}>
+              <button type="button" className="modal-btn cancel" onClick={() => setIsStudentModalOpen(false)}>닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Promo Banner Management Modal */}
       {isBannerModalOpen && (

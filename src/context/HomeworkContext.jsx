@@ -10,22 +10,48 @@ const DEFAULT_DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
 const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 const DEFAULT_META_KEY = import.meta.env.VITE_META_API_KEY || '';
 
-export const REGISTERED_STUDENTS = ['강백', '정가윤', '아리', '헤준', '지성'];
+export const REGISTERED_STUDENTS = [];
 export const ADMIN_ACCOUNTS = ['mathkorea', 'admin', '선생님', '원장샘'];
+const SYSTEM_ACCOUNT_NAMES = new Set(['전체', '공통', '원장샘', 'mathkorea', 'admin', '선생님']);
+const REGISTERED_STUDENTS_KEY = 'homework_app_registered_students_v1';
+const CLEAN_RESET_FLAG = 'homework_app_clean_reset_20261110';
+
+const runCleanStudentResetOnce = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    if (localStorage.getItem(CLEAN_RESET_FLAG)) return;
+    localStorage.removeItem('cachedHomeworkData');
+    localStorage.removeItem('homework_app_syllabus_v7');
+    localStorage.removeItem('homework_app_school_materials_v3');
+    localStorage.removeItem('homework_app_school_materials_v2');
+    localStorage.removeItem('homework_app_school_materials_v1');
+    localStorage.removeItem(REGISTERED_STUDENTS_KEY);
+    const prevUser = localStorage.getItem('homeworkAppUser');
+    if (prevUser && !ADMIN_ACCOUNTS.some(a => a.toLowerCase() === prevUser.trim().toLowerCase())) {
+      localStorage.removeItem('homeworkAppUser');
+    }
+    localStorage.setItem(CLEAN_RESET_FLAG, '1');
+  } catch (e) {}
+};
+
+runCleanStudentResetOnce();
+
+const loadRegisteredStudents = () => {
+  try {
+    const saved = localStorage.getItem(REGISTERED_STUDENTS_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed.filter(s => typeof s === 'string' && s.trim());
+    }
+  } catch (e) {}
+  return [];
+};
 
 export const normalizeStudentName = (name) => {
   if (!name || typeof name !== 'string') return '';
   const trimmed = name.trim();
   const matchedAdmin = ADMIN_ACCOUNTS.find(a => a.toLowerCase() === trimmed.toLowerCase());
   if (matchedAdmin) return matchedAdmin;
-
-  // Korean suffix '이' / common aliases
-  if (trimmed === '강백' || trimmed === '강백이') return '강백';
-  if (trimmed === '정가윤' || trimmed === '가윤' || trimmed === '가윤이' || trimmed === '정가윤이') return '정가윤';
-  if (trimmed === '아리' || trimmed === '아리이') return '아리';
-  if (trimmed === '헤준' || trimmed === '헤준이') return '헤준';
-  if (trimmed === '지성' || trimmed === '지성이') return '지성';
-
   return trimmed;
 };
 
@@ -33,7 +59,7 @@ export const isInitialValidUser = (name) => {
   if (!name || typeof name !== 'string') return false;
   const norm = normalizeStudentName(name);
   if (ADMIN_ACCOUNTS.some(a => a.toLowerCase() === norm.toLowerCase())) return true;
-  if (REGISTERED_STUDENTS.includes(norm)) return true;
+  if (REGISTERED_STUDENTS.includes(norm) || loadRegisteredStudents().includes(norm)) return true;
   return false;
 };
 
@@ -62,6 +88,45 @@ export const HomeworkProvider = ({ children }) => {
   });
   const [isSaving, setIsSaving] = useState(false);
 
+  const [registeredStudents, setRegisteredStudents] = useState(() => loadRegisteredStudents());
+
+  const saveRegisteredStudentsList = (nextList) => {
+    setRegisteredStudents(nextList);
+    try {
+      localStorage.setItem(REGISTERED_STUDENTS_KEY, JSON.stringify(nextList));
+    } catch (e) {}
+  };
+
+  const ensureStudentRegistered = (rawName) => {
+    const cleanName = normalizeStudentName(rawName);
+    if (!cleanName || SYSTEM_ACCOUNT_NAMES.has(cleanName) || ADMIN_ACCOUNTS.some(a => a.toLowerCase() === cleanName.toLowerCase())) {
+      return;
+    }
+    setRegisteredStudents(prev => {
+      if (prev.includes(cleanName)) return prev;
+      const next = [...prev, cleanName];
+      try {
+        localStorage.setItem(REGISTERED_STUDENTS_KEY, JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  const addRegisteredStudent = (rawName) => {
+    const cleanName = normalizeStudentName(rawName);
+    if (!cleanName) {
+      return { success: false, message: '학생 이름을 입력해주세요.' };
+    }
+    if (SYSTEM_ACCOUNT_NAMES.has(cleanName) || ADMIN_ACCOUNTS.some(a => a.toLowerCase() === cleanName.toLowerCase())) {
+      return { success: false, message: '관리자 또는 시스템 예약 명칭은 학생으로 등록할 수 없습니다.' };
+    }
+    if (registeredStudents.includes(cleanName)) {
+      return { success: false, message: `이미 등록된 학생입니다: "${cleanName}"` };
+    }
+    saveRegisteredStudentsList([...registeredStudents, cleanName]);
+    return { success: true, name: cleanName };
+  };
+
   // Authentication State
   const [currentUser, setCurrentUser] = useState(() => {
     try {
@@ -78,7 +143,16 @@ export const HomeworkProvider = ({ children }) => {
     const saved = localStorage.getItem('homeworkAppUser');
     if (saved) {
       const norm = normalizeStudentName(saved);
-      if (isInitialValidUser(norm)) {
+      const hasSavedStudentData = (() => {
+        try {
+          const cached = JSON.parse(localStorage.getItem('cachedHomeworkData') || '[]');
+          if (Array.isArray(cached) && cached.some(sec => sec.homeworks?.some(hw => hw.studentName === norm))) return true;
+          const syll = JSON.parse(localStorage.getItem('homework_app_syllabus_v7') || '[]');
+          if (Array.isArray(syll) && syll.some(s => s.studentName === norm)) return true;
+        } catch (e) {}
+        return false;
+      })();
+      if (isInitialValidUser(norm) || hasSavedStudentData) {
         return norm;
       } else {
         localStorage.removeItem('homeworkAppUser');
@@ -93,7 +167,9 @@ export const HomeworkProvider = ({ children }) => {
       return { success: false, message: '이름 또는 아이디를 입력해주세요.' };
     }
     const norm = normalizeStudentName(rawUsername);
-    const isDynamicStudent = (schedules && schedules.some(s => s.studentName === norm)) ||
+    const isDynamicStudent =
+      registeredStudents.includes(norm) ||
+      (schedules && schedules.some(s => s.studentName === norm)) ||
       (data && data.some(sec => sec.homeworks && sec.homeworks.some(hw => hw.studentName === norm)));
 
     if (!isInitialValidUser(norm) && !isDynamicStudent) {
@@ -178,138 +254,7 @@ export const HomeworkProvider = ({ children }) => {
   });
 
   // Student-specific Progress Plan by Subject (과목별 주차별 예상 진도 단원 - coach-plan 수립)
-  const initialSchedules = [
-    {
-      id: 1,
-      studentName: '강백',
-      week: '1주차',
-      period: '10/06(월) ~ 10/12(일)',
-      subject: '대수 (수1)',
-      chapter: '1단원. 지수와 로그의 연산 및 대소 비교',
-      topic: '개념플러스유형 기본 완성',
-      status: 'completed'
-    },
-    {
-      id: 2,
-      studentName: '강백',
-      week: '2주차',
-      period: '10/13(월) ~ 10/19(일)',
-      subject: '대수 (수1)',
-      chapter: '1단원. 지수함수와 로그함수의 그래프와 활용',
-      topic: '역함수 관계 및 격자점 개수 세기',
-      status: 'completed'
-    },
-    {
-      id: 3,
-      studentName: '강백',
-      week: '3주차',
-      period: '10/20(월) ~ 10/26(일)',
-      subject: '대수 (수1)',
-      chapter: '2단원. 일반각과 호도법 및 삼각비 정의',
-      topic: '부채꼴 호의 길이와 넓이 마스터',
-      status: 'completed'
-    },
-    {
-      id: 4,
-      studentName: '강백',
-      week: '4주차',
-      period: '10/27(월) ~ 11/02(일)',
-      subject: '대수 (수1)',
-      chapter: '2단원. 삼각함수의 그래프와 대칭성 분석',
-      topic: 'y=asin(bx-c)+d 주기/진폭/대칭축 (진행률 100%)',
-      status: 'completed'
-    },
-    {
-      id: 5,
-      studentName: '강백',
-      week: '5주차',
-      period: '11/03(월) ~ 11/09(일)',
-      subject: '대수 (수1)',
-      chapter: '2단원. 삼각함수의 활용 (사인법칙과 코사인법칙)',
-      topic: '개념플러스유형 p.48~55 핵심 30문항',
-      status: 'current'
-    },
-    {
-      id: 6,
-      studentName: '강백',
-      week: '6주차',
-      period: '11/10(월) ~ 11/16(일)',
-      subject: '대수 (수1)',
-      chapter: '2단원. 서문여고 빈출 삼각함수 도형 킬러 심화',
-      topic: '블랙라벨 Step3 킬러 변형 25문항',
-      status: 'upcoming'
-    },
-    {
-      id: 7,
-      studentName: '강백',
-      week: '7주차',
-      period: '11/17(월) ~ 11/23(일)',
-      subject: '대수 (수1)',
-      chapter: '3단원. 등차수열과 등비수열의 일반항과 합',
-      topic: '등차수열 합의 이차식 특성 및 군수열',
-      status: 'upcoming'
-    },
-    {
-      id: 8,
-      studentName: '강백',
-      week: '8주차',
-      period: '11/24(월) ~ 11/30(일)',
-      subject: '대수 (수1)',
-      chapter: '3단원. 수열의 합(∑)과 수학적 귀납법',
-      topic: '실전 타임어택 모의고사 3세트 파이널',
-      status: 'upcoming'
-    },
-    {
-      id: 9,
-      studentName: '이소은',
-      week: '1주차',
-      period: '11/03(월) ~ 11/09(일)',
-      subject: '기하',
-      chapter: '1단원. 이차곡선 (포물선과 타원)',
-      topic: '정의 기반 초점-준선 거리 공식 완결',
-      status: 'current'
-    },
-    {
-      id: 10,
-      studentName: '정가윤',
-      week: '1주차',
-      period: '11/03(월) ~ 11/09(일)',
-      subject: '공통수학1',
-      chapter: '1단원. 다항식의 연산과 나머지정리',
-      topic: '곱셈공식 변형 및 항등식 성질 마스터',
-      status: 'current'
-    },
-    {
-      id: 11,
-      studentName: '아리',
-      week: '1주차',
-      period: '11/03(월) ~ 11/09(일)',
-      subject: '공통수학1',
-      chapter: '1단원. 다항식과 나머지정리',
-      topic: '조립제법 및 인수분해 기본 20제',
-      status: 'current'
-    },
-    {
-      id: 12,
-      studentName: '헤준',
-      week: '1주차',
-      period: '11/03(월) ~ 11/09(일)',
-      subject: '대수 (수1)',
-      chapter: '1단원. 지수와 로그의 연산',
-      topic: '거듭제곱근의 성질 및 로그 기본 성질 15제',
-      status: 'current'
-    },
-    {
-      id: 13,
-      studentName: '지성',
-      week: '1주차',
-      period: '11/03(월) ~ 11/09(일)',
-      subject: '대수 (수1)',
-      chapter: '1단원. 지수함수와 로그함수',
-      topic: '지수·로그 그래프 및 성질 15제',
-      status: 'current'
-    }
-  ];
+  const initialSchedules = [];
 
   const [schedules, setSchedules] = useState(() => {
     try {
@@ -330,6 +275,7 @@ export const HomeworkProvider = ({ children }) => {
   };
 
   const addSchedule = (scheduleData) => {
+    ensureStudentRegistered(scheduleData?.studentName);
     const newSchedule = {
       id: Date.now(),
       ...scheduleData
@@ -345,6 +291,23 @@ export const HomeworkProvider = ({ children }) => {
   const deleteSchedule = (id) => {
     const newSchedules = schedules.filter(s => s.id !== parseInt(id));
     saveSchedules(newSchedules);
+  };
+
+  const removeRegisteredStudent = (targetName, removeDataToo = true) => {
+    const cleanName = normalizeStudentName(targetName);
+    if (!cleanName) return;
+    saveRegisteredStudentsList(registeredStudents.filter(s => s !== cleanName));
+    saveSchedules(schedules.filter(s => s.studentName !== cleanName));
+    if (removeDataToo) {
+      updateStateAndSave(prevData =>
+        prevData
+          .map(section => ({
+            ...section,
+            homeworks: (section.homeworks || []).filter(hw => hw.studentName !== cleanName)
+          }))
+          .filter(section => section.homeworks.length > 0)
+      );
+    }
   };
 
   // Promotional Banners & Notice Cards (로그인 화면 홍보 배너/소개 카드)
@@ -541,7 +504,7 @@ export const HomeworkProvider = ({ children }) => {
         const publicRes = await fetch(`${cleanBase}homeworkData.json?t=${Date.now()}`);
         if (publicRes.ok) {
           const publicData = await publicRes.json();
-          if (Array.isArray(publicData) && publicData.length > 0) {
+          if (Array.isArray(publicData)) {
             // 로컬에 이미 저장된 캐시(학생 풀이/채점 데이터)가 있는지 확인
             let localCache = null;
             try {
@@ -552,52 +515,58 @@ export const HomeworkProvider = ({ children }) => {
               }
             } catch (e) {}
 
-            let mergedData = publicData;
-            if (localCache) {
-              // 로컬 캐시의 풀이 및 채점 상태를 최우선 보존(Smart Merge)하여 새로고침 시 초기화 원천 차단
-              const localHwIds = new Set();
-              localCache.forEach(sec => sec.homeworks?.forEach(h => localHwIds.add(String(h.id))));
+            if (publicData.length === 0 && !localCache) {
+              currentBaseData = [];
+              setData([]);
+              setIsLoading(false);
+            } else {
+              let mergedData = publicData;
+              if (localCache) {
+                // 로컬 캐시의 풀이 및 채점 상태를 최우선 보존(Smart Merge)하여 새로고침 시 초기화 원천 차단
+                const localHwIds = new Set();
+                localCache.forEach(sec => sec.homeworks?.forEach(h => localHwIds.add(String(h.id))));
 
-              mergedData = localCache.map(sec => {
-                const pubSec = publicData.find(ps => ps.date === sec.date);
-                if (!pubSec) return sec;
-                return {
-                  ...sec,
-                  homeworks: sec.homeworks.map(hw => {
-                    const pubHw = pubSec.homeworks?.find(ph => String(ph.id) === String(hw.id));
-                    if (!pubHw) return hw;
-                    const localSubmitted = hw.submittedProblems || [];
-                    return {
-                      ...pubHw,
-                      ...hw,
-                      submittedProblems: localSubmitted.length > 0 ? localSubmitted : (pubHw.submittedProblems || [])
-                    };
-                  })
-                };
-              });
+                mergedData = localCache.map(sec => {
+                  const pubSec = publicData.find(ps => ps.date === sec.date);
+                  if (!pubSec) return sec;
+                  return {
+                    ...sec,
+                    homeworks: sec.homeworks.map(hw => {
+                      const pubHw = pubSec.homeworks?.find(ph => String(ph.id) === String(hw.id));
+                      if (!pubHw) return hw;
+                      const localSubmitted = hw.submittedProblems || [];
+                      return {
+                        ...pubHw,
+                        ...hw,
+                        submittedProblems: localSubmitted.length > 0 ? localSubmitted : (pubHw.submittedProblems || [])
+                      };
+                    })
+                  };
+                });
 
-              // publicData에 신규 배포된 과제가 있다면 추가
-              publicData.forEach(pubSec => {
-                const existingSec = mergedData.find(ms => ms.date === pubSec.date);
-                if (!existingSec) {
-                  mergedData.push(pubSec);
-                } else {
-                  pubSec.homeworks?.forEach(pubHw => {
-                    if (!localHwIds.has(String(pubHw.id))) {
-                      existingSec.homeworks.push(pubHw);
-                      localHwIds.add(String(pubHw.id));
-                    }
-                  });
-                }
-              });
+                // publicData에 신규 배포된 과제가 있다면 추가
+                publicData.forEach(pubSec => {
+                  const existingSec = mergedData.find(ms => ms.date === pubSec.date);
+                  if (!existingSec) {
+                    mergedData.push(pubSec);
+                  } else {
+                    pubSec.homeworks?.forEach(pubHw => {
+                      if (!localHwIds.has(String(pubHw.id))) {
+                        existingSec.homeworks.push(pubHw);
+                        localHwIds.add(String(pubHw.id));
+                      }
+                    });
+                  }
+                });
+              }
+
+              currentBaseData = mergedData;
+              setData(mergedData);
+              try {
+                localStorage.setItem('cachedHomeworkData', JSON.stringify(mergedData));
+              } catch (e) {}
+              setIsLoading(false);
             }
-
-            currentBaseData = mergedData;
-            setData(mergedData);
-            try {
-              localStorage.setItem('cachedHomeworkData', JSON.stringify(mergedData));
-            } catch (e) {}
-            setIsLoading(false);
           }
         }
       } catch (e) {
@@ -617,7 +586,9 @@ export const HomeworkProvider = ({ children }) => {
           if (Array.isArray(cloudData) && cloudData.length > 0) {
             // Smart Merge: Preserve 'correct' statuses and AI feedback from base data
             setData(prev => {
-              const base = (prev && prev.length > 0) ? prev : (currentBaseData || cloudData);
+              const base = (prev && prev.length > 0)
+                ? prev
+                : (currentBaseData && currentBaseData.length > 0 ? currentBaseData : cloudData);
               const merged = base.map(section => {
                 const cloudSec = cloudData.find(cs => cs.date === section.date) || section;
                 return {
@@ -1181,6 +1152,7 @@ export const HomeworkProvider = ({ children }) => {
   };
 
   const createHomework = (date, studentName, title, description, createdAt, initialProblemGroups = [], pdfUrl = "", isOnlineTest = false, timeLimit = null, problemImagesBaseUrl = "") => {
+    ensureStudentRegistered(studentName);
     updateStateAndSave(prevData => {
       let newData = [...prevData];
       let sectionIndex = newData.findIndex(sec => sec.date === date);
@@ -1221,6 +1193,7 @@ export const HomeworkProvider = ({ children }) => {
   };
 
   const createTest = (date, studentName, title, score, comment, createdAt) => {
+    ensureStudentRegistered(studentName);
     updateStateAndSave(prevData => {
       let newData = [...prevData];
       let sectionIndex = newData.findIndex(sec => sec.date === date);
@@ -1471,7 +1444,9 @@ export const HomeworkProvider = ({ children }) => {
       savePromoBanners,
       mainBannerImage,
       saveMainBannerImage,
-      registeredStudents: REGISTERED_STUDENTS,
+      registeredStudents,
+      addRegisteredStudent,
+      removeRegisteredStudent,
       adminAccounts: ADMIN_ACCOUNTS,
       normalizeStudentName
     }}>
