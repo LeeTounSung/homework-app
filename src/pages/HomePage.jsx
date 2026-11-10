@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import { analyzeStudentProgress } from '../utils/gemini';
+import AdmissionBanner from '../components/AdmissionBanner';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -836,7 +837,7 @@ export default function HomePage() {
   return (
     <div className="app-container">
       {/* Header */}
-      <header className="header" style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+      <header className="header" style={{ width: '100%', boxSizing: 'border-box', padding: '14px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
         <button 
           className="back-btn" 
           onClick={() => {
@@ -850,28 +851,29 @@ export default function HomePage() {
             }
           }}
           style={{ 
-            width: 'auto', 
+            width: 'auto',
+            flexShrink: 0,
             display: 'flex', 
             alignItems: 'center', 
-            gap: '6px', 
-            padding: '6px 10px', 
+            gap: '5px', 
+            padding: '6px 9px', 
             backgroundColor: '#1E2028',
             border: '1px solid #333',
             borderRadius: '16px',
-            fontSize: '13px',
+            fontSize: 'clamp(11.5px, 3.2vw, 13px)',
             fontWeight: 'bold',
             color: '#fff',
             whiteSpace: 'nowrap',
             cursor: 'pointer'
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
              <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#FFD700"/>
           </svg>
           {currentUser ? `${currentUser} 님` : '로그인'}
         </button>
 
-        <div className="header-tabs" style={{ display: 'flex', flex: 1, justifyContent: 'space-around', alignItems: 'center', maxWidth: '440px', margin: '0 auto', gap: '2px' }}>
+        <div className="header-tabs" style={{ display: 'flex', flex: 1, minWidth: 0, justifyContent: 'space-around', alignItems: 'center', maxWidth: '440px', margin: '0 auto', gap: '2px' }}>
           {[
             { id: 'homework', label: '숙제' },
             { id: 'incorrect', label: '학습' },
@@ -890,10 +892,10 @@ export default function HomePage() {
                   fontWeight: isActive ? 'bold' : 'normal',
                   cursor: 'pointer',
                   margin: 0,
-                  padding: '4px 6px',
+                  padding: '4px 3px',
                   borderBottom: isActive ? '2.5px solid #FFD700' : '2.5px solid transparent',
                   whiteSpace: 'nowrap',
-                  fontSize: '16px',
+                  fontSize: 'clamp(13px, 3.7vw, 16px)',
                   transition: 'all 0.2s'
                 }}
                 onClick={() => setActiveTab(tab.id)}
@@ -934,6 +936,8 @@ export default function HomePage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0 40px 0' }}>
             {/* Blank Blue Box / Image Banner Frame */}
             <div style={{
+              width: '100%',
+              boxSizing: 'border-box',
               backgroundColor: '#181A22',
               border: '1px solid rgba(59, 130, 246, 0.4)',
               borderRadius: '16px',
@@ -942,7 +946,7 @@ export default function HomePage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: (mainBannerImage || (promoBanners && promoBanners.find(b => b.imageUrl))) ? '6px' : '16px',
+              padding: (mainBannerImage || (promoBanners && promoBanners.find(b => b.imageUrl))) ? '6px' : '14px',
               overflow: 'hidden'
             }}>
               {(mainBannerImage || (promoBanners && promoBanners.find(b => b.imageUrl)?.imageUrl)) ? (
@@ -957,7 +961,9 @@ export default function HomePage() {
                     style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '10px' }}
                   />
                 </div>
-              ) : null}
+              ) : (
+                <AdmissionBanner />
+              )}
             </div>
 
             {/* Feature Cards Section */}
