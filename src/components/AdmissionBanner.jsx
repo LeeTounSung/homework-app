@@ -41,7 +41,6 @@ const ADMISSION_GROUPS = [
     borderColor: 'rgba(59, 130, 246, 0.28)',
     univColor: '#BFDBFE',
     items: [
-      { univ: '서강대', dept: '아동청소년학과', name: '송O은' },
       { univ: '성균관대', dept: '역사학과', name: '윤O민' },
       { univ: '한양대', dept: '화학과', name: '정O영' },
       { univ: '한양대', dept: 'ICT융합', name: '김O연' },
