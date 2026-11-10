@@ -2,21 +2,26 @@ import React from 'react';
 
 const ADMISSION_GROUPS = [
   {
-    id: 'medical-sky',
-    label: '의대 · SKY',
+    id: 'medical',
+    label: '의대',
+    labelColor: '#F472B6',
+    dotColor: '#F472B6',
+    chipBg: 'rgba(244, 114, 182, 0.13)',
+    chipBorder: 'rgba(244, 114, 182, 0.42)',
+    chipColor: '#FBCFE8',
+    chipWeight: 700,
+    universities: ['연세대 의예과', '가톨릭대 의예과']
+  },
+  {
+    id: 'sky',
+    label: 'SKY',
     labelColor: '#FFD700',
     dotColor: '#FFD700',
     chipBg: 'rgba(255, 215, 0, 0.12)',
     chipBorder: 'rgba(255, 215, 0, 0.4)',
     chipColor: '#FFE57F',
     chipWeight: 700,
-    universities: [
-      '연세대 의예과',
-      '가톨릭대 의예과',
-      '서울대',
-      '연세대',
-      '고려대'
-    ]
+    universities: ['서울대', '연세대', '고려대']
   },
   {
     id: 'seoul-metro',
