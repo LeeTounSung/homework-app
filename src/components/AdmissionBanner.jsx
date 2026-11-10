@@ -10,7 +10,10 @@ const ADMISSION_GROUPS = [
     chipBorder: 'rgba(244, 114, 182, 0.42)',
     chipColor: '#FBCFE8',
     chipWeight: 700,
-    universities: ['연세대 의예과', '가톨릭대 의예과']
+    items: [
+      { univ: '연세대 의예과', name: '장O호' },
+      { univ: '가톨릭대 의예과', name: '이O휘' }
+    ]
   },
   {
     id: 'sky',
@@ -18,10 +21,21 @@ const ADMISSION_GROUPS = [
     labelColor: '#FFD700',
     dotColor: '#FFD700',
     chipBg: 'rgba(255, 215, 0, 0.12)',
-    chipBorder: 'rgba(255, 215, 0, 0.4)',
+    chipBorder: 'rgba(255, 215, 0, 0.38)',
     chipColor: '#FFE57F',
     chipWeight: 700,
-    universities: ['서울대', '연세대', '고려대']
+    items: [
+      { univ: '서울대', name: '오O진' },
+      { univ: '서울대', name: '이O준' },
+      { univ: '서울대', name: '오O나' },
+      { univ: '서울대', name: '김O규' },
+      { univ: '서울대', name: '동O영' },
+      { univ: '연세대', name: '정O영' },
+      { univ: '연세대', name: '정O주' },
+      { univ: '고려대', name: '정O은' },
+      { univ: '고려대', name: '이O준' },
+      { univ: '고려대', name: '김O도' }
+    ]
   },
   {
     id: 'seoul-metro',
@@ -29,25 +43,32 @@ const ADMISSION_GROUPS = [
     labelColor: '#64B5F6',
     dotColor: '#64B5F6',
     chipBg: 'rgba(59, 130, 246, 0.12)',
-    chipBorder: 'rgba(59, 130, 246, 0.32)',
+    chipBorder: 'rgba(59, 130, 246, 0.3)',
     chipColor: '#BFDBFE',
     chipWeight: 600,
-    universities: [
-      '서강대',
-      '성균관대',
-      '한양대',
-      '경희대',
-      '한국외대',
-      '홍익대',
-      '숙명여대',
-      '국민대',
-      '숭실대',
-      '세종대',
-      '광운대',
-      '아주대',
-      '단국대',
-      '경기대',
-      '가천대'
+    items: [
+      { univ: '서강대', name: '송O은' },
+      { univ: '성균관대', name: '윤O민' },
+      { univ: '한양대', name: '정O영' },
+      { univ: '한양대', name: '김O연' },
+      { univ: '경희대', name: '이O찬' },
+      { univ: '경희대', name: '김O준' },
+      { univ: '경희대', name: '박O현' },
+      { univ: '한국외대', name: '이O호' },
+      { univ: '홍익대', name: '김O연' },
+      { univ: '숙명여대', name: '고O주' },
+      { univ: '숙명여대', name: '김O현' },
+      { univ: '국민대', name: '김O진' },
+      { univ: '숭실대', name: '국O헌' },
+      { univ: '세종대', name: '김O현' },
+      { univ: '광운대', name: '김O윤' },
+      { univ: '아주대', name: '김O현' },
+      { univ: '단국대', name: '황O연' },
+      { univ: '경기대', name: '김O현' },
+      { univ: '가천대', name: '김O연' },
+      { univ: '가천대', name: '김O화' },
+      { univ: '가천대', name: '이O진' },
+      { univ: '가천대', name: '김O은' }
     ]
   },
   {
@@ -59,13 +80,13 @@ const ADMISSION_GROUPS = [
     chipBorder: 'rgba(129, 199, 132, 0.34)',
     chipColor: '#C8E6C9',
     chipWeight: 600,
-    universities: ['일본 오사카 대학']
+    items: [{ univ: '일본 오사카 대학', name: '권형O' }]
   }
 ];
 
 /**
- * Renders a compact dark-mode university admission showcase inside the
- * logged-out landing banner box when no custom image banner is configured.
+ * Renders an aligned dark-mode university admission card inside the logged-out
+ * landing banner box showing each university alongside the student's masked name.
  */
 export default function AdmissionBanner() {
   return (
@@ -98,7 +119,7 @@ export default function AdmissionBanner() {
             whiteSpace: 'nowrap'
           }}
         >
-          누적 합격 대학
+          누적 합격 현황
         </span>
       </div>
 
@@ -119,24 +140,49 @@ export default function AdmissionBanner() {
             </span>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {group.universities.map((univ) => (
-              <span
-                key={univ}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: group.items.length === 1 ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+              gap: '6px'
+            }}
+          >
+            {group.items.map((item, idx) => (
+              <div
+                key={`${item.univ}-${item.name}-${idx}`}
                 style={{
-                  fontSize: '12px',
-                  fontWeight: group.chipWeight,
-                  color: group.chipColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '6px',
                   backgroundColor: group.chipBg,
                   border: `1px solid ${group.chipBorder}`,
                   borderRadius: '8px',
-                  padding: '4px 9px',
-                  lineHeight: 1.35,
-                  whiteSpace: 'nowrap'
+                  padding: '5px 9px',
+                  minWidth: 0
                 }}
               >
-                {univ}
-              </span>
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: group.chipWeight,
+                    color: group.chipColor,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {item.univ}
+                </span>
+                <span
+                  style={{
+                    fontSize: '11.5px',
+                    fontWeight: 500,
+                    color: '#CBD5E1',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {item.name}
+                </span>
+              </div>
             ))}
           </div>
         </div>
