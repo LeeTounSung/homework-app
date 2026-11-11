@@ -160,6 +160,40 @@ export default function HomePage() {
     return [];
   });
 
+  useEffect(() => {
+    const fetchPublicSchoolMaterials = async () => {
+      try {
+        const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
+        const res = await fetch(`${base}schoolMaterials.json?t=${Date.now()}`);
+        if (!res.ok) return;
+        const publicList = await res.json();
+        if (!Array.isArray(publicList)) return;
+
+        let deletedIds = [];
+        try {
+          const rawDel = localStorage.getItem('homework_app_deleted_school_ids_v1');
+          if (rawDel) deletedIds = JSON.parse(rawDel);
+        } catch (e) {}
+        const deletedSet = new Set(Array.isArray(deletedIds) ? deletedIds : []);
+
+        setSchoolMaterials(prev => {
+          const publicMap = new Map(publicList.filter(p => p && !deletedSet.has(p.id)).map(p => [p.id, p]));
+          const updatedPrev = prev.map(item => publicMap.has(item.id) ? { ...item, ...publicMap.get(item.id) } : item);
+          const existingIds = new Set(updatedPrev.map(item => item.id));
+          const newItems = publicList.filter(p => p && !deletedSet.has(p.id) && !existingIds.has(p.id));
+          const merged = [...newItems, ...updatedPrev];
+          try {
+            localStorage.setItem('homework_app_school_materials_v3', JSON.stringify(merged));
+          } catch (e) {}
+          return merged;
+        });
+      } catch (e) {
+        console.warn('schoolMaterials.json fetch skipped:', e);
+      }
+    };
+    fetchPublicSchoolMaterials();
+  }, []);
+
   const [schoolCategoryFilter, setSchoolCategoryFilter] = useState('전체'); // '전체' | '📄 프린트/유인물' | '📚 부교재' | '✏️ 수행평가' | '📝 기출/예상'
   const [isSchoolModalOpen, setIsSchoolModalOpen] = useState(false);
   const [schoolTitle, setSchoolTitle] = useState('');
@@ -252,6 +286,13 @@ export default function HomePage() {
 
   const handleDeleteSchoolMaterial = (id) => {
     if (window.confirm('이 학교 자료를 삭제하시겠습니까?')) {
+      try {
+        const rawDel = localStorage.getItem('homework_app_deleted_school_ids_v1');
+        const delArr = rawDel ? JSON.parse(rawDel) : [];
+        if (Array.isArray(delArr) && !delArr.includes(id)) {
+          localStorage.setItem('homework_app_deleted_school_ids_v1', JSON.stringify([...delArr, id]));
+        }
+      } catch (e) {}
       const updated = schoolMaterials.filter(m => m.id !== id);
       saveSchoolMaterialsList(updated);
       if (selectedSchoolMaterial?.id === id) {
@@ -261,8 +302,11 @@ export default function HomePage() {
   };
 
   const filteredSchoolMaterials = schoolMaterials.filter(item => {
-    if (schoolCategoryFilter === '전체') return true;
-    return item.category === schoolCategoryFilter;
+    const matchesCategory = schoolCategoryFilter === '전체' || item.category === schoolCategoryFilter;
+    if (!matchesCategory) return false;
+    if (!currentUser || isAdmin) return true;
+    if (!item.studentName || item.studentName === '원장샘') return true;
+    return item.studentName === currentUser || currentUser.includes(item.studentName);
   });
 
   const compressSelfStudyImage = (file) => {
@@ -2236,10 +2280,52 @@ export default function HomePage() {
                     {/* Footer */}
                     <div style={{
                       marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #2D3345',
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#6B7280'
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#6B7280', gap: '6px'
                     }}>
                       <span>👤 {item.studentName}</span>
-                      <span>{item.createdAt}</span>
+                      {item.pdfUrl ? (() => {
+                        const rawPdf = (item.pdfUrl || '').trim();
+                        const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
+                        const pdfHref = (rawPdf.startsWith('http://') || rawPdf.startsWith('https://')) ? rawPdf : `${base}${rawPdf.replace(/^\/+/, '')}`;
+                        return (
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                            <a
+                              href={pdfHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                padding: '4px 9px',
+                                borderRadius: '6px',
+                                backgroundColor: '#1E293B',
+                                border: '1px solid #3B82F6',
+                                color: '#93C5FD',
+                                fontWeight: 'bold',
+                                fontSize: '11px',
+                                textDecoration: 'none'
+                              }}
+                            >
+                              📄 보기
+                            </a>
+                            <a
+                              href={pdfHref}
+                              download={item.downloadName || true}
+                              style={{
+                                padding: '4px 9px',
+                                borderRadius: '6px',
+                                backgroundColor: '#2563EB',
+                                color: '#FFFFFF',
+                                fontWeight: 'bold',
+                                fontSize: '11px',
+                                textDecoration: 'none'
+                              }}
+                            >
+                              📥 다운로드
+                            </a>
+                          </div>
+                        );
+                      })() : (
+                        <span>{item.createdAt}</span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -3331,7 +3417,7 @@ export default function HomePage() {
                       href={pdfSrc}
                       target="_blank"
                       rel="noopener noreferrer"
-                      download
+                      download={selectedSchoolMaterial.downloadName || true}
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
