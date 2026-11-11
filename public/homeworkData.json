@@ -281,7 +281,9 @@
           }
         ],
         "submittedProblems": [],
-        "evaluation": null
+        "evaluation": null,
+        "student": "대치A",
+        "pdfUrl": "/school_materials/daechiA_week01_ssenB_25.pdf"
       }
     ]
   }
