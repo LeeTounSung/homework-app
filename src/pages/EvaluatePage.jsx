@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
-import { analyzeProblemSubmission } from '../utils/gemini';
+import { analyzeProblemSubmission, isValidImageUrl } from '../utils/gemini';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -115,8 +115,12 @@ export default function EvaluatePage() {
     setAiFeedbackText('');
 
     try {
-      const desc = `${hw.studentName} 학생의 ${hw.title} ${currentAiProblem.problemNumber}번 문제 풀이입니다.`;
-      const feedback = await analyzeProblemSubmission(aiConfig || geminiApiKey, desc, currentAiProblem.imageUrl, aiCustomDetails);
+      let desc = `${hw.studentName} 학생의 ${hw.title} ${currentAiProblem.problemNumber}번 문제 풀이입니다.`;
+      if (currentAiProblem.studentAnswer) {
+        desc += `\n[학생 입력 답안]: ${currentAiProblem.studentAnswer}`;
+      }
+      const imgUrl = isValidImageUrl(currentAiProblem.imageUrl) ? currentAiProblem.imageUrl : null;
+      const feedback = await analyzeProblemSubmission(aiConfig || geminiApiKey, desc, imgUrl, aiCustomDetails);
       setAiFeedbackText(feedback);
     } catch (error) {
       console.error(error);
@@ -168,34 +172,47 @@ export default function EvaluatePage() {
                     <div style={{ padding: '8px', backgroundColor: '#333', color: '#fff', fontSize: '14px', textAlign: 'center' }}>
                       {label ? `[${label}] ` : ''}{p.problemNumber}번
                     </div>
-                    <img 
-                      src={formatDriveImageUrl(p.imageUrl)} 
-                      alt={`${label} ${p.problemNumber}번 제출`} 
-                      referrerPolicy="no-referrer"
-                      crossOrigin="anonymous"
-                      style={{ width: '100%', height: '150px', objectFit: 'contain', backgroundColor: '#fff', cursor: 'pointer' }} 
-                      onClick={() => window.open(formatDriveImageUrl(p.imageUrl), '_blank')} 
-                      onError={(e) => {
-                        if (p.imageUrl && (p.imageUrl.includes('drive.google.com') || p.imageUrl.includes('googleusercontent.com'))) {
-                          const match = p.imageUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/) ||
-                                        p.imageUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
-                                        p.imageUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                          if (match && match[1]) {
-                            const fileId = match[1];
-                            if (!e.target.src.includes('thumbnail?id=')) {
-                              e.target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-                              return;
-                            } else if (!e.target.src.includes('uc?export=view')) {
-                              e.target.src = `https://drive.google.com/uc?export=view&id=${fileId}`;
-                              return;
+                    {isValidImageUrl(p.imageUrl) ? (
+                      <img 
+                        src={formatDriveImageUrl(p.imageUrl)} 
+                        alt={`${label} ${p.problemNumber}번 제출`} 
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                        style={{ width: '100%', height: '150px', objectFit: 'contain', backgroundColor: '#fff', cursor: 'pointer' }} 
+                        onClick={() => window.open(formatDriveImageUrl(p.imageUrl), '_blank')} 
+                        onError={(e) => {
+                          if (p.imageUrl && (p.imageUrl.includes('drive.google.com') || p.imageUrl.includes('googleusercontent.com'))) {
+                            const match = p.imageUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/) ||
+                                          p.imageUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+                                          p.imageUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                            if (match && match[1]) {
+                              const fileId = match[1];
+                              if (!e.target.src.includes('thumbnail?id=')) {
+                                e.target.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+                                return;
+                              } else if (!e.target.src.includes('uc?export=view')) {
+                                e.target.src = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                                return;
+                              }
                             }
                           }
-                        }
-                        if (e.target.src !== p.imageUrl) {
-                          e.target.src = p.imageUrl;
-                        }
-                      }}
-                    />
+                          if (e.target.src !== p.imageUrl) {
+                            e.target.src = p.imageUrl;
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '100%', height: '150px', backgroundColor: '#1E2028',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        padding: '12px', textAlign: 'center', color: '#E2E8F0', fontSize: '14px', boxSizing: 'border-box'
+                      }}>
+                        <span style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '6px' }}>텍스트/객관식 제출 답안</span>
+                        <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#60A5FA', wordBreak: 'break-word' }}>
+                          {p.studentAnswer || '(답안 없음)'}
+                        </span>
+                      </div>
+                    )}
                     <button
                       onClick={() => handleAiAnalyzeOpen(p)}
                       style={{

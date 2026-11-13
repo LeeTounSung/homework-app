@@ -1,5 +1,14 @@
+export const isValidImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim().toLowerCase();
+  if (!trimmed || trimmed === 'none' || trimmed === 'null' || trimmed === 'undefined' || trimmed === 'n/a' || trimmed === 'false') {
+    return false;
+  }
+  return true;
+};
+
 const normalizeImageToBase64 = async (imageInput, mimeType = 'image/jpeg') => {
-  if (!imageInput || typeof imageInput !== 'string') return null;
+  if (!isValidImageUrl(imageInput)) return null;
 
   if (imageInput.startsWith('data:image/')) {
     return imageInput;
@@ -159,7 +168,7 @@ export const callOpenRouterGeminiVision = async (openrouterKey, prompt, base64Im
       model: 'google/gemini-2.5-flash-lite',
       messages: [{ role: 'user', content: content }],
       temperature: 0.1,
-      max_tokens: 300
+      max_tokens: 1000
     })
   });
 
@@ -330,31 +339,48 @@ export const callAIAPI = async (aiConfig, prompt, base64Image = null, mimeType =
   if (typeof aiConfig === 'object' && aiConfig !== null) {
     const { provider, geminiApiKey, deepseekApiKey, deepseekModel, musesparkApiKey, musesparkModel, openrouterApiKey, openrouterModel } = aiConfig;
     if (provider === 'jev' || provider === 'typesafe-jev') {
-      const { correctAns, studentAns } = extraMeta || {};
-      if (correctAns && studentAns) {
+      const { correctAns, studentAns, skipJevEquivalence } = extraMeta || {};
+      const activeOrKey = (openrouterApiKey && openrouterApiKey.trim()) || DEFAULT_OPENROUTER_KEY || '';
+      const validImage = isValidImageUrl(base64Image) ? base64Image : null;
+
+      if (!skipJevEquivalence && correctAns !== null && correctAns !== undefined && String(correctAns).trim() !== '' && studentAns !== null && studentAns !== undefined && String(studentAns).trim() !== '') {
         return await checkMathEquivalenceWithAI(aiConfig, correctAns, studentAns);
       }
-      // If image is present and correctAns is present, try vision OCR to extract LaTeX then run Jev 1.14
-      if (base64Image && correctAns) {
+
+      let lastErr = null;
+      // If image is present and correctAns is present, try vision OCR to extract answer then run Jev 1.14
+      if (validImage && correctAns !== null && correctAns !== undefined && String(correctAns).trim() !== '') {
         let extracted = '';
-        if (geminiApiKey) {
+        if (geminiApiKey || activeOrKey) {
           try {
-            extracted = await extractStudentMathToLatex(geminiApiKey, base64Image);
+            extracted = await extractStudentMathToLatex(geminiApiKey, validImage, activeOrKey, { correctAns });
           } catch (e) {
-            console.warn('Gemini OCR extraction failed:', e);
+            lastErr = e;
+            console.warn('Vision OCR extraction failed:', e);
           }
         }
         if (extracted) {
           return await checkMathEquivalenceWithAI(aiConfig, correctAns, extracted);
         }
       }
-      // Fallback to text LLM or available vision provider if pure equivalence cannot run
-      if (deepseekApiKey && deepseekApiKey.trim()) {
-        return await callDeepseekAPI(deepseekApiKey, prompt, base64Image, mimeType, deepseekModel);
-      } else if (geminiApiKey && geminiApiKey.trim()) {
-        return await callGeminiAPI(geminiApiKey, prompt, base64Image, mimeType);
+      // Fallback to OpenRouter Gemini Vision, DeepSeek, or direct Gemini if pure equivalence cannot run
+      if (activeOrKey) {
+        try {
+          return await callOpenRouterGeminiVision(activeOrKey, prompt, validImage, mimeType);
+        } catch (e) {
+          lastErr = e;
+          console.warn('OpenRouter vision/chat fallback failed:', e);
+        }
       }
-      throw new Error('AI 자동 채점을 위한 API 키(DeepSeek 또는 Gemini)가 설정되지 않았습니다.');
+      if (deepseekApiKey && deepseekApiKey.trim()) {
+        return await callDeepseekAPI(deepseekApiKey, prompt, validImage, mimeType, deepseekModel);
+      } else if (geminiApiKey && geminiApiKey.trim()) {
+        return await callGeminiAPI(geminiApiKey, prompt, validImage, mimeType);
+      }
+      if (lastErr) {
+        throw lastErr;
+      }
+      throw new Error('AI 자동 채점을 위한 API 키(OpenRouter, DeepSeek 또는 Gemini)가 설정되지 않았습니다.');
     } else if (provider === 'musespark' || provider === 'meta') {
       if (!musesparkApiKey || !musesparkApiKey.trim()) {
         throw new Error('Meta Muse Spark API 키가 설정되지 않았거나 삭제되었습니다. 호출을 차단합니다.');
@@ -940,7 +966,7 @@ export const checkMathEquivalenceWithAI = async (aiConfig, correctAnswer, studen
 - 학생 답안: ${studentAnswer}
 - 해설: (동치 여부에 대한 간결한 1줄 설명)`;
 
-  return await callAIAPI(aiConfig, prompt, null, 'image/jpeg', { correctAns: correctAnswer, studentAns: studentAnswer });
+  return await callAIAPI(aiConfig, prompt, null, 'image/jpeg', { correctAns: correctAnswer, studentAns: studentAnswer, skipJevEquivalence: true });
 };
 
 export const autoGradeProblemSubmission = async (aiConfig, problemDesc, studentSolutionImage, customDetails = '', correctAns = null) => {

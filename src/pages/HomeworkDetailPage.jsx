@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
-import { autoGradeProblemSubmission, solveProblemWithAI, checkMathEquivalenceWithAI, normalizeKoreanMath } from '../utils/gemini';
+import { autoGradeProblemSubmission, solveProblemWithAI, checkMathEquivalenceWithAI, normalizeKoreanMath, normalizeChoiceNumber, isValidImageUrl } from '../utils/gemini';
 
 const formatGroupLabel = (label) => {
   if (!label || typeof label !== 'string') return label;
@@ -41,7 +41,7 @@ export default function HomeworkDetailPage() {
     updateHomeworkAnswers,
     isAdmin, 
     deleteHomework,
-    evaluateSingleProblem,
+    evaluateProblemsBatch,
     geminiApiKey,
     aiConfig,
     isAiConfigured
@@ -253,7 +253,7 @@ export default function HomeworkDetailPage() {
 
         if (!probImage) {
           const sp = (hw.submittedProblems || []).find(p => p.problemNumber === num);
-          if (sp && sp.imageUrl) probImage = sp.imageUrl;
+          if (sp && isValidImageUrl(sp.imageUrl)) probImage = sp.imageUrl;
         }
 
         const answer = await solveProblemWithAI(aiConfig || geminiApiKey, statement, probImage);
@@ -276,13 +276,13 @@ export default function HomeworkDetailPage() {
   const handleBulkAiGrade = async () => {
     // 💡 미채점(submitted) 또는 오답(incorrect, indeterminate) 문제 우선 선별
     let toGrade = (hw.submittedProblems || []).filter(
-      p => p.status !== 'correct' && p.status !== 'exempt' && (p.imageUrl || p.studentAnswer)
+      p => p.status !== 'correct' && p.status !== 'exempt' && (isValidImageUrl(p.imageUrl) || (p.studentAnswer !== null && p.studentAnswer !== undefined && String(p.studentAnswer).trim() !== ''))
     );
 
     // 미채점/오답이 없으면 제출된 전체 문제를 대상으로 즉시 채점 실행
     if (toGrade.length === 0) {
       toGrade = (hw.submittedProblems || []).filter(
-        p => p.status !== 'exempt' && (p.imageUrl || p.studentAnswer)
+        p => p.status !== 'exempt' && (isValidImageUrl(p.imageUrl) || (p.studentAnswer !== null && p.studentAnswer !== undefined && String(p.studentAnswer).trim() !== ''))
       );
     }
 
@@ -301,6 +301,7 @@ export default function HomeworkDetailPage() {
     let indeterminateCount = 0;
     let autoMatchedCount = 0;
     let errors = [];
+    const batchEvaluations = [];
 
     try {
       for (let i = 0; i < toGrade.length; i++) {
@@ -318,12 +319,13 @@ export default function HomeworkDetailPage() {
           const item = registeredAnswers.find(a => a && (a.problemNumber === p.problemNumber || a.problemNumber === Number(p.problemNumber)));
           correctAns = item ? (typeof item === 'object' && item.answer !== undefined ? item.answer : item) : null;
         } else if (typeof registeredAnswers === 'object' && registeredAnswers !== null) {
-          const raw = registeredAnswers[p.problemNumber] || registeredAnswers[String(p.problemNumber)];
+          const raw = registeredAnswers[p.problemNumber] !== undefined ? registeredAnswers[p.problemNumber] : registeredAnswers[String(p.problemNumber)];
           correctAns = (raw && typeof raw === 'object' && raw.answer !== undefined) ? raw.answer : raw;
         }
 
-        const hasTextAnswer = Boolean(p.studentAnswer && String(p.studentAnswer).trim());
-        const hasImage = Boolean(p.imageUrl && String(p.imageUrl).trim());
+        const hasCorrectAns = correctAns !== null && correctAns !== undefined && String(correctAns).trim() !== '';
+        const hasTextAnswer = p.studentAnswer !== null && p.studentAnswer !== undefined && String(p.studentAnswer).trim() !== '';
+        const hasImage = isValidImageUrl(p.imageUrl);
 
         // ══════════════════════════════════════════════════════════════════
         // [하이브리드 병행 채점 엔진 (Hybrid Parallel Grading Engine)]
@@ -335,7 +337,7 @@ export default function HomeworkDetailPage() {
         let textMatchStatus = null; // 'correct' | 'incorrect' | null
         let textFeedback = '';
 
-        if (correctAns && hasTextAnswer) {
+        if (hasCorrectAns && hasTextAnswer) {
           const normStudent = normalizeAnswer(p.studentAnswer);
           const normCorrect = normalizeAnswer(correctAns);
           const choiceStudent = normalizeChoiceNumber(p.studentAnswer);
@@ -374,7 +376,7 @@ export default function HomeworkDetailPage() {
             } catch (err) {
               console.warn('AI Equivalence check error, fallback:', err);
               textMatchStatus = 'incorrect';
-              textFeedback = `❌ [정답표 불일치]\n- 학생 답안: ${p.studentAnswer}\n- 공식 정답: ${correctAns}`;
+              textFeedback = `❌ [정답표 불일치 / AI 판정 오류]\n- 학생 답안: ${p.studentAnswer}\n- 공식 정답: ${correctAns}\n- 참고: ${err.message}`;
             }
           } else {
             textMatchStatus = 'incorrect';
@@ -389,7 +391,7 @@ export default function HomeworkDetailPage() {
           if (hasImage) {
             finalFeedback += `\n\n📌 [제출 형태: 🔘 선택 답안 + 📸 풀이 사진 동시 제출 완료]`;
           }
-          evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, 'correct', finalFeedback);
+          batchEvaluations.push({ groupId: p.groupId, problemNumber: p.problemNumber, gradeResult: 'correct', aiFeedback: finalFeedback });
           correctCount++;
           autoMatchedCount++;
           continue;
@@ -401,17 +403,17 @@ export default function HomeworkDetailPage() {
           if (!isAiConfigured && !geminiApiKey) {
             // AI 키가 없을 때는 텍스트 결과 그대로 반영
             if (textMatchStatus) {
-              evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, textMatchStatus, textFeedback);
+              batchEvaluations.push({ groupId: p.groupId, problemNumber: p.problemNumber, gradeResult: textMatchStatus, aiFeedback: textFeedback });
               if (textMatchStatus === 'correct') correctCount++; else incorrectCount++;
               autoMatchedCount++;
             } else {
-              errors.push(`${p.problemNumber}번: AI API 키 미설정 (사진 채점에는 Gemini/OpenRouter API 키가 필요합니다)`);
+              errors.push(`${p.problemNumber}번: AI API 키 미설정 (사진 채점에는 OpenRouter/Gemini API 키가 필요합니다)`);
             }
             continue;
           }
 
           let desc = `${hw.studentName} 학생의 ${hw.title} ${label ? `[${label}] ` : ''}${p.problemNumber}번 문제 풀이입니다.`;
-          if (correctAns) {
+          if (hasCorrectAns) {
             desc += `\n[공식 정답]: ${correctAns}`;
             if (hasTextAnswer) {
               desc += `\n(참고: 학생이 앱에서 입력한 답안은 [${p.studentAnswer}]이지만, 사진 속 풀이의 최종 답안과 비교하여 확인해주세요)`;
@@ -419,7 +421,7 @@ export default function HomeworkDetailPage() {
           }
 
           try {
-            const visionFeedback = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, p.imageUrl, '', correctAns);
+            const visionFeedback = await autoGradeProblemSubmission(aiConfig || geminiApiKey, desc, p.imageUrl, '', hasCorrectAns ? correctAns : null);
             
             const isIndeterminate = visionFeedback.includes('채점 불가') || visionFeedback.includes('채점불가') || visionFeedback.includes('🔺') || visionFeedback.includes('확인 필요');
             const isWrong = visionFeedback.includes('❌') || visionFeedback.includes('오답') || visionFeedback.includes('틀렸습니다');
@@ -449,13 +451,13 @@ export default function HomeworkDetailPage() {
                 : `❌ [손글씨 비전 채점 오답]\n${visionFeedback}`;
             }
 
-            evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, finalGradeStatus, combinedFeedback);
+            batchEvaluations.push({ groupId: p.groupId, problemNumber: p.problemNumber, gradeResult: finalGradeStatus, aiFeedback: combinedFeedback });
             continue;
           } catch (visionErr) {
             console.error(`Error in vision grading problem ${p.problemNumber}:`, visionErr);
             // 비전 에러 시 텍스트 결과로 폴백
             if (textMatchStatus) {
-              evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, textMatchStatus, textFeedback);
+              batchEvaluations.push({ groupId: p.groupId, problemNumber: p.problemNumber, gradeResult: textMatchStatus, aiFeedback: textFeedback });
               if (textMatchStatus === 'correct') correctCount++; else incorrectCount++;
             } else {
               errors.push(`${p.problemNumber}번: ${visionErr.message}`);
@@ -464,16 +466,27 @@ export default function HomeworkDetailPage() {
           }
         }
 
-        // (3) 사진이 없고 텍스트 답안만 있는데 오답인 경우
+        // (3) 사진이 없고 텍스트 답안만 있는데 오답(또는 정답표 미등록 시 AI 직접 판정 불가)인 경우
         if (textMatchStatus) {
-          evaluateSingleProblem(hw.id, p.groupId, p.problemNumber, textMatchStatus, textFeedback);
+          batchEvaluations.push({ groupId: p.groupId, problemNumber: p.problemNumber, gradeResult: textMatchStatus, aiFeedback: textFeedback });
           if (textMatchStatus === 'correct') correctCount++; else incorrectCount++;
           autoMatchedCount++;
           continue;
         }
 
-        // (4) 사진도 없고 텍스트도 없는 경우
+        // (4) 정답표 미등록 + 사진 없음 + 텍스트만 있는 경우
+        if (hasTextAnswer && !hasCorrectAns) {
+          errors.push(`${p.problemNumber}번: 정답표가 등록되지 않아 텍스트 답안만으로는 채점할 수 없습니다.`);
+          continue;
+        }
+
+        // (5) 사진도 없고 텍스트도 없는 경우
         errors.push(`${p.problemNumber}번: 제출된 답안이나 풀이 사진이 없습니다.`);
+      }
+
+      let cloudSaved = true;
+      if (batchEvaluations.length > 0) {
+        cloudSaved = await evaluateProblemsBatch(hw.id, batchEvaluations);
       }
 
       if (errors.length > 0 && correctCount === 0 && incorrectCount === 0 && indeterminateCount === 0) {
@@ -485,6 +498,9 @@ export default function HomeworkDetailPage() {
         }
         if (autoMatchedCount > 0) {
           msg += `\n⚡ (정답표 초고속 자동채점: ${autoMatchedCount}문항, 토큰 0개 소모)`;
+        }
+        if (!cloudSaved) {
+          msg += `\n\n⚠️ 클라우드 서버 저장에 일시적 지연이 발생했습니다. 새로고침 전 잠시 후 다시 확인해주세요.`;
         }
         if (errors.length > 0) {
           msg += `\n(참고: ${errors.length}건 오류)`;

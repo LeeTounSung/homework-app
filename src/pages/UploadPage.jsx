@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import MathInkComponent from '../components/MathInkComponent';
 import ProblemStatementView from '../components/ProblemStatementView';
-import { autoGradeProblemSubmission, extractStudentMathToLatex, checkMathEquivalenceWithAI, normalizeChoiceNumber } from '../utils/gemini';
+import { autoGradeProblemSubmission, extractStudentMathToLatex, checkMathEquivalenceWithAI, normalizeChoiceNumber, isValidImageUrl } from '../utils/gemini';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -114,7 +114,7 @@ export default function UploadPage() {
         if (existingProblem.studentAnswer) {
           setStudentAnswer(existingProblem.studentAnswer);
         }
-        if (existingProblem.imageUrl && existingProblem.status !== 'exempt') {
+        if (isValidImageUrl(existingProblem.imageUrl) && existingProblem.status !== 'exempt') {
           setImagePreview(existingProblem.imageUrl);
         }
         if (existingProblem.aiFeedback) {
@@ -167,7 +167,7 @@ export default function UploadPage() {
   // Extract student handwriting/math from image using TypeSafe Jev 1.14 Vision
   const handleExtractLatex = async (imageInput) => {
     const targetImg = imageInput || imagePreview;
-    if (!targetImg) return;
+    if (!isValidImageUrl(targetImg)) return;
 
     setIsExtractingLatex(true);
     try {

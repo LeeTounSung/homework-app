@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import { isValidImageUrl } from '../utils/gemini';
 
 const HomeworkContext = createContext();
 
@@ -92,6 +93,8 @@ export const HomeworkProvider = ({ children }) => {
     return true;
   });
   const [isSaving, setIsSaving] = useState(false);
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   const [registeredStudents, setRegisteredStudents] = useState(() => loadRegisteredStudents());
 
@@ -636,10 +639,14 @@ export const HomeworkProvider = ({ children }) => {
                     // Merge submittedProblems safely
                     const baseSubmitted = hw.submittedProblems || [];
                     const cloudSubmitted = cloudHw.submittedProblems || [];
-                    
+                    const gradedStatuses = new Set(['correct', 'incorrect', 'indeterminate']);
+
                     const mergedSubmitted = [...baseSubmitted];
                     cloudSubmitted.forEach(cProb => {
-                      const existingIdx = mergedSubmitted.findIndex(b => b.problemNumber === cProb.problemNumber);
+                      const existingIdx = mergedSubmitted.findIndex(b =>
+                        (b.groupId === cProb.groupId || !b.groupId || !cProb.groupId) &&
+                        Number(b.problemNumber) === Number(cProb.problemNumber)
+                      );
                       if (existingIdx === -1) {
                         // New problem submitted from student
                         mergedSubmitted.push(cProb);
@@ -648,7 +655,11 @@ export const HomeworkProvider = ({ children }) => {
                         if (cProb.status === 'correct') {
                           // Cloud is correct: adopt it along with latest score & feedback
                           mergedSubmitted[existingIdx] = { ...existing, ...cProb };
-                        } else if (existing.status !== 'correct' && (cProb.status === 'incorrect' || cProb.imageUrl || cProb.studentAnswer)) {
+                        } else if (!gradedStatuses.has(existing.status) && (
+                          gradedStatuses.has(cProb.status) ||
+                          isValidImageUrl(cProb.imageUrl) ||
+                          (cProb.studentAnswer !== null && cProb.studentAnswer !== undefined && String(cProb.studentAnswer).trim() !== '')
+                        )) {
                           mergedSubmitted[existingIdx] = { ...existing, ...cProb };
                         }
                       }
@@ -682,7 +693,7 @@ export const HomeworkProvider = ({ children }) => {
 
   const saveDataToDrive = async (newData) => {
     try {
-      await fetch(GAS_URL, {
+      const response = await fetch(GAS_URL, {
         method: 'POST',
         redirect: 'follow',
         headers: {
@@ -693,20 +704,28 @@ export const HomeworkProvider = ({ children }) => {
           data: newData
         })
       });
+      if (!response.ok) {
+        console.warn("GAS save HTTP warning:", response.status);
+        return false;
+      }
+      return true;
     } catch (error) {
       console.error("Error saving data to cloud:", error);
+      return false;
     }
   };
 
-  const updateStateAndSave = (updaterFn) => {
-    setData(prevData => {
-      const newData = updaterFn(prevData);
-      try {
-        localStorage.setItem('cachedHomeworkData', JSON.stringify(newData));
-      } catch (e) {}
-      saveDataToDrive(newData); // Async save in background
-      return newData;
-    });
+  const updateStateAndSave = (updaterFn, { syncCloud = true } = {}) => {
+    const newData = updaterFn(dataRef.current);
+    dataRef.current = newData;
+    setData(newData);
+    try {
+      localStorage.setItem('cachedHomeworkData', JSON.stringify(newData));
+    } catch (e) {}
+    if (syncCloud) {
+      return saveDataToDrive(newData);
+    }
+    return Promise.resolve(true);
   };
 
   const getHomeworkById = (id) => {
@@ -902,7 +921,7 @@ export const HomeworkProvider = ({ children }) => {
               const wasIncorrect = prev.status === 'incorrect' || (prev.wrongCount > 0) || Boolean(prev.hasBeenIncorrect);
               newSubmitted[existingIndex] = { 
                 ...prev, 
-                imageUrl: finalImageUrl || prev.imageUrl || null, 
+                imageUrl: isValidImageUrl(finalImageUrl) ? finalImageUrl : (isValidImageUrl(prev.imageUrl) ? prev.imageUrl : null), 
                 status: statusToSet,
                 studentAnswer: studentAnswer !== null ? studentAnswer : (prev.studentAnswer || null),
                 aiFeedback: aiFeedback !== undefined ? aiFeedback : null,
@@ -914,7 +933,7 @@ export const HomeworkProvider = ({ children }) => {
               newSubmitted.push({ 
                 groupId, 
                 problemNumber: parseInt(problemNumber), 
-                imageUrl: finalImageUrl || null, 
+                imageUrl: isValidImageUrl(finalImageUrl) ? finalImageUrl : null, 
                 status: statusToSet,
                 studentAnswer: studentAnswer || null,
                 aiFeedback: aiFeedback || null,
@@ -992,62 +1011,97 @@ export const HomeworkProvider = ({ children }) => {
     })));
   };
 
+  const applySingleProblemEvaluation = (submittedProblems, groupId, problemNumber, gradeResult, aiFeedback = null, dateStr = '') => {
+    const targetNum = parseInt(problemNumber);
+    const existingIndex = (submittedProblems || []).findIndex(
+      p => (p.groupId === groupId || !groupId || !p.groupId) && parseInt(p.problemNumber) === targetNum
+    );
+    if (existingIndex < 0) return submittedProblems;
+
+    const newSubmitted = [...submittedProblems];
+    const currentItem = newSubmitted[existingIndex];
+    const currentAttempts = currentItem.attempts || 1;
+    const currentWrongCount = currentItem.wrongCount || (currentItem.status === 'incorrect' ? 1 : 0);
+
+    let statusToSet = 'incorrect';
+    if (gradeResult === true || gradeResult === 'correct') {
+      statusToSet = 'correct';
+    } else if (gradeResult === 'indeterminate' || gradeResult === 'unclear' || gradeResult === 'pending') {
+      statusToSet = 'indeterminate';
+    } else if (gradeResult === false || gradeResult === 'incorrect') {
+      statusToSet = 'incorrect';
+    }
+
+    // 오답 횟수(wrongCount): 이번 채점에서 오답이면 +1 누적, 맞았으면 기존 오답 횟수 유지
+    let newWrongCount = currentWrongCount;
+    if (statusToSet === 'incorrect') {
+      newWrongCount = currentWrongCount + 1;
+    }
+
+    const newAttempts = currentAttempts + 1;
+    const existingHistory = Array.isArray(currentItem.history) ? currentItem.history : [];
+    const newHistoryEntry = {
+      attempt: newAttempts,
+      date: dateStr,
+      status: statusToSet,
+      wrongCount: newWrongCount,
+      imageUrl: isValidImageUrl(currentItem.imageUrl) ? currentItem.imageUrl : null,
+      studentAnswer: currentItem.studentAnswer,
+      aiFeedback: aiFeedback !== null ? aiFeedback : currentItem.aiFeedback
+    };
+
+    newSubmitted[existingIndex] = {
+      ...currentItem,
+      status: statusToSet,
+      aiGrade: statusToSet === 'correct' ? '⭕ 정답' : (statusToSet === 'indeterminate' ? '🔺 확인' : '❌ 오답'),
+      attempts: newAttempts,
+      wrongCount: newWrongCount,
+      aiFeedback: aiFeedback !== null ? aiFeedback : currentItem.aiFeedback,
+      history: [...existingHistory, newHistoryEntry],
+      hasBeenIncorrect: currentItem.hasBeenIncorrect || statusToSet === 'incorrect' || newWrongCount > 0
+    };
+    return newSubmitted;
+  };
+
   const evaluateSingleProblem = (id, groupId, problemNumber, gradeResult, aiFeedback = null) => {
     const now = new Date();
     const dateStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-    updateStateAndSave(prevData => prevData.map(section => ({
+    return updateStateAndSave(prevData => prevData.map(section => ({
       ...section,
       homeworks: section.homeworks.map(hw => {
         if (hw.id === parseInt(id)) {
-          const existingIndex = hw.submittedProblems.findIndex(
-            p => p.groupId === groupId && p.problemNumber === parseInt(problemNumber)
-          );
-          if (existingIndex >= 0) {
-            let newSubmitted = [...hw.submittedProblems];
-            const currentItem = newSubmitted[existingIndex];
-            const currentAttempts = currentItem.attempts || 1;
-            const currentWrongCount = currentItem.wrongCount || (currentItem.status === 'incorrect' ? 1 : 0);
-            
-            let statusToSet = 'incorrect';
-            if (gradeResult === true || gradeResult === 'correct') {
-              statusToSet = 'correct';
-            } else if (gradeResult === 'indeterminate' || gradeResult === 'unclear' || gradeResult === 'pending') {
-              statusToSet = 'indeterminate';
-            } else if (gradeResult === false || gradeResult === 'incorrect') {
-              statusToSet = 'incorrect';
-            }
+          return {
+            ...hw,
+            submittedProblems: applySingleProblemEvaluation(hw.submittedProblems, groupId, problemNumber, gradeResult, aiFeedback, dateStr)
+          };
+        }
+        return hw;
+      })
+    })));
+  };
 
-            // 오답 횟수(wrongCount): 이번 채점에서 오답이면 +1 누적, 맞았으면 기존 오답 횟수 유지
-            let newWrongCount = currentWrongCount;
-            if (statusToSet === 'incorrect') {
-              newWrongCount = currentWrongCount + 1;
-            }
+  const evaluateProblemsBatch = async (id, evaluations) => {
+    if (!Array.isArray(evaluations) || evaluations.length === 0) return true;
+    const now = new Date();
+    const dateStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-            const newAttempts = currentAttempts + 1;
-
-            const existingHistory = Array.isArray(currentItem.history) ? currentItem.history : [];
-            const newHistoryEntry = {
-              attempt: newAttempts,
-              date: dateStr,
-              status: statusToSet,
-              wrongCount: newWrongCount,
-              imageUrl: currentItem.imageUrl,
-              studentAnswer: currentItem.studentAnswer,
-              aiFeedback: aiFeedback !== null ? aiFeedback : currentItem.aiFeedback
-            };
-
-            newSubmitted[existingIndex] = { 
-              ...currentItem, 
-              status: statusToSet,
-              attempts: newAttempts,
-              wrongCount: newWrongCount,
-              aiFeedback: aiFeedback !== null ? aiFeedback : currentItem.aiFeedback,
-              history: [...existingHistory, newHistoryEntry],
-              hasBeenIncorrect: currentItem.hasBeenIncorrect || statusToSet === 'incorrect' || newWrongCount > 0
-            };
-            return { ...hw, submittedProblems: newSubmitted };
-          }
+    return await updateStateAndSave(prevData => prevData.map(section => ({
+      ...section,
+      homeworks: section.homeworks.map(hw => {
+        if (hw.id === parseInt(id)) {
+          let updatedSubmitted = [...(hw.submittedProblems || [])];
+          evaluations.forEach(ev => {
+            updatedSubmitted = applySingleProblemEvaluation(
+              updatedSubmitted,
+              ev.groupId,
+              ev.problemNumber,
+              ev.gradeResult,
+              ev.aiFeedback !== undefined ? ev.aiFeedback : null,
+              dateStr
+            );
+          });
+          return { ...hw, submittedProblems: updatedSubmitted };
         }
         return hw;
       })
@@ -1061,7 +1115,8 @@ export const HomeworkProvider = ({ children }) => {
         if (hw.id === parseInt(id)) {
           let newSubmitted = [...(hw.submittedProblems || [])];
           newSubmitted = newSubmitted.map(p => {
-            if (p.status === 'exempt' || !p.imageUrl) return p;
+            const hasText = p.studentAnswer !== null && p.studentAnswer !== undefined && String(p.studentAnswer).trim() !== '';
+            if (p.status === 'exempt' || (!isValidImageUrl(p.imageUrl) && !hasText)) return p;
             
             const isWrong = wrongNumbersArray.includes(p.problemNumber);
             const currentAttempts = p.attempts || 1;
@@ -1436,6 +1491,7 @@ export const HomeworkProvider = ({ children }) => {
       exemptProblem,
       toggleBookmarkProblem,
       evaluateSingleProblem,
+      evaluateProblemsBatch,
       evaluateBulkProblems,
       addProblemRange,
       removeProblemGroup,
