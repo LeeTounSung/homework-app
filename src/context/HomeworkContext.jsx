@@ -98,6 +98,33 @@ export const HomeworkProvider = ({ children }) => {
 
   const [registeredStudents, setRegisteredStudents] = useState(() => loadRegisteredStudents());
 
+  const [viewMode, setViewModeState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('homework_app_view_mode');
+      if (saved === 'desktop' || saved === 'mobile') return saved;
+    } catch (e) {}
+    return 'mobile';
+  });
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-view-mode', viewMode);
+    }
+    try {
+      localStorage.setItem('homework_app_view_mode', viewMode);
+    } catch (e) {}
+  }, [viewMode]);
+
+  const setViewMode = (mode) => {
+    setViewModeState(mode === 'desktop' ? 'desktop' : 'mobile');
+  };
+
+  const toggleViewMode = () => {
+    setViewModeState(prev => (prev === 'desktop' ? 'mobile' : 'desktop'));
+  };
+
+  const isDesktopMode = viewMode === 'desktop';
+
   const saveRegisteredStudentsList = (nextList) => {
     setRegisteredStudents(nextList);
     try {
@@ -1540,7 +1567,11 @@ export const HomeworkProvider = ({ children }) => {
       addRegisteredStudent,
       removeRegisteredStudent,
       adminAccounts: ADMIN_ACCOUNTS,
-      normalizeStudentName
+      normalizeStudentName,
+      viewMode,
+      setViewMode,
+      toggleViewMode,
+      isDesktopMode
     }}>
       {children}
     </HomeworkContext.Provider>

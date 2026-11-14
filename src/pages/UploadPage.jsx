@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import MathInkComponent from '../components/MathInkComponent';
 import ProblemStatementView from '../components/ProblemStatementView';
+import ViewModeToggle from '../components/ViewModeToggle';
 import { autoGradeProblemSubmission, extractStudentMathToLatex, checkMathEquivalenceWithAI, normalizeChoiceNumber, isValidImageUrl } from '../utils/gemini';
 
 const formatDriveImageUrl = (url) => {
@@ -280,7 +281,7 @@ export default function UploadPage() {
           </svg>
         </button>
         <h1 className="header-title">{problemId}번 제출</h1>
-        <div style={{width: '24px'}}></div> {/* Spacer for centering */}
+        <ViewModeToggle compact />
       </header>
 
       {/* Main Content */}
@@ -357,8 +358,9 @@ export default function UploadPage() {
           </div>
         )}
 
-        {/* Problem Image & Submitted Answer Cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+        <div className="upload-split-layout">
+        {/* Left Pane in Desktop Mode: Problem Image & Submitted Answer Cards */}
+        <div className="upload-left-pane" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
           {/* Problem Image Card */}
           {driveImageUrl && !imageError && (
             <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '16px', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
@@ -500,11 +502,8 @@ export default function UploadPage() {
           )}
         </div>
 
-
-
-
-
-
+        {/* Right Pane in Desktop Mode: Submission Controls & Grading */}
+        <div className="upload-right-pane">
         {/* Hybrid Submission Guide Banner */}
         <div style={{
           backgroundColor: '#1E293B',
@@ -746,6 +745,8 @@ export default function UploadPage() {
           >
             풀지 않아도 되는 문제 (제외하기)
           </button>
+        </div>
+        </div>
         </div>
       </main>
 

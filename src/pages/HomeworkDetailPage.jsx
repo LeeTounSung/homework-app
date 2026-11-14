@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
+import ViewModeToggle from '../components/ViewModeToggle';
 import { autoGradeProblemSubmission, solveProblemWithAI, checkMathEquivalenceWithAI, normalizeKoreanMath, normalizeChoiceNumber, isValidImageUrl } from '../utils/gemini';
 
 const formatGroupLabel = (label) => {
@@ -627,7 +628,7 @@ export default function HomeworkDetailPage() {
           </svg>
         </button>
         <h1 className="header-title">숙제 상세</h1>
-        <div style={{width: '24px'}}></div> {/* Spacer for centering */}
+        <ViewModeToggle compact />
       </header>
 
       {/* Main Content */}

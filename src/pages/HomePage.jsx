@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import { analyzeStudentProgress } from '../utils/gemini';
 import AdmissionBanner from '../components/AdmissionBanner';
+import ViewModeToggle from '../components/ViewModeToggle';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -112,7 +113,7 @@ const StatusIndicator = ({ hw }) => {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { data, isLoading, createHomework, createTest, updateTestInfo, deleteHomework, currentUser, isAdmin, login, logout, geminiApiKey, aiConfig, isAiConfigured, schedules, addSchedule, updateSchedule, deleteSchedule, promoBanners, mainBannerImage, addSelfStudyProblem, deleteSelfStudyProblem, updateSelfStudyProblem, registeredStudents } = useHomework();
+  const { data, isLoading, createHomework, createTest, updateTestInfo, deleteHomework, currentUser, isAdmin, login, logout, geminiApiKey, aiConfig, isAiConfigured, schedules, addSchedule, updateSchedule, deleteSchedule, promoBanners, mainBannerImage, addSelfStudyProblem, deleteSelfStudyProblem, updateSelfStudyProblem, registeredStudents, isDesktopMode } = useHomework();
 
   const [activeTab, setActiveTabState] = useState(() => {
     try {
@@ -835,104 +836,251 @@ export default function HomePage() {
     );
   }
 
+  const navTabs = [
+    { id: 'homework', label: '숙제', fullLabel: '숙제 과제 관리', icon: '📝' },
+    { id: 'incorrect', label: '학습', fullLabel: '단원별 학습·오답', icon: '📚' },
+    { id: 'test', label: '시험', fullLabel: '온라인·정기 시험', icon: '⏱️' },
+    { id: 'schedule', label: '일정', fullLabel: '수업 일정 안내', icon: '📅' },
+    { id: 'statistics', label: '성적', fullLabel: '성적·누적 통계', icon: '📊' },
+    { id: 'school', label: '학교', fullLabel: '학교 기출·자료실', icon: '🏫' }
+  ];
+  const currentTabMeta = navTabs.find(t => t.id === activeTab) || navTabs[0];
+
+  const handleAuthButtonClick = () => {
+    if (currentUser) {
+      if (window.confirm('로그아웃 하시겠습니까?')) {
+        logout();
+      }
+    } else {
+      setLoginError('');
+      setIsLoginModalOpen(true);
+    }
+  };
+
   return (
-    <div className="app-container">
-      {/* Header */}
-      <header className="header" style={{ width: '100%', boxSizing: 'border-box', padding: '14px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-        <button 
-          className="back-btn" 
-          onClick={() => {
-            if (currentUser) {
-              if (window.confirm('로그아웃 하시겠습니까?')) {
-                logout();
-              }
-            } else {
-              setLoginError('');
-              setIsLoginModalOpen(true);
-            }
-          }}
-          style={{ 
-            width: 'auto',
-            flexShrink: 0,
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '5px', 
-            padding: '6px 9px', 
-            backgroundColor: '#1E2028',
-            border: '1px solid #333',
-            borderRadius: '16px',
-            fontSize: 'clamp(11.5px, 3.2vw, 13px)',
-            fontWeight: 'bold',
-            color: '#fff',
-            whiteSpace: 'nowrap',
-            cursor: 'pointer'
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-             <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#FFD700"/>
-          </svg>
-          {currentUser ? `${currentUser} 님` : '로그인'}
-        </button>
+    <div className={isDesktopMode ? 'desktop-dashboard-shell' : 'app-container'}>
+      {isDesktopMode && (
+        <aside className="desktop-sidebar">
+          <div>
+            <div className="desktop-brand">
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '10px',
+                background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '18px', flexShrink: 0, boxShadow: '0 4px 12px rgba(37,99,235,0.35)'
+              }}>
+                📐
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '-0.2px' }}>
+                  수학 학습 매니저
+                </div>
+                <div style={{ fontSize: '11px', color: '#60A5FA', fontWeight: '600' }}>
+                  Desktop Dashboard
+                </div>
+              </div>
+            </div>
 
-        <div className="header-tabs" style={{ display: 'flex', flex: 1, minWidth: 0, justifyContent: 'space-around', alignItems: 'center', maxWidth: '440px', margin: '0 auto', gap: '2px' }}>
-          {[
-            { id: 'homework', label: '숙제' },
-            { id: 'incorrect', label: '학습' },
-            { id: 'test', label: '시험' },
-            { id: 'schedule', label: '일정' },
-            { id: 'statistics', label: '성적' },
-            { id: 'school', label: '학교' }
-          ].map(tab => {
-            const isActive = activeTab === tab.id;
-            return (
-              <h1 
-                key={tab.id}
-                className="header-title" 
-                style={{ 
-                  color: isActive ? '#FFD700' : '#888', 
-                  fontWeight: isActive ? 'bold' : 'normal',
-                  cursor: 'pointer',
-                  margin: 0,
-                  padding: '4px 3px',
-                  borderBottom: isActive ? '2.5px solid #FFD700' : '2.5px solid transparent',
-                  whiteSpace: 'nowrap',
-                  fontSize: 'clamp(13px, 3.7vw, 16px)',
-                  transition: 'all 0.2s'
-                }}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </h1>
-            );
-          })}
-        </div>
-
-        {isAdmin && (
-          <div style={{ flexShrink: 0 }}>
-            <button 
-              className="new-hw-btn" 
-              style={{ 
-                backgroundColor: '#FFD700', 
-                color: '#000000', 
-                fontWeight: 'bold',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                fontSize: '12.5px',
-                whiteSpace: 'nowrap',
-                border: 'none',
+            {/* User Profile Box */}
+            <button
+              type="button"
+              onClick={handleAuthButtonClick}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                padding: '11px 12px',
+                marginBottom: '18px',
+                backgroundColor: '#1B2234',
+                border: '1px solid #2D3854',
+                borderRadius: '12px',
+                color: '#FFFFFF',
                 cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)'
-              }} 
-              onClick={() => navigate('/admin')}
+                textAlign: 'left'
+              }}
             >
-              👑 관리자
+              <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0 }}>
+                <div style={{
+                  width: '30px', height: '30px', borderRadius: '50%',
+                  backgroundColor: currentUser ? '#2563EB' : '#334155',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '13px', fontWeight: 'bold', color: '#FFD700', flexShrink: 0
+                }}>
+                  {currentUser ? currentUser.charAt(0) : '🔑'}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#F8FAFC', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {currentUser ? `${currentUser} 님` : '학생 / 관리자 로그인'}
+                  </div>
+                  <div style={{ fontSize: '11px', color: currentUser ? '#93C5FD' : '#94A3B8' }}>
+                    {currentUser ? (isAdmin ? '관리자 계정 (클릭 시 로그아웃)' : '학습 계정 접속 중') : '클릭하여 로그인'}
+                  </div>
+                </div>
+              </div>
             </button>
+
+            <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748B', padding: '0 8px 8px', letterSpacing: '0.5px' }}>
+              학습 메뉴
+            </div>
+            <nav className="desktop-nav-list">
+              {navTabs.map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`desktop-nav-btn ${activeTab === tab.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <span style={{ fontSize: '17px', width: '22px', textAlign: 'center' }}>{tab.icon}</span>
+                  <span>{tab.fullLabel}</span>
+                </button>
+              ))}
+            </nav>
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '16px', borderTop: '1px solid #1F283A' }}>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => navigate('/admin')}
+                style={{
+                  width: '100%',
+                  backgroundColor: '#FFD700',
+                  color: '#000000',
+                  fontWeight: '800',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 10px rgba(255, 215, 0, 0.3)'
+                }}
+              >
+                👑 관리자 대시보드 열기
+              </button>
+            )}
+            <ViewModeToggle fullWidth />
+          </div>
+        </aside>
+      )}
+
+      <div className={isDesktopMode ? 'desktop-main-scroll' : ''} style={isDesktopMode ? undefined : { display: 'contents' }}>
+        {isDesktopMode ? (
+          <header className="desktop-topbar">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '22px' }}>{currentTabMeta.icon}</span>
+              <div>
+                <h1 style={{ fontSize: '19px', fontWeight: '800', color: '#FFFFFF', margin: 0 }}>
+                  {currentTabMeta.fullLabel}
+                </h1>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/teacher')}
+                  style={{
+                    backgroundColor: '#1E293B',
+                    color: '#FFD700',
+                    border: '1px solid rgba(255,215,0,0.4)',
+                    padding: '7px 12px',
+                    borderRadius: '16px',
+                    fontSize: '12.5px',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  📋 평가 대기열
+                </button>
+              )}
+              <ViewModeToggle />
+            </div>
+          </header>
+        ) : (
+          /* Mobile Header */
+          <header className="header" style={{ width: '100%', boxSizing: 'border-box', padding: '14px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+            <button 
+              className="back-btn" 
+              onClick={handleAuthButtonClick}
+              style={{ 
+                width: 'auto',
+                flexShrink: 0,
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '5px', 
+                padding: '6px 8px', 
+                backgroundColor: '#1E2028',
+                border: '1px solid #333',
+                borderRadius: '16px',
+                fontSize: 'clamp(11px, 3vw, 12.5px)',
+                fontWeight: 'bold',
+                color: '#fff',
+                whiteSpace: 'nowrap',
+                cursor: 'pointer'
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                 <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#FFD700"/>
+              </svg>
+              {currentUser ? `${currentUser} 님` : '로그인'}
+            </button>
+
+            <div className="header-tabs" style={{ display: 'flex', flex: 1, minWidth: 0, justifyContent: 'space-around', alignItems: 'center', maxWidth: '420px', margin: '0 auto', gap: '2px' }}>
+              {navTabs.map(tab => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <h1 
+                    key={tab.id}
+                    className="header-title" 
+                    style={{ 
+                      color: isActive ? '#FFD700' : '#888', 
+                      fontWeight: isActive ? 'bold' : 'normal',
+                      cursor: 'pointer',
+                      margin: 0,
+                      padding: '4px 2px',
+                      borderBottom: isActive ? '2.5px solid #FFD700' : '2.5px solid transparent',
+                      whiteSpace: 'nowrap',
+                      fontSize: 'clamp(12.5px, 3.5vw, 15.5px)',
+                      transition: 'all 0.2s'
+                    }}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    {tab.label}
+                  </h1>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+              <ViewModeToggle compact />
+              {isAdmin && (
+                <button 
+                  className="new-hw-btn" 
+                  style={{ 
+                    backgroundColor: '#FFD700', 
+                    color: '#000000', 
+                    fontWeight: 'bold',
+                    padding: '6px 9px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    whiteSpace: 'nowrap',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)'
+                  }} 
+                  onClick={() => navigate('/admin')}
+                >
+                  👑 관리자
+                </button>
+              )}
+            </div>
+          </header>
         )}
-      </header>
 
       {/* Main Content */}
-      <main className="content-list">
+      <main className={isDesktopMode ? 'desktop-content-body' : 'content-list'}>
         {!currentUser ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0 40px 0' }}>
             {/* Blank Blue Box / Image Banner Frame */}
@@ -1327,6 +1475,7 @@ export default function HomePage() {
                   <h2 className="date-title">{section.date}</h2>
                 </div>
                 
+                <div className="hw-card-grid">
                 {section.homeworks.map(test => {
                   if (test.type === 'test') {
                     return (
@@ -1426,6 +1575,7 @@ export default function HomePage() {
                     );
                   }
                 })}
+                </div>
               </div>
             ))
           )
@@ -2345,6 +2495,7 @@ export default function HomePage() {
                   <h2 className="date-title">{section.date}</h2>
                 </div>
                 
+                <div className="hw-card-grid">
                 {section.homeworks.filter(hw => hw.type !== 'test' && !hw.isSelfStudy && hw.title !== '[자율학습] 숙제 외 문제 보관').map(hw => (
                   <div 
                     key={hw.id} 
@@ -2384,11 +2535,13 @@ export default function HomePage() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             ))
           )
         )}
       </main>
+      </div>
 
       {/* Login Modal */}
       {isLoginModalOpen && (

@@ -387,3 +387,182 @@
 .modal-btn.confirm:hover {
   background-color: #E6C200;
 }
+
+/* =========================================================
+   Desktop / Tablet Dashboard Mode ([data-view-mode="desktop"])
+   ========================================================= */
+.desktop-dashboard-shell {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  height: 100vh;
+  width: 100%;
+  background-color: #0F1420;
+  color: #E2E8F0;
+  overflow: hidden;
+}
+
+.desktop-sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #131927;
+  border-right: 1px solid #222B3E;
+  padding: 22px 16px;
+  box-sizing: border-box;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.desktop-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 18px;
+  border-bottom: 1px solid #1F283A;
+  margin-bottom: 16px;
+}
+
+.desktop-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.desktop-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #94A3B8;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.desktop-nav-btn:hover {
+  background-color: #1B2336;
+  color: #F1F5F9;
+}
+
+.desktop-nav-btn.active {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.14) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border-color: rgba(255, 215, 0, 0.45);
+  color: #FFD700;
+  font-weight: 700;
+}
+
+.desktop-main-scroll {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.desktop-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background-color: rgba(15, 20, 32, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #1E2738;
+}
+
+.desktop-content-body {
+  padding: 24px 32px 56px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Homework & Test Multi-Column Card Grid in Desktop Mode */
+.hw-card-grid {
+  display: block;
+}
+
+html[data-view-mode="desktop"] .hw-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 16px;
+}
+
+html[data-view-mode="desktop"] .hw-card-grid .homework-card {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #262E42;
+  background-color: #181E2C;
+}
+
+html[data-view-mode="desktop"] .hw-card-grid .homework-card:hover {
+  border-color: #3B82F6;
+}
+
+/* Detail & Subpages Wide Layout in Desktop Mode */
+html[data-view-mode="desktop"] .header {
+  padding: 18px 36px;
+  border-bottom: 1px solid #1E2738;
+  background-color: rgba(15, 20, 32, 0.9);
+}
+
+html[data-view-mode="desktop"] .content-list {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 24px 36px 56px;
+}
+
+html[data-view-mode="desktop"] .problem-grid {
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+/* UploadPage 2-Column Split Study View in Desktop Mode */
+.upload-split-layout {
+  display: block;
+}
+
+html[data-view-mode="desktop"] .upload-split-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(390px, 0.88fr);
+  gap: 28px;
+  align-items: start;
+}
+
+html[data-view-mode="desktop"] .upload-left-pane {
+  position: sticky;
+  top: 16px;
+}
+
+html[data-view-mode="desktop"] .upload-right-pane {
+  background-color: #151B28;
+  border: 1px solid #242E42;
+  border-radius: 16px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+html[data-view-mode="desktop"] .submit-btn {
+  max-width: 100%;
+}
+
+@media (max-width: 820px) {
+  .desktop-dashboard-shell {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+  html[data-view-mode="desktop"] .upload-split-layout {
+    grid-template-columns: 1fr;
+  }
+  html[data-view-mode="desktop"] .upload-left-pane {
+    position: static;
+  }
+}

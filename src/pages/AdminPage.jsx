@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import SettingsModal from '../components/SettingsModal';
+import ViewModeToggle from '../components/ViewModeToggle';
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function AdminPage() {
     agentApiUrl,
     saveAiSettings, 
     isAdmin,
+    isDesktopMode,
     scanDriveFolderProblems,
     promoBanners,
     addPromoBanner,
@@ -305,10 +307,12 @@ export default function AdminPage() {
           뒤로 가기
         </button>
         <h1 className="header-title" style={{ margin: 0 }}>👑 관리자 대시보드</h1>
-        <div style={{ width: '100px' }}></div> {/* Spacer for centering */}
+        <div style={{ width: '100px', display: 'flex', justifyContent: 'flex-end' }}>
+          <ViewModeToggle compact />
+        </div>
       </header>
 
-      <main style={{ padding: '30px 20px', maxWidth: '800px', margin: '0 auto' }}>
+      <main style={{ padding: '30px 20px', maxWidth: isDesktopMode ? '1180px' : '800px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 

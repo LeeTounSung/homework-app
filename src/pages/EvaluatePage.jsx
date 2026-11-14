@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
 import { analyzeProblemSubmission, isValidImageUrl } from '../utils/gemini';
+import ViewModeToggle from '../components/ViewModeToggle';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -23,7 +24,7 @@ const formatDriveImageUrl = (url) => {
 export default function EvaluatePage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { getHomeworkById, evaluateHomework, evaluateSingleProblem, evaluateBulkProblems, geminiApiKey, aiConfig, isAiConfigured } = useHomework();
+  const { getHomeworkById, evaluateHomework, evaluateSingleProblem, evaluateBulkProblems, geminiApiKey, aiConfig, isAiConfigured, isDesktopMode } = useHomework();
   const [evaluationType, setEvaluationType] = useState('check'); // check, stars
   const [stars, setStars] = useState(0);
 
@@ -140,7 +141,7 @@ export default function EvaluatePage() {
           </svg>
         </button>
         <h1 className="header-title" style={{ color: '#FFFFFF' }}>숙제 평가하기</h1>
-        <div style={{width: '24px'}}></div>
+        <ViewModeToggle compact />
       </header>
 
       {/* Main Content */}
@@ -164,7 +165,7 @@ export default function EvaluatePage() {
 
         <div className="problems-viewer" style={{ flex: 1, overflowY: 'auto', marginBottom: '24px' }}>
           {sortedProblems.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktopMode ? 'repeat(auto-fill, minmax(260px, 1fr))' : 'repeat(2, 1fr)', gap: '12px' }}>
               {sortedProblems.map(p => {
                 const label = groupLabelMap[p.groupId] || '';
                 return (

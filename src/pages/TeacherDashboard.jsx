@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHomework } from '../context/HomeworkContext';
+import ViewModeToggle from '../components/ViewModeToggle';
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function TeacherDashboard() {
           </svg>
         </button>
         <h1 className="header-title" style={{ color: '#FFD700' }}>[관리자] 평가 대기열</h1>
-        <div style={{width: '24px'}}></div>
+        <ViewModeToggle compact />
       </header>
 
       {/* Main Content */}
@@ -28,7 +29,7 @@ export default function TeacherDashboard() {
             현재 평가 대기중인 숙제가 없습니다.
           </div>
         ) : (
-          <div style={{ marginTop: '24px' }}>
+          <div className="hw-card-grid" style={{ marginTop: '24px' }}>
             {submitted.map(hw => (
               <div 
                 key={hw.id} 

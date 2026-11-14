@@ -30,6 +30,12 @@ body {
   box-shadow: 0 0 30px rgba(0,0,0,0.6);
   position: relative;
   overflow-x: hidden;
+  transition: max-width 0.25s ease;
+}
+
+html[data-view-mode="desktop"] #root {
+  max-width: 1400px;
+  background-color: #0F1420;
 }
 
 h1, h2, h3, p {
