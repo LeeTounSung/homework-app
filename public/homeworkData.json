@@ -1,5 +1,204 @@
 [
   {
+    "date": "11월 22일(일)까지",
+    "homeworks": [
+      {
+        "id": 1794981044962,
+        "studentName": "강백",
+        "title": "[개념플러스유형] 대수 등차수열의 합 (23~43번)",
+        "description": "개념플러스유형 대수 유형편 p.67~69 (유형 07 등차수열의 합 ~ 유형 12 등차수열의 합의 활용) 21문항",
+        "createdAt": "11/18 14:50",
+        "teacherName": "mathkorea",
+        "tag": "개념플러스유형 대수 등차수열의 합",
+        "statusType": "none",
+        "statusValue": null,
+        "problemImagesBaseUrl": "/problem_images/kpy_daesu_p67_69_23_43",
+        "answers": {
+          "23": "1",
+          "24": "3",
+          "25": "200",
+          "26": "3",
+          "27": "290",
+          "28": "15",
+          "29": "81",
+          "30": "3",
+          "31": "3",
+          "32": "-64",
+          "33": "2",
+          "34": "3",
+          "35": "1667",
+          "36": "630",
+          "37": "4",
+          "38": "5",
+          "39": "4",
+          "40": "16",
+          "41": "75",
+          "42": "6",
+          "43": "143"
+        },
+        "problemGroups": [
+          {
+            "groupId": "g_1794981044962",
+            "label": "[개념플러스유형]-[01 등차수열]-[p.67~69]-[번호:23~43]",
+            "problems": [
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43
+            ]
+          }
+        ],
+        "problemDetails": {
+          "23": {
+            "page": 67,
+            "topic": "등차수열의 합 (첫째항과 공차)",
+            "type": "객관식 (①)",
+            "source": "개념플러스유형 대수 유형편 p.67 #23"
+          },
+          "24": {
+            "page": 67,
+            "topic": "등차수열의 합 (조건 연립방정식)",
+            "type": "객관식 (③)",
+            "source": "개념플러스유형 대수 유형편 p.67 #24"
+          },
+          "25": {
+            "page": 67,
+            "topic": "두 등차수열의 합",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.67 #25"
+          },
+          "26": {
+            "page": 67,
+            "topic": "부분의 합이 주어진 등차수열의 합",
+            "type": "객관식 (③)",
+            "source": "개념플러스유형 대수 유형편 p.67 #26"
+          },
+          "27": {
+            "page": 67,
+            "topic": "등차수열 연속 구간합 추론",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.67 #27"
+          },
+          "28": {
+            "page": 67,
+            "topic": "처음과 마지막 항의 합을 이용한 항수 구하기",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.67 #28"
+          },
+          "29": {
+            "page": 68,
+            "topic": "등차수열의 합의 최댓값",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.68 #29"
+          },
+          "30": {
+            "page": 68,
+            "topic": "등차수열의 합의 최솟값",
+            "type": "객관식 (③)",
+            "source": "개념플러스유형 대수 유형편 p.68 #30"
+          },
+          "31": {
+            "page": 68,
+            "topic": "합의 최댓값 조건과 정수 공차",
+            "type": "객관식 (③)",
+            "source": "개념플러스유형 대수 유형편 p.68 #31"
+          },
+          "32": {
+            "page": 68,
+            "topic": "항의 곱 조건과 합의 최솟값",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.68 #32"
+          },
+          "33": {
+            "page": 68,
+            "topic": "나머지가 같은 두 자리 자연수의 총합",
+            "type": "객관식 (②)",
+            "source": "개념플러스유형 대수 유형편 p.68 #33"
+          },
+          "34": {
+            "page": 68,
+            "topic": "공배수의 총합 (15의 배수)",
+            "type": "객관식 (③)",
+            "source": "개념플러스유형 대수 유형편 p.68 #34"
+          },
+          "35": {
+            "page": 68,
+            "topic": "배수의 합과 합집합 (3 또는 7의 배수)",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.68 #35"
+          },
+          "36": {
+            "page": 68,
+            "topic": "두 조건을 만족하는 자연수 수열의 합",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.68 #36"
+          },
+          "37": {
+            "page": 69,
+            "topic": "수열의 합과 일반항 사이의 관계 (상수항 존재)",
+            "type": "객관식 (④)",
+            "source": "개념플러스유형 대수 유형편 p.69 #37"
+          },
+          "38": {
+            "page": 69,
+            "topic": "나머지정리와 수열의 합",
+            "type": "객관식 (⑤)",
+            "source": "개념플러스유형 대수 유형편 p.69 #38"
+          },
+          "39": {
+            "page": 69,
+            "topic": "합의 공식과 음수 항의 개수",
+            "type": "객관식 (④)",
+            "source": "개념플러스유형 대수 유형편 p.69 #39"
+          },
+          "40": {
+            "page": 69,
+            "topic": "홀수항·짝수항 부분합과 일반항",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.69 #40"
+          },
+          "41": {
+            "page": 69,
+            "topic": "두 직선 사이의 평행 선분의 길이의 합",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.69 #41"
+          },
+          "42": {
+            "page": 69,
+            "topic": "다각형의 내각의 크기와 등차수열",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.69 #42"
+          },
+          "43": {
+            "page": 69,
+            "topic": "두 포물선 사이의 수직 선분의 길이의 합",
+            "type": "주관식",
+            "source": "개념플러스유형 대수 유형편 p.69 #43"
+          }
+        },
+        "submittedProblems": [],
+        "evaluation": null
+      }
+    ]
+  },
+  {
     "date": "11월 15일(일)까지",
     "homeworks": [
       {
@@ -201,7 +400,445 @@
             "source": "개념플러스유형 대수 유형편 p.66 #22"
           }
         },
-        "submittedProblems": [],
+        "submittedProblems": [
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 1,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "4",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ④ (4번)\n- 공식 정답: ④ (4번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "4",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ④ (4번)\n- 공식 정답: ④ (4번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 2,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "4",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ④ (4번)\n- 공식 정답: ④ (4번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "4",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ④ (4번)\n- 공식 정답: ④ (4번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 3,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "2",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "2",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 4,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "2",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "2",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 5,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "3",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ③ (3번)\n- 공식 정답: ③ (3번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "3",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ③ (3번)\n- 공식 정답: ③ (3번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 6,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "-3",
+            "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: -3\n- 공식 정답: -3\n- 결과: 수학적 표기 완전 일치 (0ms)",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "-3",
+                "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: -3\n- 공식 정답: -3\n- 결과: 수학적 표기 완전 일치 (0ms)"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 7,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "2",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "2",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 8,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "4",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ④ (4번)\n- 공식 정답: ④ (4번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "4",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ④ (4번)\n- 공식 정답: ④ (4번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 9,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "2",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "2",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 10,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "13",
+            "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: 13\n- 공식 정답: 13\n- 결과: 수학적 표기 완전 일치 (0ms)",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "13",
+                "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: 13\n- 공식 정답: 13\n- 결과: 수학적 표기 완전 일치 (0ms)"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 11,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "2",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "2",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ② (2번)\n- 공식 정답: ② (2번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 12,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "-16",
+            "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: -16\n- 공식 정답: -16\n- 결과: 수학적 표기 완전 일치 (0ms)",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "-16",
+                "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: -16\n- 공식 정답: -16\n- 결과: 수학적 표기 완전 일치 (0ms)"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 15,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "-6",
+            "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: -6\n- 공식 정답: -6\n- 결과: 수학적 표기 완전 일치 (0ms)",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "-6",
+                "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: -6\n- 공식 정답: -6\n- 결과: 수학적 표기 완전 일치 (0ms)"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 16,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "3",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ③ (3번)\n- 공식 정답: ③ (3번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "3",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ③ (3번)\n- 공식 정답: ③ (3번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 17,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "6",
+            "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: 6\n- 공식 정답: 6\n- 결과: 수학적 표기 완전 일치 (0ms)",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "6",
+                "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: 6\n- 공식 정답: 6\n- 결과: 수학적 표기 완전 일치 (0ms)"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 18,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "5",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ⑤ (5번)\n- 공식 정답: ⑤ (5번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "5",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ⑤ (5번)\n- 공식 정답: ⑤ (5번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 19,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "-24",
+            "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: -24\n- 공식 정답: -24\n- 결과: 수학적 표기 완전 일치 (0ms)",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "-24",
+                "aiFeedback": "⭕ [정답표 고속 일치 판정]\n- 학생 답안: -24\n- 공식 정답: -24\n- 결과: 수학적 표기 완전 일치 (0ms)"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 20,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "3",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ③ (3번)\n- 공식 정답: ③ (3번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "3",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ③ (3번)\n- 공식 정답: ③ (3번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          },
+          {
+            "groupId": "g_1794305907064",
+            "problemNumber": 21,
+            "imageUrl": null,
+            "status": "correct",
+            "studentAnswer": "4",
+            "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ④ (4번)\n- 공식 정답: ④ (4번)\n- 결과: 완벽히 일치합니다!",
+            "aiGrade": "⭕ 정답",
+            "wrongCount": 0,
+            "hasBeenIncorrect": false,
+            "attempts": 2,
+            "history": [
+              {
+                "attempt": 2,
+                "date": "11/13 18:26",
+                "status": "correct",
+                "wrongCount": 0,
+                "imageUrl": null,
+                "studentAnswer": "4",
+                "aiFeedback": "⭕ [객관식 정답 판정]\n- 학생 선택: ④ (4번)\n- 공식 정답: ④ (4번)\n- 결과: 완벽히 일치합니다!"
+              }
+            ]
+          }
+        ],
         "evaluation": null
       }
     ]
@@ -212,7 +849,7 @@
       {
         "id": 1794306110001,
         "studentName": "대치A",
-        "title": "[미적분Ⅰ] 부정적분과 정적분 쎈 B단계 유사변형 25제",
+        "title": "[쎈 미적분Ⅰ] 부정적분과 정적분 B단계 핵심 25제",
         "description": "2022 개정 쎈 미적분Ⅰ 07단원(부정적분)·08단원(정적분) B단계 대표 유형 25문항 (고난도 킬러 배제, 개념·계산 3-Step CoT 체화)",
         "createdAt": "11/11 19:00",
         "teacherName": "mathkorea",
