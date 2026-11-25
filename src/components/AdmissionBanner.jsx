@@ -35,7 +35,7 @@ const ADMISSION_GROUPS = [
   },
   {
     id: 'seoul-metro',
-    label: 'IN 서울 · 수도권 주요 대학',
+    label: '서울 주요대학',
     accentColor: '#64B5F6',
     headerBg: 'rgba(59, 130, 246, 0.11)',
     borderColor: 'rgba(59, 130, 246, 0.28)',
@@ -172,7 +172,7 @@ export default function AdmissionBanner() {
                   whiteSpace: 'nowrap'
                 }}
               >
-                {group.id === 'seoul-metro' ? 'IN 서울 · 수도권' : group.label}
+                {group.label}
               </span>
               <span
                 style={{
