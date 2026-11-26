@@ -48,10 +48,15 @@ const formatKoreanDuration = (totalSec) => {
   return `${m}분`;
 };
 
+// Google Sheets Apps Script 웹 앱 URL (배포 후 아래 문자열에 붙여넣으면 자동 클라우드 동기화)
+const STUDY_TIMER_SYNC_URL = '';
+
 export default function StudyTimer({ studentName }) {
   const userKey = (studentName || 'guest').trim();
   const logsStorageKey = `homework_app_study_logs_v1_${userKey}`;
   const activeStorageKey = `homework_app_study_active_v1_${userKey}`;
+  const syncUrl = STUDY_TIMER_SYNC_URL || (typeof window !== 'undefined' ? (localStorage.getItem('homework_app_study_sync_url') || '') : '');
+  const [cloudSynced, setCloudSynced] = useState(false);
 
   const [subject, setSubject] = useState('대수(수1)');
   const [logs, setLogs] = useState(() => {
@@ -96,6 +101,32 @@ export default function StudyTimer({ studentName }) {
       setStartedAt(null);
     }
   }, [logsStorageKey, activeStorageKey]);
+
+  // Cloud sync: fetch student logs from Google Sheets when syncUrl is configured
+  useEffect(() => {
+    if (!syncUrl) return;
+    let cancelled = false;
+    fetch(`${syncUrl}?student=${encodeURIComponent(userKey)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (cancelled || !data || !data.ok || !Array.isArray(data.logs)) return;
+        setLogs(prev => {
+          const map = new Map();
+          data.logs.forEach(item => map.set(String(item.id), item));
+          prev.forEach(item => {
+            if (!map.has(String(item.id))) map.set(String(item.id), item);
+          });
+          const merged = Array.from(map.values()).sort((a, b) => Number(b.id) - Number(a.id));
+          try {
+            localStorage.setItem(logsStorageKey, JSON.stringify(merged));
+          } catch {}
+          return merged;
+        });
+        setCloudSynced(true);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [syncUrl, userKey, logsStorageKey]);
 
   // Persist active timer state
   useEffect(() => {
@@ -162,6 +193,13 @@ export default function StudyTimer({ studentName }) {
     try {
       localStorage.setItem(logsStorageKey, JSON.stringify(nextLogs));
     } catch {}
+    if (syncUrl) {
+      fetch(syncUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'add', ...newEntry, student: userKey })
+      }).then(() => setCloudSynced(true)).catch(() => {});
+    }
     setIsRunning(false);
     setStartedAt(null);
     setAccumulatedSec(0);
@@ -174,6 +212,13 @@ export default function StudyTimer({ studentName }) {
     try {
       localStorage.setItem(logsStorageKey, JSON.stringify(nextLogs));
     } catch {}
+    if (syncUrl) {
+      fetch(syncUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'delete', id, student: userKey })
+      }).catch(() => {});
+    }
   };
 
   const todayKey = getTodayKey();
