@@ -198,8 +198,9 @@ export default function HomePage() {
   const [schoolCategoryFilter, setSchoolCategoryFilter] = useState('전체'); // '전체' | '📄 프린트/유인물' | '📚 부교재' | '✏️ 수행평가' | '📝 기출/예상'
   const [mathArchiveItems, setMathArchiveItems] = useState([]);
   const [mathArchiveSearch, setMathArchiveSearch] = useState('');
-  const [mathArchiveCategoryFilter, setMathArchiveCategoryFilter] = useState('전체');
   const [mathArchiveSubjectFilter, setMathArchiveSubjectFilter] = useState('전체');
+  const [mathArchiveUnitFilter, setMathArchiveUnitFilter] = useState('전체');
+  const [mathArchiveLevelFilter, setMathArchiveLevelFilter] = useState('전체');
 
   useEffect(() => {
     const fetchMathArchive = async () => {
@@ -2529,44 +2530,67 @@ export default function HomePage() {
             )}
           </div>
         ) : activeTab === 'mathArchive' && isDesktopMode ? (
-          // --- 📁 PC 전용 공통 수학자료실 탭 ---
+          // --- 📁 PC 전용 공통 수학자료 탭 (과목 -> 단원 2단 탭 + 1줄 게시판 리스트) ---
           (() => {
-            const archiveCategories = ['전체', ...Array.from(new Set(mathArchiveItems.map(i => i.category).filter(Boolean)))];
-            const archiveSubjects = ['전체', ...Array.from(new Set(mathArchiveItems.map(i => i.subject).filter(Boolean)))];
+            const curriculumUnits = {
+              '전체': [],
+              '공통수학1': ['다항식', '방정식과 부등식', '경우의 수', '행렬', '중간고사', '기말고사', '전범위'],
+              '공통수학2': ['도형의 방정식', '집합과 명제', '함수와 그래프', '중간고사', '기말고사', '전범위'],
+              '대수(수1)': ['지수와 로그', '삼각함수', '수열', '중간고사', '기말고사', '전범위'],
+              '미적분1(수2)': ['함수의 극한과 연속', '다항함수의 미분법', '다항함수의 적분법', '중간고사', '기말고사', '전범위'],
+              '미적분2': ['수열의 극한', '미분법', '적분법', '중간고사', '기말고사', '전범위'],
+              '확률과 통계': ['경우의 수', '확률', '통계', '중간고사', '기말고사', '전범위'],
+              '기하': ['이차곡선', '평면벡터', '공간도형과 공간좌표', '중간고사', '기말고사', '전범위']
+            };
+            const subjectList = Object.keys(curriculumUnits);
+            const activeUnits = mathArchiveSubjectFilter === '전체'
+              ? ['전체', '중간고사', '기말고사', '전범위']
+              : ['전체', ...(curriculumUnits[mathArchiveSubjectFilter] || [])];
+            const levelList = ['전체', '초급', '중급', '고급', '학교 기출', '공통 교재'];
             const q = mathArchiveSearch.trim().toLowerCase();
+
             const archiveItems = mathArchiveItems.filter(item => {
-              if (mathArchiveCategoryFilter !== '전체' && item.category !== mathArchiveCategoryFilter) return false;
               if (mathArchiveSubjectFilter !== '전체' && item.subject !== mathArchiveSubjectFilter) return false;
+              if (mathArchiveUnitFilter !== '전체' && (item.unit || '') !== mathArchiveUnitFilter) return false;
+              const itemLevel = item.level || item.category || '';
+              if (mathArchiveLevelFilter !== '전체' && !itemLevel.includes(mathArchiveLevelFilter)) return false;
               if (!q) return true;
               return (
                 (item.title || '').toLowerCase().includes(q) ||
                 (item.subject || '').toLowerCase().includes(q) ||
-                (item.category || '').toLowerCase().includes(q) ||
+                (item.unit || '').toLowerCase().includes(q) ||
+                (item.level || '').toLowerCase().includes(q) ||
                 (item.memo || '').toLowerCase().includes(q)
               );
             });
+
+            const levelStyleMap = {
+              '초급': { bg: 'rgba(16, 185, 129, 0.16)', color: '#34D399', border: 'rgba(16, 185, 129, 0.35)' },
+              '중급': { bg: 'rgba(59, 130, 246, 0.16)', color: '#60A5FA', border: 'rgba(59, 130, 246, 0.35)' },
+              '고급': { bg: 'rgba(168, 85, 247, 0.16)', color: '#C084FC', border: 'rgba(168, 85, 247, 0.35)' },
+              '학교 기출': { bg: 'rgba(245, 158, 11, 0.16)', color: '#FBBF24', border: 'rgba(245, 158, 11, 0.35)' },
+              '공통 교재': { bg: 'rgba(148, 163, 184, 0.16)', color: '#CBD5E1', border: 'rgba(148, 163, 184, 0.35)' }
+            };
+
             return (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
-                    <h2 style={{ color: '#60A5FA', fontSize: '19px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h2 style={{ color: '#60A5FA', fontSize: '19px', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       📁 수학자료 <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px', backgroundColor: 'rgba(59,130,246,0.18)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.35)' }}>PC 공통</span>
                     </h2>
-                    <p style={{ color: '#94A3B8', fontSize: '13px', margin: 0 }}>
-                      모든 학생에게 공통으로 제공되는 수학 교재·개념·기출 자료실입니다. (개인 맞춤 자료는 좌측 🏫 학교 메뉴에서 확인)
+                    <p style={{ color: '#94A3B8', fontSize: '12.5px', margin: 0 }}>
+                      단원별 PDF · 학교 중간/기말 시험지 · 공통 교재를 과목/단원 탭으로 빠르게 찾아 열람·다운로드하세요.
                     </p>
                   </div>
-                </div>
-
-                {/* Search + Category Filter Bar */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '14px', padding: '12px 14px', backgroundColor: '#161B29', borderRadius: '12px', border: '1px solid #263047' }}>
                   <input
                     type="text"
                     value={mathArchiveSearch}
                     onChange={(e) => setMathArchiveSearch(e.target.value)}
-                    placeholder="🔍 자료 제목, 과목, 키워드 검색..."
+                    placeholder="🔍 자료명, 단원, 학교명 검색..."
                     style={{
-                      flex: '1 1 240px',
+                      width: '280px',
+                      maxWidth: '100%',
                       padding: '8px 12px',
                       borderRadius: '8px',
                       border: '1px solid #334155',
@@ -2576,116 +2600,177 @@ export default function HomePage() {
                       outline: 'none'
                     }}
                   />
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {archiveCategories.map(cat => (
+                </div>
+
+                {/* 1단: 과목 탭 */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', padding: '10px 12px', backgroundColor: '#141927', borderRadius: '10px 10px 0 0', border: '1px solid #263047', borderBottom: '1px solid #1F2940' }}>
+                  {subjectList.map(subj => {
+                    const isActive = mathArchiveSubjectFilter === subj;
+                    const count = subj === '전체'
+                      ? mathArchiveItems.length
+                      : mathArchiveItems.filter(i => i.subject === subj).length;
+                    return (
                       <button
-                        key={cat}
+                        key={subj}
                         type="button"
-                        onClick={() => setMathArchiveCategoryFilter(cat)}
+                        onClick={() => {
+                          setMathArchiveSubjectFilter(subj);
+                          setMathArchiveUnitFilter('전체');
+                        }}
                         style={{
-                          padding: '6px 11px',
-                          borderRadius: '999px',
-                          border: mathArchiveCategoryFilter === cat ? '1px solid #60A5FA' : '1px solid #334155',
-                          backgroundColor: mathArchiveCategoryFilter === cat ? 'rgba(59,130,246,0.2)' : '#1E2436',
-                          color: mathArchiveCategoryFilter === cat ? '#93C5FD' : '#CBD5E1',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          border: isActive ? '1px solid #60A5FA' : '1px solid transparent',
+                          backgroundColor: isActive ? 'rgba(37, 99, 235, 0.28)' : '#1C2336',
+                          color: isActive ? '#FFFFFF' : '#94A3B8',
+                          fontSize: '12.5px',
+                          fontWeight: isActive ? '700' : '600',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px'
                         }}
                       >
-                        {cat}
+                        <span>{subj}</span>
+                        {count > 0 && (
+                          <span style={{ fontSize: '10.5px', padding: '0 5px', borderRadius: '999px', backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(148,163,184,0.18)', color: isActive ? '#E0F2FE' : '#CBD5E1' }}>
+                            {count}
+                          </span>
+                        )}
                       </button>
-                    ))}
+                    );
+                  })}
+                </div>
+
+                {/* 2단: 단원·시험 하위 탭 + 난이도 필터 */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', padding: '9px 12px', backgroundColor: '#101522', borderRadius: '0 0 10px 10px', border: '1px solid #263047', borderTop: 'none', marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11.5px', color: '#64748B', fontWeight: '700', marginRight: '4px' }}>단원/시험:</span>
+                    {activeUnits.map(unit => {
+                      const isActive = mathArchiveUnitFilter === unit;
+                      return (
+                        <button
+                          key={unit}
+                          type="button"
+                          onClick={() => setMathArchiveUnitFilter(unit)}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            border: isActive ? '1px solid #FFD700' : '1px solid #2B354D',
+                            backgroundColor: isActive ? 'rgba(255,215,0,0.14)' : 'transparent',
+                            color: isActive ? '#FFD700' : '#CBD5E1',
+                            fontSize: '12px',
+                            fontWeight: isActive ? '700' : '500',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {unit}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11.5px', color: '#64748B', fontWeight: '700', marginRight: '4px' }}>구분:</span>
+                    {levelList.map(lv => {
+                      const isActive = mathArchiveLevelFilter === lv;
+                      return (
+                        <button
+                          key={lv}
+                          type="button"
+                          onClick={() => setMathArchiveLevelFilter(lv)}
+                          style={{
+                            padding: '3px 9px',
+                            borderRadius: '6px',
+                            border: isActive ? '1px solid #34D399' : '1px solid #263047',
+                            backgroundColor: isActive ? 'rgba(16,185,129,0.18)' : '#171D2E',
+                            color: isActive ? '#6EE7B7' : '#94A3B8',
+                            fontSize: '11.5px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {lv}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Subject Filter Pills */}
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', color: '#64748B', fontWeight: '600', marginRight: '4px' }}>과목:</span>
-                  {archiveSubjects.map(subj => (
-                    <button
-                      key={subj}
-                      type="button"
-                      onClick={() => setMathArchiveSubjectFilter(subj)}
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        border: mathArchiveSubjectFilter === subj ? '1px solid #FFD700' : '1px solid #2D3345',
-                        backgroundColor: mathArchiveSubjectFilter === subj ? 'rgba(255,215,0,0.14)' : '#171C2B',
-                        color: mathArchiveSubjectFilter === subj ? '#FFD700' : '#94A3B8',
-                        fontSize: '11.5px',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {subj}
-                    </button>
-                  ))}
-                  <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#94A3B8' }}>
-                    총 <strong style={{ color: '#F8FAFC' }}>{archiveItems.length}</strong>건
-                  </span>
-                </div>
-
-                {archiveItems.length === 0 ? (
-                  <div style={{ padding: '48px 20px', textAlign: 'center', color: '#64748B', backgroundColor: '#161B29', borderRadius: '12px', border: '1px dashed #2D3854' }}>
-                    조건에 맞는 공통 수학 자료가 없습니다.
+                {/* 1줄 게시판 리스트 */}
+                <div style={{ backgroundColor: '#131826', border: '1px solid #263047', borderRadius: '10px', overflow: 'hidden' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 90px 150px', gap: '10px', padding: '9px 14px', backgroundColor: '#1A2236', borderBottom: '1px solid #28334E', fontSize: '11.5px', fontWeight: '700', color: '#94A3B8' }}>
+                    <span>과목 · 단원</span>
+                    <span>자료명 (총 {archiveItems.length}건)</span>
+                    <span style={{ textAlign: 'center' }}>구분</span>
+                    <span style={{ textAlign: 'right' }}>열람 / 다운로드</span>
                   </div>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
-                    {archiveItems.map(item => {
+
+                  {archiveItems.length === 0 ? (
+                    <div style={{ padding: '40px 20px', textAlign: 'center', color: '#64748B', fontSize: '13px' }}>
+                      선택한 과목·단원에 등록된 자료가 없습니다.
+                    </div>
+                  ) : (
+                    archiveItems.map((item, idx) => {
                       const rawPdf = (item.pdfUrl || '').trim();
                       const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
                       const pdfHref = rawPdf ? ((rawPdf.startsWith('http://') || rawPdf.startsWith('https://')) ? rawPdf : `${base}${rawPdf.replace(/^\/+/, '')}`) : '';
+                      const lvText = item.level || '공통 교재';
+                      const lvStyle = levelStyleMap[lvText] || levelStyleMap['공통 교재'];
                       return (
                         <div
                           key={item.id}
                           onClick={() => setSelectedSchoolMaterial(item)}
                           style={{
-                            backgroundColor: '#171C2B',
-                            border: '1px solid #28334E',
-                            borderRadius: '12px',
-                            padding: '14px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '8px',
+                            display: 'grid',
+                            gridTemplateColumns: '140px 1fr 90px 150px',
+                            gap: '10px',
+                            alignItems: 'center',
+                            padding: '10px 14px',
+                            borderBottom: idx < archiveItems.length - 1 ? '1px solid #1E273B' : 'none',
+                            backgroundColor: idx % 2 === 1 ? 'rgba(255,255,255,0.015)' : 'transparent',
                             cursor: 'pointer'
                           }}
                         >
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '2px 7px', borderRadius: '4px', backgroundColor: '#1E3A5F', color: '#60A5FA' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                            <span style={{ fontSize: '11.5px', fontWeight: '700', color: '#60A5FA', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {item.subject}
                             </span>
-                            <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '2px 7px', borderRadius: '4px', backgroundColor: '#372813', color: '#FBBF24' }}>
-                              {item.category}
-                            </span>
-                            <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#34D399', fontWeight: '600' }}>🌐 전체 공통</span>
+                            {item.unit && (
+                              <span style={{ fontSize: '11px', color: '#94A3B8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {item.unit}
+                              </span>
+                            )}
                           </div>
-                          <h3 style={{ color: '#F8FAFC', fontSize: '14.5px', fontWeight: '700', margin: 0, lineHeight: 1.4 }}>
-                            {item.title}
-                          </h3>
-                          {item.memo && (
-                            <p style={{ color: '#94A3B8', fontSize: '12px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.45 }}>
-                              {item.memo}
-                            </p>
-                          )}
-                          <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #242E46', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '11px', color: '#64748B' }}>{item.createdAt}</span>
+
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ color: '#F1F5F9', fontSize: '13.5px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {item.title}
+                            </div>
+                          </div>
+
+                          <div style={{ textAlign: 'center' }}>
+                            <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px', backgroundColor: lvStyle.bg, color: lvStyle.color, border: `1px solid ${lvStyle.border}`, whiteSpace: 'nowrap' }}>
+                              {lvText}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
                             {pdfHref && (
-                              <div style={{ display: 'flex', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
-                                <a href={pdfHref} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', borderRadius: '6px', backgroundColor: '#1E293B', border: '1px solid #3B82F6', color: '#93C5FD', fontWeight: 'bold', fontSize: '11.5px', textDecoration: 'none' }}>
+                              <>
+                                <a href={pdfHref} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 9px', borderRadius: '6px', backgroundColor: '#1E293B', border: '1px solid #3B82F6', color: '#93C5FD', fontWeight: '700', fontSize: '11.5px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                                   📄 보기
                                 </a>
-                                <a href={pdfHref} download={item.downloadName || true} style={{ padding: '4px 10px', borderRadius: '6px', backgroundColor: '#2563EB', color: '#FFFFFF', fontWeight: 'bold', fontSize: '11.5px', textDecoration: 'none' }}>
-                                  📥 다운로드
+                                <a href={pdfHref} download={item.downloadName || true} style={{ padding: '4px 9px', borderRadius: '6px', backgroundColor: '#2563EB', color: '#FFFFFF', fontWeight: '700', fontSize: '11.5px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                                  📥 다운
                                 </a>
-                              </div>
+                              </>
                             )}
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
-                )}
+                    })
+                  )}
+                </div>
               </div>
             );
           })()

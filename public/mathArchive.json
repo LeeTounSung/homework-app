@@ -2,7 +2,9 @@
   {
     "id": 1795701000001,
     "title": "2027 EBS 수능특강 수학Ⅰ (본문 + 정답과 풀이 원본)",
-    "subject": "수학Ⅰ",
+    "subject": "대수(수1)",
+    "unit": "전범위",
+    "level": "공통 교재",
     "category": "📚 공통 교재",
     "pdfUrl": "school_materials/ebs_2027_sutuk_math1.pdf",
     "downloadName": "2027_EBS_수능특강_수학1_원본.pdf",
@@ -12,7 +14,9 @@
   {
     "id": 1795701000002,
     "title": "2027 EBS 수능특강 수학Ⅱ (본문 + 정답과 풀이 원본)",
-    "subject": "수학Ⅱ",
+    "subject": "미적분1(수2)",
+    "unit": "전범위",
+    "level": "공통 교재",
     "category": "📚 공통 교재",
     "pdfUrl": "school_materials/ebs_2027_sutuk_math2.pdf",
     "downloadName": "2027_EBS_수능특강_수학2_원본.pdf",
@@ -22,7 +26,9 @@
   {
     "id": 1795701000003,
     "title": "2027 EBS 수능완성 수학Ⅰ·수학Ⅱ·미적분 (본문 + 정답과 풀이 원본)",
-    "subject": "수학Ⅰ·수학Ⅱ",
+    "subject": "미적분2",
+    "unit": "전범위",
+    "level": "공통 교재",
     "category": "📚 공통 교재",
     "pdfUrl": "school_materials/ebs_2027_suwan_math.pdf",
     "downloadName": "2027_EBS_수능완성_수학1_수학2_원본.pdf",
