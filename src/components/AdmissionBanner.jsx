@@ -85,14 +85,14 @@ const ADMISSION_GROUPS = [
     borderColor: 'rgba(167, 139, 250, 0.32)',
     univColor: '#DDD6FE',
     items: [
-      { univ: '고려대', dept: '통계학과', name: '대학수학·물리' },
-      { univ: '고려대', dept: '지구환경과학과', name: '대학수학·물리' },
-      { univ: '고려대', dept: '보건과학과', name: '대학수학·물리' },
-      { univ: '연세대', dept: '물리학과', name: '대학수학·물리' },
-      { univ: '한양대', dept: '미래자동차공학과', name: '대학수학·물리' },
-      { univ: '이화여대', dept: '자유전공', name: '대학수학·물리' },
-      { univ: '세종대', dept: '생명공학과', name: '대학수학·물리' },
-      { univ: '서울과기대', dept: '산업공학과', name: '대학수학·물리' }
+      { univ: '고려대', dept: '통계학과', name: '대학수학' },
+      { univ: '고려대', dept: '지구환경과학과', name: '대학수학' },
+      { univ: '고려대', dept: '보건과학과', name: '대학수학' },
+      { univ: '연세대', dept: '물리학과', name: '대학수학' },
+      { univ: '한양대', dept: '미래자동차공학과', name: '대학수학' },
+      { univ: '이화여대', dept: '자유전공', name: '대학수학' },
+      { univ: '세종대', dept: '생명공학과', name: '대학물리' },
+      { univ: '서울과기대', dept: '산업공학과', name: '대학수학' }
     ]
   },
   {
