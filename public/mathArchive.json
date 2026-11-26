@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1795701000001,
+    "title": "2027 EBS 수능특강 수학Ⅰ (본문 + 정답과 풀이 원본)",
+    "subject": "수학Ⅰ",
+    "category": "📚 공통 교재",
+    "pdfUrl": "school_materials/ebs_2027_sutuk_math1.pdf",
+    "downloadName": "2027_EBS_수능특강_수학1_원본.pdf",
+    "memo": "전체 학생 공통 제공 — 2027학년도 EBS 수능특강 수학Ⅰ 전 범위 원본(총 160쪽, 정답과 풀이 포함)입니다.",
+    "createdAt": "2026. 11. 26"
+  },
+  {
+    "id": 1795701000002,
+    "title": "2027 EBS 수능특강 수학Ⅱ (본문 + 정답과 풀이 원본)",
+    "subject": "수학Ⅱ",
+    "category": "📚 공통 교재",
+    "pdfUrl": "school_materials/ebs_2027_sutuk_math2.pdf",
+    "downloadName": "2027_EBS_수능특강_수학2_원본.pdf",
+    "memo": "전체 학생 공통 제공 — 2027학년도 EBS 수능특강 수학Ⅱ 전 범위 원본(총 168쪽, 정답과 풀이 포함)입니다.",
+    "createdAt": "2026. 11. 26"
+  },
+  {
+    "id": 1795701000003,
+    "title": "2027 EBS 수능완성 수학Ⅰ·수학Ⅱ·미적분 (본문 + 정답과 풀이 원본)",
+    "subject": "수학Ⅰ·수학Ⅱ",
+    "category": "📚 공통 교재",
+    "pdfUrl": "school_materials/ebs_2027_suwan_math.pdf",
+    "downloadName": "2027_EBS_수능완성_수학1_수학2_원본.pdf",
+    "memo": "전체 학생 공통 제공 — 2027학년도 EBS 수능완성 원본(총 296쪽, 유형편 수학Ⅰ·수학Ⅱ + 실전모의고사 1~5회 + 정답과 풀이 완본)입니다.",
+    "createdAt": "2026. 11. 26"
+  }
+]

@@ -196,8 +196,25 @@ export default function HomePage() {
   }, []);
 
   const [schoolCategoryFilter, setSchoolCategoryFilter] = useState('전체'); // '전체' | '📄 프린트/유인물' | '📚 부교재' | '✏️ 수행평가' | '📝 기출/예상'
+  const [mathArchiveItems, setMathArchiveItems] = useState([]);
   const [mathArchiveSearch, setMathArchiveSearch] = useState('');
+  const [mathArchiveCategoryFilter, setMathArchiveCategoryFilter] = useState('전체');
   const [mathArchiveSubjectFilter, setMathArchiveSubjectFilter] = useState('전체');
+
+  useEffect(() => {
+    const fetchMathArchive = async () => {
+      try {
+        const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
+        const res = await fetch(`${base}mathArchive.json?t=${Date.now()}`);
+        if (!res.ok) return;
+        const list = await res.json();
+        if (Array.isArray(list)) setMathArchiveItems(list);
+      } catch (e) {
+        console.warn('mathArchive.json fetch skipped:', e);
+      }
+    };
+    fetchMathArchive();
+  }, []);
 
   useEffect(() => {
     if (!isDesktopMode && activeTab === 'mathArchive') {
@@ -850,7 +867,7 @@ export default function HomePage() {
     { id: 'test', label: '시험', fullLabel: '온라인·정기 시험', icon: '⏱️' },
     { id: 'schedule', label: '일정', fullLabel: '수업 일정 안내', icon: '📅' },
     { id: 'statistics', label: '성적', fullLabel: '성적·누적 통계', icon: '📊' },
-    { id: 'school', label: '학교', fullLabel: '학교 기출·자료실', icon: '🏫' }
+    { id: 'school', label: '학교', fullLabel: '학교', icon: '🏫' }
   ];
   const desktopOnlyTabs = [
     { id: 'mathArchive', label: '수학자료실', fullLabel: '수학자료실', icon: '📁' }
@@ -2512,17 +2529,19 @@ export default function HomePage() {
             )}
           </div>
         ) : activeTab === 'mathArchive' && isDesktopMode ? (
-          // --- 📁 PC 전용 수학자료실 탭 ---
+          // --- 📁 PC 전용 공통 수학자료실 탭 ---
           (() => {
-            const archiveSubjects = ['전체', ...Array.from(new Set(filteredSchoolMaterials.map(i => i.subject).filter(Boolean)))];
+            const archiveCategories = ['전체', ...Array.from(new Set(mathArchiveItems.map(i => i.category).filter(Boolean)))];
+            const archiveSubjects = ['전체', ...Array.from(new Set(mathArchiveItems.map(i => i.subject).filter(Boolean)))];
             const q = mathArchiveSearch.trim().toLowerCase();
-            const archiveItems = filteredSchoolMaterials.filter(item => {
+            const archiveItems = mathArchiveItems.filter(item => {
+              if (mathArchiveCategoryFilter !== '전체' && item.category !== mathArchiveCategoryFilter) return false;
               if (mathArchiveSubjectFilter !== '전체' && item.subject !== mathArchiveSubjectFilter) return false;
               if (!q) return true;
               return (
                 (item.title || '').toLowerCase().includes(q) ||
                 (item.subject || '').toLowerCase().includes(q) ||
-                (item.studentName || '').toLowerCase().includes(q) ||
+                (item.category || '').toLowerCase().includes(q) ||
                 (item.memo || '').toLowerCase().includes(q)
               );
             });
@@ -2531,45 +2550,21 @@ export default function HomePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
                     <h2 style={{ color: '#60A5FA', fontSize: '19px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      📁 수학자료실 <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px', backgroundColor: 'rgba(59,130,246,0.18)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.35)' }}>PC 전용</span>
+                      📁 수학자료실 <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px', backgroundColor: 'rgba(59,130,246,0.18)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.35)' }}>PC 공통</span>
                     </h2>
                     <p style={{ color: '#94A3B8', fontSize: '13px', margin: 0 }}>
-                      부교재·기출/예상·학습 PDF 자료를 과목별·키워드별로 빠르게 검색하고 열람·다운로드할 수 있습니다.
+                      모든 학생에게 공통으로 제공되는 수학 교재·개념·기출 자료실입니다. (개인 맞춤 자료는 좌측 🏫 학교 메뉴에서 확인)
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSchoolTitle('');
-                      setSchoolSubject('수학Ⅰ·수학Ⅱ');
-                      setSchoolCategory('📚 부교재');
-                      setSchoolImage(null);
-                      setSchoolMemo('');
-                      setIsSchoolModalOpen(true);
-                    }}
-                    style={{
-                      backgroundColor: '#2563EB',
-                      color: '#FFFFFF',
-                      border: 'none',
-                      padding: '10px 16px',
-                      borderRadius: '10px',
-                      fontWeight: 'bold',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(37, 99, 235, 0.35)'
-                    }}
-                  >
-                    + 수학자료 등록
-                  </button>
                 </div>
 
-                {/* Search + Filter Bar */}
+                {/* Search + Category Filter Bar */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '14px', padding: '12px 14px', backgroundColor: '#161B29', borderRadius: '12px', border: '1px solid #263047' }}>
                   <input
                     type="text"
                     value={mathArchiveSearch}
                     onChange={(e) => setMathArchiveSearch(e.target.value)}
-                    placeholder="🔍 자료 제목, 과목, 학생명, 키워드 검색..."
+                    placeholder="🔍 자료 제목, 과목, 키워드 검색..."
                     style={{
                       flex: '1 1 240px',
                       padding: '8px 12px',
@@ -2582,17 +2577,17 @@ export default function HomePage() {
                     }}
                   />
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {['전체', '📚 부교재', '📝 기출/예상', '📄 프린트/유인물', '✏️ 수행평가'].map(cat => (
+                    {archiveCategories.map(cat => (
                       <button
                         key={cat}
                         type="button"
-                        onClick={() => setSchoolCategoryFilter(cat)}
+                        onClick={() => setMathArchiveCategoryFilter(cat)}
                         style={{
                           padding: '6px 11px',
                           borderRadius: '999px',
-                          border: schoolCategoryFilter === cat ? '1px solid #60A5FA' : '1px solid #334155',
-                          backgroundColor: schoolCategoryFilter === cat ? 'rgba(59,130,246,0.2)' : '#1E2436',
-                          color: schoolCategoryFilter === cat ? '#93C5FD' : '#CBD5E1',
+                          border: mathArchiveCategoryFilter === cat ? '1px solid #60A5FA' : '1px solid #334155',
+                          backgroundColor: mathArchiveCategoryFilter === cat ? 'rgba(59,130,246,0.2)' : '#1E2436',
+                          color: mathArchiveCategoryFilter === cat ? '#93C5FD' : '#CBD5E1',
                           fontSize: '12px',
                           fontWeight: '600',
                           cursor: 'pointer'
@@ -2633,7 +2628,7 @@ export default function HomePage() {
 
                 {archiveItems.length === 0 ? (
                   <div style={{ padding: '48px 20px', textAlign: 'center', color: '#64748B', backgroundColor: '#161B29', borderRadius: '12px', border: '1px dashed #2D3854' }}>
-                    조건에 맞는 수학 자료가 없습니다.
+                    조건에 맞는 공통 수학 자료가 없습니다.
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
@@ -2663,7 +2658,7 @@ export default function HomePage() {
                             <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '2px 7px', borderRadius: '4px', backgroundColor: '#372813', color: '#FBBF24' }}>
                               {item.category}
                             </span>
-                            <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#64748B' }}>👤 {item.studentName}</span>
+                            <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#34D399', fontWeight: '600' }}>🌐 전체 공통</span>
                           </div>
                           <h3 style={{ color: '#F8FAFC', fontSize: '14.5px', fontWeight: '700', margin: 0, lineHeight: 1.4 }}>
                             {item.title}
