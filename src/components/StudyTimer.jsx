@@ -49,7 +49,7 @@ const formatKoreanDuration = (totalSec) => {
 };
 
 // Google Sheets Apps Script 웹 앱 URL (배포 후 아래 문자열에 붙여넣으면 자동 클라우드 동기화)
-const STUDY_TIMER_SYNC_URL = '';
+const STUDY_TIMER_SYNC_URL = 'https://script.google.com/macros/s/AKfycbzSuv0sy4Pvu5OUFntV-x1HCmrceq3qi82O-5asrh6JSERrWi2hGtpAvhfxN1UOsHgg/exec';
 
 export default function StudyTimer({ studentName }) {
   const userKey = (studentName || 'guest').trim();
