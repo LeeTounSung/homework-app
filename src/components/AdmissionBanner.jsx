@@ -76,6 +76,36 @@ const ADMISSION_GROUPS = [
       { univ: '일본 오사카 대학', dept: '', name: '권형O' },
       { univ: '델프트공대', dept: '우주항공', name: '서O원' }
     ]
+  },
+  {
+    id: 'univ-tutoring',
+    label: '대학수학 · 물리 지도',
+    accentColor: '#A78BFA',
+    headerBg: 'rgba(167, 139, 250, 0.12)',
+    borderColor: 'rgba(167, 139, 250, 0.32)',
+    univColor: '#DDD6FE',
+    items: [
+      { univ: '고려대', dept: '통계학과', name: '대학수학·물리' },
+      { univ: '고려대', dept: '지구환경과학과', name: '대학수학·물리' },
+      { univ: '고려대', dept: '보건과학과', name: '대학수학·물리' },
+      { univ: '연세대', dept: '물리학과', name: '대학수학·물리' },
+      { univ: '한양대', dept: '미래자동차공학과', name: '대학수학·물리' },
+      { univ: '이화여대', dept: '자유전공', name: '대학수학·물리' },
+      { univ: '세종대', dept: '생명공학과', name: '대학수학·물리' },
+      { univ: '서울과기대', dept: '산업공학과', name: '대학수학·물리' }
+    ]
+  },
+  {
+    id: 'science-high',
+    label: '영재고 지도',
+    accentColor: '#34D399',
+    headerBg: 'rgba(52, 211, 153, 0.12)',
+    borderColor: 'rgba(52, 211, 153, 0.32)',
+    univColor: '#A7F3D0',
+    singleCol: true,
+    items: [
+      { univ: '서울과학고', dept: '2학년 수업 지도', name: '영재고' }
+    ]
   }
 ];
 
@@ -119,7 +149,7 @@ export default function AdmissionBanner() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
             <span style={{ fontSize: '16px', flexShrink: 0 }}>🏆</span>
             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#FFFFFF' }}>
-              주요 대학 합격 실적
+              주요 대학 합격 실적 · 지도 경력
             </h3>
           </div>
           <span
