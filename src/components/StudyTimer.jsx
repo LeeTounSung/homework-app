@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
 const SUBJECTS = ['공통수학1', '공통수학2', '대수(수1)', '미적분1(수2)', '미적분2', '확통', '기하', '숙제·오답'];
-const GOAL_MIN_SEC = 90 * 60;  // 1시간 30분 (1등급 최소 기준)
-const GOAL_MAX_SEC = 120 * 60; // 2시간 (1등급 완성 기준)
+const TIER_3_SEC = 60 * 60;    // 1시간 (2~3등급 기준)
+const TIER_2_SEC = 90 * 60;    // 1시간 30분 (1.5~2등급 기준)
+const GOAL_MIN_SEC = 120 * 60; // 2시간 (1등급 최소 기준)
+const GOAL_MAX_SEC = 150 * 60; // 2시간 30분 (1등급 완벽 기준)
 
 const getTodayKey = () => {
   const d = new Date();
@@ -228,10 +230,14 @@ export default function StudyTimer({ studentName }) {
   }, [past7Days]);
 
   const statusBadge = todayTotalSec >= GOAL_MAX_SEC
-    ? { text: '🏆 오늘 1등급 2시간 완벽 달성!', bg: 'rgba(16,185,129,0.2)', color: '#34D399', border: 'rgba(16,185,129,0.45)' }
+    ? { text: '🏆 1등급 2시간 30분 완벽 달성!', bg: 'rgba(16,185,129,0.2)', color: '#34D399', border: 'rgba(16,185,129,0.45)' }
     : todayTotalSec >= GOAL_MIN_SEC
-      ? { text: '✨ 1등급 최소 기준(1시간 30분) 달성!', bg: 'rgba(255,215,0,0.16)', color: '#FFD700', border: 'rgba(255,215,0,0.45)' }
-      : { text: `🔥 1등급 기준까지 ${formatKoreanDuration(GOAL_MIN_SEC - todayTotalSec)} 남음`, bg: 'rgba(59,130,246,0.16)', color: '#93C5FD', border: 'rgba(59,130,246,0.4)' };
+      ? { text: `🥇 1등급 달성! 완벽(2h30m)까지 ${formatKoreanDuration(GOAL_MAX_SEC - todayTotalSec)} 남음`, bg: 'rgba(255,215,0,0.16)', color: '#FFD700', border: 'rgba(255,215,0,0.45)' }
+      : todayTotalSec >= TIER_2_SEC
+        ? { text: `✨ 1.5~2등급 구간 · 1등급(2h)까지 ${formatKoreanDuration(GOAL_MIN_SEC - todayTotalSec)} 남음`, bg: 'rgba(245,158,11,0.16)', color: '#FBBF24', border: 'rgba(245,158,11,0.45)' }
+        : todayTotalSec >= TIER_3_SEC
+          ? { text: `📘 2~3등급 구간 · 1.5~2등급(1h30m)까지 ${formatKoreanDuration(TIER_2_SEC - todayTotalSec)} 남음`, bg: 'rgba(59,130,246,0.16)', color: '#93C5FD', border: 'rgba(59,130,246,0.45)' }
+          : { text: `🔥 2~3등급(1h)까지 ${formatKoreanDuration(TIER_3_SEC - todayTotalSec)} · 1등급(2h)까지 ${formatKoreanDuration(GOAL_MIN_SEC - todayTotalSec)}`, bg: 'rgba(59,130,246,0.16)', color: '#93C5FD', border: 'rgba(59,130,246,0.4)' };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '860px', margin: '0 auto' }}>
@@ -245,7 +251,7 @@ export default function StudyTimer({ studentName }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
           <div style={{ fontSize: '15.5px', fontWeight: '800', color: '#FFD700', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>🏆</span>
-            <span>1등급의 절대 조건: 매일 수학 1시간 30분 ~ 2시간</span>
+            <span>1등급의 절대 조건: 매일 수학 2시간 ~ 2시간 30분</span>
           </div>
           <span style={{
             fontSize: '12px', fontWeight: '700', padding: '4px 10px', borderRadius: '999px',
@@ -255,16 +261,16 @@ export default function StudyTimer({ studentName }) {
           </span>
         </div>
         <p style={{ margin: 0, fontSize: '12.5px', color: '#CBD5E1', lineHeight: 1.5 }}>
-          매일 끊기지 않는 수학 공부량이 1등급을 만듭니다. 하루 평균 <strong style={{ color: '#FFFFFF' }}>1시간 30분~2시간</strong> 루틴을 습관으로 각인하세요!
+          매일 끊기지 않는 수학 공부량이 등급을 결정합니다. <strong style={{ color: '#93C5FD' }}>1h~1h30m(2~3등급)</strong> · <strong style={{ color: '#FBBF24' }}>1h30m~2h(1.5~2등급)</strong> · <strong style={{ color: '#FFD700' }}>2h~2h30m(1등급)</strong> 기준선을 돌파해 보세요!
         </p>
 
-        {/* 오늘 진행률 바 */}
+        {/* 오늘 진행률 바 (0 ~ 2시간 30분 = 150분) */}
         <div style={{ marginTop: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94A3B8', marginBottom: '6px' }}>
             <span>오늘 누적: <strong style={{ color: '#FFFFFF', fontSize: '13.5px' }}>{formatKoreanDuration(todayTotalSec)}</strong></span>
-            <span>목표: <strong style={{ color: '#FFD700' }}>1시간 30분</strong> ~ <strong style={{ color: '#34D399' }}>2시간</strong> ({progressPct}%)</span>
+            <span>목표: <strong style={{ color: '#FFD700' }}>2시간</strong> ~ <strong style={{ color: '#34D399' }}>2시간 30분</strong> ({progressPct}%)</span>
           </div>
-          <div style={{ position: 'relative', height: '12px', backgroundColor: '#1E293B', borderRadius: '999px', overflow: 'hidden', border: '1px solid #334155' }}>
+          <div style={{ position: 'relative', height: '14px', backgroundColor: '#1E293B', borderRadius: '999px', overflow: 'hidden', border: '1px solid #334155' }}>
             <div style={{
               width: `${progressPct}%`,
               height: '100%',
@@ -272,19 +278,34 @@ export default function StudyTimer({ studentName }) {
                 ? 'linear-gradient(90deg, #10B981, #34D399)'
                 : todayTotalSec >= GOAL_MIN_SEC
                   ? 'linear-gradient(90deg, #F59E0B, #FFD700)'
-                  : 'linear-gradient(90deg, #2563EB, #60A5FA)',
+                  : todayTotalSec >= TIER_2_SEC
+                    ? 'linear-gradient(90deg, #D97706, #FBBF24)'
+                    : 'linear-gradient(90deg, #2563EB, #60A5FA)',
               transition: 'width 0.35s ease'
             }} />
-            {/* 90분(75%) 1등급 최소 기준선 */}
-            <div title="1등급 최소 기준 (1시간 30분)" style={{
+            {/* 60분(40%) 2~3등급 기준선 */}
+            <div title="2~3등급 기준 (1시간)" style={{
+              position: 'absolute', left: '40%', top: 0, bottom: 0,
+              width: '2px', backgroundColor: '#60A5FA'
+            }} />
+            {/* 90분(60%) 1.5~2등급 기준선 */}
+            <div title="1.5~2등급 기준 (1시간 30분)" style={{
+              position: 'absolute', left: '60%', top: 0, bottom: 0,
+              width: '2px', backgroundColor: '#F59E0B'
+            }} />
+            {/* 120분(80%) 1등급 기준선 */}
+            <div title="1등급 기준 (2시간)" style={{
               position: 'absolute', left: `${minMarkerPct}%`, top: 0, bottom: 0,
               width: '2px', backgroundColor: '#FFD700'
             }} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px', color: '#64748B', marginTop: '4px' }}>
-            <span>0분</span>
-            <span style={{ color: '#FFD700', marginLeft: '45%' }}>▲ 1h 30m (1등급 기준)</span>
-            <span style={{ color: '#34D399' }}>2h (완벽)</span>
+          {/* 기준선 눈금 라벨 */}
+          <div style={{ position: 'relative', height: '20px', fontSize: '10px', marginTop: '4px' }}>
+            <span style={{ position: 'absolute', left: '0%', color: '#64748B' }}>0분</span>
+            <span style={{ position: 'absolute', left: '40%', transform: 'translateX(-50%)', color: '#93C5FD', fontWeight: '700', whiteSpace: 'nowrap' }}>▲1h(2~3등급)</span>
+            <span style={{ position: 'absolute', left: '60%', transform: 'translateX(-50%)', color: '#FBBF24', fontWeight: '700', whiteSpace: 'nowrap' }}>▲1.5h(1.5~2)</span>
+            <span style={{ position: 'absolute', left: '80%', transform: 'translateX(-50%)', color: '#FFD700', fontWeight: '800', whiteSpace: 'nowrap' }}>▲2h(1등급)</span>
+            <span style={{ position: 'absolute', right: '0%', color: '#34D399', fontWeight: '700', whiteSpace: 'nowrap' }}>2.5h</span>
           </div>
         </div>
       </div>
@@ -420,15 +441,27 @@ export default function StudyTimer({ studentName }) {
 
       {/* 최근 7일 공부량 막대 그래프 */}
       <div style={{ padding: '16px', borderRadius: '14px', backgroundColor: '#141927', border: '1px solid #263047' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
           <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#F8FAFC' }}>📊 최근 7일 수학 공부량</h3>
-          <span style={{ fontSize: '11px', color: '#FFD700' }}>노란선 = 1시간 30분 (1등급 기준)</span>
+          <span style={{ fontSize: '10.5px', color: '#94A3B8' }}>
+            <span style={{ color: '#FFD700', fontWeight: '700' }}>━ 2h(1등급)</span> · <span style={{ color: '#F59E0B', fontWeight: '700' }}>━ 1.5h(1.5~2)</span> · <span style={{ color: '#60A5FA', fontWeight: '700' }}>━ 1h(2~3)</span>
+          </span>
         </div>
-        <div style={{ position: 'relative', height: '130px', display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', alignItems: 'end', paddingTop: '14px' }}>
-          {/* 90분 기준선 (max 150분 기준 60% 높이) */}
-          <div style={{
-            position: 'absolute', left: 0, right: 0, bottom: '76px',
-            borderTop: '1px dashed rgba(255,215,0,0.55)', pointerEvents: 'none'
+        <div style={{ position: 'relative', height: '140px', display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', alignItems: 'end', paddingTop: '14px' }}>
+          {/* 120분(2h) 1등급 기준선 */}
+          <div title="1등급 기준 (2시간)" style={{
+            position: 'absolute', left: 0, right: 0, bottom: '89px',
+            borderTop: '1px dashed rgba(255,215,0,0.65)', pointerEvents: 'none'
+          }} />
+          {/* 90분(1.5h) 1.5~2등급 기준선 */}
+          <div title="1.5~2등급 기준 (1시간 30분)" style={{
+            position: 'absolute', left: 0, right: 0, bottom: '72px',
+            borderTop: '1px dashed rgba(245,158,11,0.55)', pointerEvents: 'none'
+          }} />
+          {/* 60분(1h) 2~3등급 기준선 */}
+          <div title="2~3등급 기준 (1시간)" style={{
+            position: 'absolute', left: 0, right: 0, bottom: '55px',
+            borderTop: '1px dashed rgba(96,165,250,0.45)', pointerEvents: 'none'
           }} />
           {past7Days.map(d => {
             const maxBarSec = 150 * 60;
@@ -436,7 +469,7 @@ export default function StudyTimer({ studentName }) {
             const reached = d.seconds >= GOAL_MIN_SEC;
             return (
               <div key={d.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', gap: '4px' }}>
-                <span style={{ fontSize: '10px', color: reached ? '#FFD700' : '#94A3B8', fontWeight: reached ? '700' : '500' }}>
+                <span style={{ fontSize: '10px', color: reached ? '#FFD700' : d.seconds >= TIER_2_SEC ? '#FBBF24' : '#94A3B8', fontWeight: reached ? '700' : '500' }}>
                   {d.seconds > 0 ? `${Math.round(d.seconds / 60)}분` : '-'}
                 </span>
                 <div style={{
@@ -447,8 +480,12 @@ export default function StudyTimer({ studentName }) {
                   background: d.seconds >= GOAL_MAX_SEC
                     ? '#10B981'
                     : reached
-                      ? '#F59E0B'
-                      : d.seconds > 0 ? '#3B82F6' : '#1E293B'
+                      ? '#FFD700'
+                      : d.seconds >= TIER_2_SEC
+                        ? '#F59E0B'
+                        : d.seconds >= TIER_3_SEC
+                          ? '#3B82F6'
+                          : d.seconds > 0 ? '#475569' : '#1E293B'
                 }} />
                 <span style={{ fontSize: '10px', color: d.key === todayKey ? '#FFFFFF' : '#64748B', fontWeight: d.key === todayKey ? '700' : '500' }}>
                   {d.label}
