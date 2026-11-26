@@ -870,7 +870,7 @@ export default function HomePage() {
     { id: 'school', label: '학교', fullLabel: '학교', icon: '🏫' }
   ];
   const desktopOnlyTabs = [
-    { id: 'mathArchive', label: '수학자료실', fullLabel: '수학자료실', icon: '📁' }
+    { id: 'mathArchive', label: '수학자료', fullLabel: '수학자료', icon: '📁' }
   ];
   const allNavTabs = isDesktopMode ? [...navTabs, ...desktopOnlyTabs] : navTabs;
   const currentTabMeta = allNavTabs.find(t => t.id === activeTab) || navTabs[0];
@@ -2550,7 +2550,7 @@ export default function HomePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
                     <h2 style={{ color: '#60A5FA', fontSize: '19px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      📁 수학자료실 <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px', backgroundColor: 'rgba(59,130,246,0.18)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.35)' }}>PC 공통</span>
+                      📁 수학자료 <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px', backgroundColor: 'rgba(59,130,246,0.18)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.35)' }}>PC 공통</span>
                     </h2>
                     <p style={{ color: '#94A3B8', fontSize: '13px', margin: 0 }}>
                       모든 학생에게 공통으로 제공되는 수학 교재·개념·기출 자료실입니다. (개인 맞춤 자료는 좌측 🏫 학교 메뉴에서 확인)
