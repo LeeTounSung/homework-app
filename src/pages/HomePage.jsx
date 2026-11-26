@@ -4,6 +4,7 @@ import { useHomework } from '../context/HomeworkContext';
 import { analyzeStudentProgress } from '../utils/gemini';
 import AdmissionBanner from '../components/AdmissionBanner';
 import ViewModeToggle from '../components/ViewModeToggle';
+import StudyTimer from '../components/StudyTimer';
 
 const formatDriveImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
@@ -868,7 +869,8 @@ export default function HomePage() {
     { id: 'test', label: '시험', fullLabel: '온라인·정기 시험', icon: '⏱️' },
     { id: 'schedule', label: '일정', fullLabel: '수업 일정 안내', icon: '📅' },
     { id: 'statistics', label: '성적', fullLabel: '성적·누적 통계', icon: '📊' },
-    { id: 'school', label: '학교', fullLabel: '학교', icon: '🏫' }
+    { id: 'school', label: '학교', fullLabel: '학교', icon: '🏫' },
+    { id: 'timer', label: '타이머', fullLabel: '스터디 타이머', icon: '⏰' }
   ];
   const desktopOnlyTabs = [
     { id: 'mathArchive', label: '수학자료', fullLabel: '수학자료', icon: '📁' }
@@ -2529,6 +2531,9 @@ export default function HomePage() {
               </div>
             )}
           </div>
+        ) : activeTab === 'timer' ? (
+          // --- ⏰ 스터디 타이머 탭 (모바일 · PC 공용) ---
+          <StudyTimer studentName={currentUser} />
         ) : activeTab === 'mathArchive' && isDesktopMode ? (
           // --- 📁 PC 전용 공통 수학자료 탭 (과목 -> 단원 2단 탭 + 1줄 게시판 리스트) ---
           (() => {
