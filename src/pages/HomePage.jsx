@@ -196,6 +196,14 @@ export default function HomePage() {
   }, []);
 
   const [schoolCategoryFilter, setSchoolCategoryFilter] = useState('전체'); // '전체' | '📄 프린트/유인물' | '📚 부교재' | '✏️ 수행평가' | '📝 기출/예상'
+  const [mathArchiveSearch, setMathArchiveSearch] = useState('');
+  const [mathArchiveSubjectFilter, setMathArchiveSubjectFilter] = useState('전체');
+
+  useEffect(() => {
+    if (!isDesktopMode && activeTab === 'mathArchive') {
+      setActiveTab('homework');
+    }
+  }, [isDesktopMode, activeTab]);
   const [isSchoolModalOpen, setIsSchoolModalOpen] = useState(false);
   const [schoolTitle, setSchoolTitle] = useState('');
   const [schoolSubject, setSchoolSubject] = useState('공통수학1');
@@ -844,7 +852,11 @@ export default function HomePage() {
     { id: 'statistics', label: '성적', fullLabel: '성적·누적 통계', icon: '📊' },
     { id: 'school', label: '학교', fullLabel: '학교 기출·자료실', icon: '🏫' }
   ];
-  const currentTabMeta = navTabs.find(t => t.id === activeTab) || navTabs[0];
+  const desktopOnlyTabs = [
+    { id: 'mathArchive', label: '수학자료실', fullLabel: '수학자료실', icon: '📁' }
+  ];
+  const allNavTabs = isDesktopMode ? [...navTabs, ...desktopOnlyTabs] : navTabs;
+  const currentTabMeta = allNavTabs.find(t => t.id === activeTab) || navTabs[0];
 
   const handleAuthButtonClick = () => {
     if (currentUser) {
@@ -926,6 +938,23 @@ export default function HomePage() {
             </div>
             <nav className="desktop-nav-list">
               {navTabs.map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`desktop-nav-btn ${activeTab === tab.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <span style={{ fontSize: '17px', width: '22px', textAlign: 'center' }}>{tab.icon}</span>
+                  <span>{tab.fullLabel}</span>
+                </button>
+              ))}
+            </nav>
+
+            <div style={{ fontSize: '11px', fontWeight: '700', color: '#60A5FA', padding: '16px 8px 8px', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>PC 전용 메뉴</span>
+            </div>
+            <nav className="desktop-nav-list">
+              {desktopOnlyTabs.map(tab => (
                 <button
                   key={tab.id}
                   type="button"
@@ -2482,6 +2511,189 @@ export default function HomePage() {
               </div>
             )}
           </div>
+        ) : activeTab === 'mathArchive' && isDesktopMode ? (
+          // --- 📁 PC 전용 수학자료실 탭 ---
+          (() => {
+            const archiveSubjects = ['전체', ...Array.from(new Set(filteredSchoolMaterials.map(i => i.subject).filter(Boolean)))];
+            const q = mathArchiveSearch.trim().toLowerCase();
+            const archiveItems = filteredSchoolMaterials.filter(item => {
+              if (mathArchiveSubjectFilter !== '전체' && item.subject !== mathArchiveSubjectFilter) return false;
+              if (!q) return true;
+              return (
+                (item.title || '').toLowerCase().includes(q) ||
+                (item.subject || '').toLowerCase().includes(q) ||
+                (item.studentName || '').toLowerCase().includes(q) ||
+                (item.memo || '').toLowerCase().includes(q)
+              );
+            });
+            return (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h2 style={{ color: '#60A5FA', fontSize: '19px', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      📁 수학자료실 <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '999px', backgroundColor: 'rgba(59,130,246,0.18)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.35)' }}>PC 전용</span>
+                    </h2>
+                    <p style={{ color: '#94A3B8', fontSize: '13px', margin: 0 }}>
+                      부교재·기출/예상·학습 PDF 자료를 과목별·키워드별로 빠르게 검색하고 열람·다운로드할 수 있습니다.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSchoolTitle('');
+                      setSchoolSubject('수학Ⅰ·수학Ⅱ');
+                      setSchoolCategory('📚 부교재');
+                      setSchoolImage(null);
+                      setSchoolMemo('');
+                      setIsSchoolModalOpen(true);
+                    }}
+                    style={{
+                      backgroundColor: '#2563EB',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '10px 16px',
+                      borderRadius: '10px',
+                      fontWeight: 'bold',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(37, 99, 235, 0.35)'
+                    }}
+                  >
+                    + 수학자료 등록
+                  </button>
+                </div>
+
+                {/* Search + Filter Bar */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '14px', padding: '12px 14px', backgroundColor: '#161B29', borderRadius: '12px', border: '1px solid #263047' }}>
+                  <input
+                    type="text"
+                    value={mathArchiveSearch}
+                    onChange={(e) => setMathArchiveSearch(e.target.value)}
+                    placeholder="🔍 자료 제목, 과목, 학생명, 키워드 검색..."
+                    style={{
+                      flex: '1 1 240px',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #334155',
+                      backgroundColor: '#0F131F',
+                      color: '#F8FAFC',
+                      fontSize: '13px',
+                      outline: 'none'
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {['전체', '📚 부교재', '📝 기출/예상', '📄 프린트/유인물', '✏️ 수행평가'].map(cat => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSchoolCategoryFilter(cat)}
+                        style={{
+                          padding: '6px 11px',
+                          borderRadius: '999px',
+                          border: schoolCategoryFilter === cat ? '1px solid #60A5FA' : '1px solid #334155',
+                          backgroundColor: schoolCategoryFilter === cat ? 'rgba(59,130,246,0.2)' : '#1E2436',
+                          color: schoolCategoryFilter === cat ? '#93C5FD' : '#CBD5E1',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject Filter Pills */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', color: '#64748B', fontWeight: '600', marginRight: '4px' }}>과목:</span>
+                  {archiveSubjects.map(subj => (
+                    <button
+                      key={subj}
+                      type="button"
+                      onClick={() => setMathArchiveSubjectFilter(subj)}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        border: mathArchiveSubjectFilter === subj ? '1px solid #FFD700' : '1px solid #2D3345',
+                        backgroundColor: mathArchiveSubjectFilter === subj ? 'rgba(255,215,0,0.14)' : '#171C2B',
+                        color: mathArchiveSubjectFilter === subj ? '#FFD700' : '#94A3B8',
+                        fontSize: '11.5px',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {subj}
+                    </button>
+                  ))}
+                  <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#94A3B8' }}>
+                    총 <strong style={{ color: '#F8FAFC' }}>{archiveItems.length}</strong>건
+                  </span>
+                </div>
+
+                {archiveItems.length === 0 ? (
+                  <div style={{ padding: '48px 20px', textAlign: 'center', color: '#64748B', backgroundColor: '#161B29', borderRadius: '12px', border: '1px dashed #2D3854' }}>
+                    조건에 맞는 수학 자료가 없습니다.
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
+                    {archiveItems.map(item => {
+                      const rawPdf = (item.pdfUrl || '').trim();
+                      const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') + '/';
+                      const pdfHref = rawPdf ? ((rawPdf.startsWith('http://') || rawPdf.startsWith('https://')) ? rawPdf : `${base}${rawPdf.replace(/^\/+/, '')}`) : '';
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => setSelectedSchoolMaterial(item)}
+                          style={{
+                            backgroundColor: '#171C2B',
+                            border: '1px solid #28334E',
+                            borderRadius: '12px',
+                            padding: '14px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '2px 7px', borderRadius: '4px', backgroundColor: '#1E3A5F', color: '#60A5FA' }}>
+                              {item.subject}
+                            </span>
+                            <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '2px 7px', borderRadius: '4px', backgroundColor: '#372813', color: '#FBBF24' }}>
+                              {item.category}
+                            </span>
+                            <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#64748B' }}>👤 {item.studentName}</span>
+                          </div>
+                          <h3 style={{ color: '#F8FAFC', fontSize: '14.5px', fontWeight: '700', margin: 0, lineHeight: 1.4 }}>
+                            {item.title}
+                          </h3>
+                          {item.memo && (
+                            <p style={{ color: '#94A3B8', fontSize: '12px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.45 }}>
+                              {item.memo}
+                            </p>
+                          )}
+                          <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #242E46', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', color: '#64748B' }}>{item.createdAt}</span>
+                            {pdfHref && (
+                              <div style={{ display: 'flex', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                                <a href={pdfHref} target="_blank" rel="noopener noreferrer" style={{ padding: '4px 10px', borderRadius: '6px', backgroundColor: '#1E293B', border: '1px solid #3B82F6', color: '#93C5FD', fontWeight: 'bold', fontSize: '11.5px', textDecoration: 'none' }}>
+                                  📄 보기
+                                </a>
+                                <a href={pdfHref} download={item.downloadName || true} style={{ padding: '4px 10px', borderRadius: '6px', backgroundColor: '#2563EB', color: '#FFFFFF', fontWeight: 'bold', fontSize: '11.5px', textDecoration: 'none' }}>
+                                  📥 다운로드
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()
         ) : (
           // --- 숙제 관리 탭 ---
           filteredData.length === 0 ? (
